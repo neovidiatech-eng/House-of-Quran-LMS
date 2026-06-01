@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, GraduationCap, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -8,6 +8,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePlans } from '../../features/admin/hooks/usePlans';
 import { Plan } from '../../types/plan';
+import { GetCountries } from 'react-country-state-city';
 
 interface AddStudentModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface AddStudentModalProps {
 export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStudentModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
+  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]);
   const { data: plansData } = usePlans();
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(getStudentSchema(t)),
@@ -38,14 +40,15 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
     onClose();
   };
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    GetCountries()
+      .then((data) => {
+        if (data?.length) setCountryCodes(data);
+      })
+      .catch(() => setCountryCodes([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]));
+  }, []);
 
-  const countryCodes = [
-    { code: '+20', country: t('egypt') },
-    { code: '+966', country: t('saudiArabia') },
-    { code: '+971', country: t('uae') },
-    { code: '+965', country: t('kuwait') },
-  ];
+  if (!isOpen) return null;
 
   const plans = plansData || [];
 
@@ -56,6 +59,8 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
       label: language === 'ar' ? p.name_ar : p.name_en,
     }))
   ];
+
+  
 
   const genderOptions = [
     { value: 'male', label: t('male') },
@@ -75,13 +80,18 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
     { value: 'rejected', label: t('rejected') },
   ];
 
-  const countryCodeOptions = countryCodes.map((c) => ({
-    value: c.code,
-    searchText: `${c.country} ${c.code}`,
+  const uniqueCountryCodes = Array.from(
+    new Map(countryCodes.map((c) => [`+${c.phone_code}`, c])).values()
+  );
+  const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
+
+  const countryCodeOptions = uniqueCountryCodes.map((c) => ({
+    value: `+${c.phone_code}`,
+    searchText: `${displayNames.of(c.iso2) || c.name} +${c.phone_code}`,
     label: (
       <div className="flex justify-between items-center w-full">
-        <span className="font-mono">{c.code}</span>
-        <span className="text-gray-500 text-xs">{c.country}</span>
+        <span className="font-mono">+{c.phone_code}</span>
+        <span className="text-gray-500 text-xs">{displayNames.of(c.iso2) || c.name}</span>
       </div>
     ),
   }));
@@ -279,3 +289,5 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
     </div>
   );
 }
+
+

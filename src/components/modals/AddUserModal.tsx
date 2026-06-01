@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -6,6 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { UserFormData, getUserSchema } from '../../lib/schemas/UserSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRoles } from '../../features/admin/hooks/useRoles';
+import { GetCountries } from 'react-country-state-city';
 // import { CustomCheckbox } from '../ui/CustomCheckbox';
 //import { usePermissions } from '../../hooks/usePermissions';
 
@@ -25,33 +26,24 @@ interface AddUserModalProps {
 
 // Static permission list removed in favor of dynamic fetching
 
-const countryCodes = [
-  { code: '+20', country: 'مصر', flag: '🇪🇬' },
-  { code: '+966', country: 'السعودية', flag: '🇸🇦' },
-  { code: '+971', country: 'الإمارات', flag: '🇦🇪' },
-  { code: '+965', country: 'الكويت', flag: '🇰🇼' },
-  { code: '+974', country: 'قطر', flag: '🇶🇦' },
-  { code: '+973', country: 'البحرين', flag: '🇧🇭' },
-  { code: '+968', country: 'عمان', flag: '🇴🇲' },
-  { code: '+962', country: 'الأردن', flag: '🇯🇴' },
-  { code: '+961', country: 'لبنان', flag: '🇱🇧' },
-  { code: '+963', country: 'سوريا', flag: '🇸🇾' },
-  { code: '+964', country: 'العراق', flag: '🇮🇶' },
-  { code: '+967', country: 'اليمن', flag: '🇾🇪' },
-  { code: '+212', country: 'المغرب', flag: '🇲🇦' },
-  { code: '+213', country: 'الجزائر', flag: '🇩🇿' },
-  { code: '+216', country: 'تونس', flag: '🇹🇳' },
-  { code: '+218', country: 'ليبيا', flag: '🇱🇾' },
-  { code: '+249', country: 'السودان', flag: '🇸🇩' },
-];
+const fallbackPhoneCodes = [{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }];
 
 
 
 export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
+  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(fallbackPhoneCodes);
   const { data: rolesData } = useRoles();
   const dynamicRoles = rolesData?.data || [];
+
+  useEffect(() => {
+    GetCountries()
+      .then((data) => {
+        if (data?.length) setCountryCodes(data);
+      })
+      .catch(() => setCountryCodes(fallbackPhoneCodes));
+  }, []);
 
 
   // const { data: permsData } = usePermissions();
@@ -99,13 +91,18 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
     onClose();
   };
 
-  const countryOptions = countryCodes.map((c) => ({
-    value: c.code,
-    searchText: `${c.country} ${c.code}`,
+  const uniqueCountryCodes = Array.from(
+    new Map(countryCodes.map((c) => [`+${c.phone_code}`, c])).values()
+  );
+  const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
+
+  const countryOptions = uniqueCountryCodes.map((c) => ({
+    value: `+${c.phone_code}`,
+    searchText: `${displayNames.of(c.iso2) || c.name} +${c.phone_code}`,
     label: (
       <div className={`flex justify-between items-center ${language === 'ar' ? 'flex-row-reverse' : ''} w-full text-start`}>
-        <span>{c.flag} {c.country}</span>
-        <span className="text-gray-400 font-mono text-xs">{c.code}</span>
+        <span>{c.emoji} {displayNames.of(c.iso2) || c.name}</span>
+        <span className="text-gray-400 font-mono text-xs">+{c.phone_code}</span>
       </div>
     ),
   }));
@@ -318,3 +315,4 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
     </div>
   );
 }
+

@@ -4,12 +4,12 @@ export const getLoginSchema = (t: (key: string, options?: any) => string) => z.o
   email: z.string()
     .min(1, t("validation.required"))
     .email(t("validation.email")),
-  password: z
+ password: z
   .string()
-  .min(8, "Password must be at least 8 characters")
+  .min(8, t("validation.passwordMin", { count: 8 }))
   .regex(
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
-    "Password must include uppercase, lowercase, number, and special character (@$!%*?&^#)"
+    t("validation.passwordComplex")
   ),
   rememberMe: z.boolean().optional(),
 });

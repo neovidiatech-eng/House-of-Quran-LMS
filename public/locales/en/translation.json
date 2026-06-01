@@ -23,6 +23,8 @@
     "email": "Please enter a valid email address",
     "min": "Must be at least {{count}} characters",
     "max": "Must be at most {{count}} characters",
+    "passwordMin": "Password must be at least {{count}} characters",
+    "passwordComplex": "Password must include uppercase, lowercase, number, and special character (@$!%*?&^#)",
     "passwordMatch": "Passwords do not match",
     "invalidPhone": "Invalid phone number for the selected country",
     "invalidUrl": "Please enter a valid URL"
@@ -523,6 +525,7 @@
   "updatedSuccessfully": "Updated successfully",
   "noData": "No data found",
   "30minutes": "30 minutes",
+  "45minutes": "45 minutes",
   "60minutes": "60 minutes",
   "90minutes": "90 minutes",
   "120minutes": "120 minutes",

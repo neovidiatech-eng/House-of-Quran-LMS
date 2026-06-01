@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createStudent, deleteStudent, getStudentById, getStudents, updateStudent } from "../services/StudentServices";
+import { createStudent, deleteStudent, getStudentById, getStudents, GetStudentsParams, updateStudent } from "../services/StudentServices";
 import { Student } from "../../../types/student";
 import { StudentFormData } from "../../../lib/schemas/StudentSchema";
 import { message } from "antd";
 
-export const useStudents = () => {
+export const useStudents = (params: GetStudentsParams = {}) => {
     return useQuery({
-        queryKey: ["students"],
-        queryFn: getStudents,
+        queryKey: ["students", params],
+        queryFn: () => getStudents(params),
     });
 }
 export const useStudentById = (id?: string) => {

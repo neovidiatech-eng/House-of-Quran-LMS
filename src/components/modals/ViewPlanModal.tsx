@@ -78,7 +78,7 @@ export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalPr
 
         <div className="p-6 space-y-6">
           {plan.bestSeller && (
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-center py-3 px-6 rounded-xl font-bold text-lg shadow-lg">
+            <div className="bg-gradient-to-r from-primary to-primary-dark text-white text-center py-3 px-6 rounded-xl font-bold text-lg shadow-lg">
               {text.isPopular[language]}
             </div>
           )}

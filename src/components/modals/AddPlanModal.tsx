@@ -263,6 +263,7 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
     <CustomSelect
       options={[
         { label: t('30minutes'), value: 30 },
+        { label: t('45minutes'), value: 45 },
         { label: t('60minutes'), value: 60 },
         { label: t('90minutes'), value: 90 },
         { label: t('120minutes'), value: 120 },

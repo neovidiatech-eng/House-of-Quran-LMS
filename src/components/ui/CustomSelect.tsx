@@ -29,7 +29,9 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
         ref={ref}
         showSearch
         className={`w-full h-[46px] ${className}`}
-        optionFilterProp="children"
+        optionFilterProp="searchText"
+        listHeight={240}
+        virtual={false}
         placeholder="اختر من القائمة"
         {...props} 
       >
@@ -37,6 +39,7 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
           <Select.Option 
             key={option.value} 
             value={option.value}
+            searchText={option.searchText || String(option.value)}
             label={option.searchText || option.label}
           >
             {option.label}
@@ -52,3 +55,4 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
 CustomSelect.displayName = 'CustomSelect';
 
 export default CustomSelect;
+

@@ -154,7 +154,7 @@ export default function Teachers() {
       currency_id: formData.currency,
       gender: formData.gender as 'male' | 'female',
       active: formData.status === 'active',
-      code_country: '+20', // Default if missing, ideally extracted from phone
+      code_country: formData.phone_code,
       subject_ids: formData.subjects,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       meeting_link: formData.meeting_link?.trim() || undefined,

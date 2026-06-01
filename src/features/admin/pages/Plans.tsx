@@ -186,12 +186,12 @@ export default function Plans() {
               key={plan.id}
               className={`bg-white rounded-2xl shadow-sm border-2 transition-all hover:shadow-xl ${
                 plan.bestSeller
-                  ? "border-blue-500 ring-4 ring-blue-100"
+                  ? "border-primary ring-primary"
                   : "border-gray-200"
               }`}
             >
               {plan.bestSeller && (
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center py-2 rounded-t-2xl font-bold text-sm">
+                <div className="bg-gradient-to-r from-primary to-primary-dark text-white text-center py-2 rounded-t-2xl font-bold text-sm">
                   {text.popular[language]}
                 </div>
               )}

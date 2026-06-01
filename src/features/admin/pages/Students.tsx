@@ -1,4 +1,4 @@
-import { useState, lazy, useMemo } from 'react';
+import { useState, lazy, useMemo, useEffect } from 'react';
 import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardList } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 // import AddStudentModal from '../../../components/modals/AddStudentModal';
@@ -22,6 +22,7 @@ export default function Students() {
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('all');
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,10 +32,29 @@ export default function Students() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const itemsPerPage = 7;
 
-  const { data: apiResponse, isLoading } = useStudents();
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  const studentsQueryParams = useMemo(() => ({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: debouncedSearch || undefined,
+    country: selectedCountry !== 'all' ? selectedCountry : undefined,
+    planId: selectedGrade !== 'all' ? selectedGrade : undefined,
+  }), [currentPage, itemsPerPage, debouncedSearch, selectedCountry, selectedGrade]);
+
+  const { data: apiResponse, isLoading } = useStudents(studentsQueryParams);
 
   const rawData: any = apiResponse?.data.studentsData;
   const studentsList: Student[] = Array.isArray(rawData) ? rawData : (rawData?.students || rawData?.data || []);
+  const pagination = apiResponse?.data?.pagination;
+  const totalItems = pagination?.totalItems ?? 0;
+  const totalPages = pagination?.totalPages ?? 1;
   const { mutateAsync: createStudent } = useCreateStudent();
   const { mutateAsync: updateStudent } = useUpdateStudent();
   const { mutateAsync: deleteStudent } = useDeleteStudent();
@@ -44,7 +64,7 @@ export default function Students() {
     {
       id: 'total',
       label: t('totalStudents'),
-      value: studentsList.length,
+      value: totalItems,
       icon: Users,
       bgColor: 'bg-primary-50',
       iconColor: 'text-blue-600',
@@ -92,27 +112,10 @@ export default function Students() {
     { id: 'saudi', label: t('saudiArabia'), labelEn: 'Saudi Arabia' },
   ];
 
-  const filteredStudents = useMemo(() => {
-    return studentsList.filter(student => {
-      const matchesSearch =
-        student.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.user.phone?.includes(searchTerm);
-
-      const matchesGrade = selectedGrade === 'all' || student.planId === selectedGrade;
-      const matchesCountry = selectedCountry === 'all' || student.country === selectedCountry;
-
-      return matchesSearch && matchesGrade && matchesCountry;
-    });
-  }, [studentsList, searchTerm, selectedGrade, selectedCountry]);
-
-  const totalPages = useMemo(() => Math.ceil((filteredStudents?.length || 0) / itemsPerPage), [filteredStudents, itemsPerPage]);
-
-  const currentStudents = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredStudents?.slice(startIndex, endIndex);
-  }, [filteredStudents, currentPage, itemsPerPage]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedGrade, selectedCountry]);
 
 
   const handlePageChange = (page: number) => {
@@ -127,6 +130,16 @@ export default function Students() {
   const handleEditStudent = (student: Student) => {
     setSelectedStudent(student);
     setIsEditModalOpen(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedStudent(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedStudent(null);
   };
 
   const handleDeleteStudent = async (studentId: string) => {
@@ -267,7 +280,7 @@ export default function Students() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {currentStudents.length === 0 ? (
+                {studentsList.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
                       <div className="flex flex-col items-center gap-2">
@@ -277,7 +290,7 @@ export default function Students() {
                     </td>
                   </tr>
                 ) : (
-                  currentStudents.map((student) => (
+                  studentsList.map((student) => (
                     <tr key={student.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -364,13 +377,15 @@ export default function Students() {
               </tbody>
             </table>
           </div>
+
+          
         )}
 
         {!isLoading && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={filteredStudents.length}
+            totalItems={totalItems}
             itemsPerPage={itemsPerPage}
             onPageChange={handlePageChange}
           />
@@ -395,7 +410,6 @@ export default function Students() {
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
 
-            // Only include planId if it's a valid GUID string (not empty)
             if (studentData.plan && studentData.plan.trim() !== "") {
               payload.planId = studentData.plan;
             }
@@ -405,6 +419,7 @@ export default function Students() {
             }
             await createStudent(payload);
             setIsAddModalOpen(false);
+            setSelectedStudent(null);
           } catch (error) {
             console.error('Error adding student:', error);
             // Detailed error is handled by axios interceptor
@@ -414,13 +429,13 @@ export default function Students() {
 
       <ViewStudentModal
         isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
+        onClose={handleCloseViewModal}
         studentData={selectedStudent}
       />
 
       <EditStudentModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={handleCloseEditModal}
         studentData={
           selectedStudent
             ? {
@@ -433,6 +448,7 @@ export default function Students() {
               status: (selectedStudent.status || 'pending') as any,
               gender: selectedStudent.gender || 'male',
               plan: selectedStudent.planId || '',
+              password: '',
               birthDate: selectedStudent.birth_date ? selectedStudent.birth_date.split('T')[0] : '',
             }
             : null
@@ -462,6 +478,7 @@ export default function Students() {
             }
             await updateStudent({ id: updatedData.id, data: payload });
             setIsEditModalOpen(false);
+            setSelectedStudent(null);
           } catch (error) {
             console.error('Error updating student:', error);
             // Detailed error is handled by axios interceptor

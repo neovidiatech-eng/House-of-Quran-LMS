@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Users, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -9,6 +9,7 @@ import { CustomCheckbox } from '../ui/CustomCheckbox';
 import { useCurrency } from '../../features/admin/hooks/useCurrency';
 import { useMemo } from 'react';
 import { useSubjects } from '../../features/admin/hooks/useSubjects';
+import { GetCountries } from 'react-country-state-city';
 
 interface AddTeacherModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface AddTeacherModalProps {
 export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeacherModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
+  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]);
   const { data: currenciesData } = useCurrency();
   const { data: subjectsData, isLoading: isLoadingSubjects, error, isError } = useSubjects();
 
@@ -28,6 +30,7 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
       name: '',
       email: '',
       phone: '',
+      phone_code: '+20',
       password: '',
       hourlyRate: 0,
       currency: '',
@@ -45,6 +48,14 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
       label: language === 'ar' ? `${c.name_ar} (${c.symbol})` : `${c.name_en} (${c.code})`
     }));
   }, [currenciesData, language]);
+
+  useEffect(() => {
+    GetCountries()
+      .then((data) => {
+        if (data?.length) setCountryCodes(data);
+      })
+      .catch(() => setCountryCodes([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]));
+  }, []);
 
   const handleOnSubmit = (data: TeacherFormData) => {
     onSubmit({
@@ -79,6 +90,21 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
     { id: 'active', label: 'نشط', labelEn: 'Active' },
     { id: 'inactive', label: 'غير نشط', labelEn: 'Inactive' },
   ];
+
+  const uniqueCountryCodes = Array.from(
+    new Map(countryCodes.map((c) => [`+${c.phone_code}`, c])).values()
+  );
+  const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
+  const countryCodeOptions = uniqueCountryCodes.map((c) => ({
+    value: `+${c.phone_code}`,
+    searchText: `${displayNames.of(c.iso2) || c.name} +${c.phone_code}`,
+    label: (
+      <div className="flex justify-between items-center w-full">
+        <span className="font-mono">+{c.phone_code}</span>
+        <span className="text-gray-500 text-xs">{displayNames.of(c.iso2) || c.name}</span>
+      </div>
+    ),
+  }));
 
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -130,9 +156,8 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
               </div>
             </div>
 
-            {/* Row 2: Password and Phone */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Password */}
+            {/* Row 2: Password */}
+            <div className="grid grid-cols-1 gap-4">
               <div className="text-start relative">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('password')} *
@@ -152,15 +177,27 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
                 </div>
                 {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
               </div>
+            </div>
 
-              {/* Phone */}
+            {/* Row 3: Country Code and Phone */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Controller
+                name="phone_code"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    label={t('countryCode')}
+                    value={field.value}
+                    options={countryCodeOptions}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
               <div className="text-start">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('phone')} *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('phone')} *</label>
                 <input
                   type="tel"
-                  placeholder="+2012345678"
+                  placeholder="123456789"
                   {...register('phone')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
                   dir="ltr"
@@ -169,7 +206,7 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
               </div>
             </div>
 
-            {/* Row 3: Hourly Rate and Currency */}
+            {/* Row 4: Hourly Rate and Currency */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Currency */}
               <Controller

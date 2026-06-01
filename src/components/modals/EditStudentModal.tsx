@@ -1,5 +1,5 @@
 import { X, GraduationCap } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
 import DatePickerField from '../ui/DatePickerField';
@@ -7,12 +7,15 @@ import { StudentFormData, getStudentSchema } from '../../lib/schemas/StudentSche
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePlans } from '../../features/admin/hooks/usePlans';
+import { GetCountries } from 'react-country-state-city';
+
+type EditStudentFormData = Omit<StudentFormData, 'password'> & { password?: string };
 
 interface EditStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (studentData: StudentFormData & { id: string }) => void;
-  studentData: StudentFormData & { id: string } | null;
+  onSubmit: (studentData: EditStudentFormData & { id: string }) => void;
+  studentData: (EditStudentFormData & { id: string }) | null;
 }
 
 export default function EditStudentModal({
@@ -23,9 +26,10 @@ export default function EditStudentModal({
 }: EditStudentModalProps) {
   const { language, t } = useLanguage();
   const { data: plansData } = usePlans();
+  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]);
 
-  const { control, handleSubmit, register, reset, formState: { errors } } = useForm<StudentFormData>({
-    resolver: zodResolver(getStudentSchema(t)),
+  const { control, handleSubmit, register, reset, formState: { errors } } = useForm<EditStudentFormData>({
+    resolver: zodResolver(getStudentSchema(t).omit({ password: true })),
     defaultValues: studentData || undefined,
   });
 
@@ -35,31 +39,32 @@ export default function EditStudentModal({
     }
   }, [isOpen, studentData, reset]);
 
+  useEffect(() => {
+    GetCountries()
+      .then((data) => {
+        if (data?.length) setCountryCodes(data);
+      })
+      .catch(() => setCountryCodes([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]));
+  }, []);
+
   if (!isOpen || !studentData) return null;
 
 
-  const handleEditSubmit = (data: StudentFormData) => {
-    const cleanedData = { ...data };
-    if (!cleanedData.password) {
-      delete cleanedData.password;
-    }
-
-    onSubmit({ ...cleanedData, id: studentData!.id });
+  const handleEditSubmit = (data: EditStudentFormData) => {
+    onSubmit({ ...data, id: studentData.id });
     onClose();
   };
-  const countryCodes = [
-    { code: '+20', country: 'مصر', countryEn: 'Egypt' },
-    { code: '+966', country: 'السعودية', countryEn: 'Saudi Arabia' },
-    { code: '+971', country: 'الإمارات', countryEn: 'UAE' },
-    { code: '+965', country: 'الكويت', countryEn: 'Kuwait' },
-  ];
+  const uniqueCountryCodes = Array.from(
+    new Map(countryCodes.map((c) => [`+${c.phone_code}`, c])).values()
+  );
+  const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
 
-  const countryCodeOptions = countryCodes.map((c) => ({
-    value: c.code,
+  const countryCodeOptions = uniqueCountryCodes.map((c) => ({
+    value: `+${c.phone_code}`,
     label: (
       <div className="flex justify-between items-center w-full" dir="ltr">
-        <span className="font-mono">{c.code}</span>
-        <span className="text-gray-500 text-xs">{language === 'ar' ? c.country : c.countryEn}</span>
+        <span className="font-mono">+{c.phone_code}</span>
+        <span className="text-gray-500 text-xs">{displayNames.of(c.iso2) || c.name}</span>
       </div>
     ),
   }));

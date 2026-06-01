@@ -2,8 +2,25 @@ import api from "../../../lib/axios";
 import { Student, StudentsFetchResponse } from "../../../types/student";
 import { StudentFormData } from "../../../lib/schemas/StudentSchema";
 
-export const getStudents = async (): Promise<StudentsFetchResponse> => {
-  const response = await api.get("/students");
+export interface GetStudentsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  country?: string;
+  planId?: string;
+}
+
+export const getStudents = async (params: GetStudentsParams = {}): Promise<StudentsFetchResponse> => {
+  const { page = 1, limit = 7, search, country, planId } = params;
+
+  const queryParams: Record<string, string | number> = { page, limit };
+  if (search) queryParams.search = search;
+  if (country && country !== "all") queryParams.country = country;
+  if (planId && planId !== "all") queryParams.planId = planId;
+
+  const response = await api.get("/students", {
+    params: queryParams
+  });
   return response.data;
 };
 

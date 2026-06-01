@@ -15,7 +15,13 @@ export const getRegisterSchema = (t: (key: string, options?: any) => string) =>
       .refine((val) => val !== "", { message: t("validation.required") }),
     gender: z.string().min(1, t("validation.required")),
     country: z.string().min(1, t("validation.required")),
-    password: z.string().min(8, t("validation.min", { count: 8 })),
+    password: z
+  .string()
+  .min(8, t("validation.passwordMin", { count: 8 }))
+  .regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+    t("validation.passwordComplex")
+  ),
     plan_id: z.string().min(1, t("validation.required")),
     timezone: z.string().optional(),
   });

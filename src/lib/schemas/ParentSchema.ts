@@ -6,7 +6,13 @@ export const getParentSchema = (t: TFunc) => z.object({
   name: z.string().min(3, t("validation.min", { count: 3 })),
   email: z.string().email(t("validation.email")),
   phone: z.string().min(8, t("validation.min", { count: 8 })),
-  password: z.string().min(6, t("validation.min", { count: 6 })),
+ password: z
+  .string()
+  .min(8, t("validation.passwordMin", { count: 8 }))
+  .regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+    t("validation.passwordComplex")
+  ),
   codeCountry: z.string().default("+20"),
   country: z.string().default("Egypt"),
   timezone: z.string().optional(),

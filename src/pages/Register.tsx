@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -19,6 +19,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRegisterSchema, RegisterInput } from "../lib/schemas/RegisterSchema";
 import { register as registerService } from "../services/AuthServices";
+import { GetCountries } from "react-country-state-city";
 
 interface RegisterProps {
   onRegisterSuccess: () => void;
@@ -28,6 +29,7 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
+  const [countryCodes, setCountryCodes] = useState<Array<{ value: string; label: string; country: string }>>([{ value: "+20", label: "Egypt (+20)", country: "Egypt" }]);
   const { data: plansData } = usePlans();
 
   const {
@@ -66,13 +68,27 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
     { value: "male", label: t("male") },
     { value: "female", label: t("female") },
   ];
-
-  const countryCodes = [
-    { value: "+20", label: "+20", country: "مصر", countryEn: "Egypt" },
-    { value: "+966", label: "+966", country: "السعودية", countryEn: "Saudi Arabia" },
-    { value: "+971", label: "+971", country: "الإمارات", countryEn: "UAE" },
-    { value: "+965", label: "+965", country: "الكويت", countryEn: "Kuwait" },
-  ];
+  useEffect(() => {
+    const displayNames = new Intl.DisplayNames([language === "ar" ? "ar" : "en"], { type: "region" });
+    GetCountries()
+      .then((data) => {
+        if (!data?.length) return;
+        const uniqueCodes = Array.from(
+          new Map(
+            data.map((item) => [
+              `+${item.phone_code}`,
+              {
+                value: `+${item.phone_code}`,
+                label: `${displayNames.of(item.iso2) || item.name} (+${item.phone_code})`,
+                country: displayNames.of(item.iso2) || item.name,
+              },
+            ])
+          ).values()
+        );
+        setCountryCodes(uniqueCodes);
+      })
+      .catch(() => setCountryCodes([{ value: "+20", label: "Egypt (+20)", country: "Egypt" }]));
+  }, [language]);
 
   const onSubmit = async (data: RegisterInput) => {
     try {
@@ -191,7 +207,7 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
                     <Select
                       {...field}
                       options={countryCodes}
-                      className="h-12 w-24 text-slate-600 font-medium"
+                      className="h-12 w-44 text-slate-600 font-medium"
                     />
                   )}
                 />
@@ -383,3 +399,4 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
     </ConfigProvider>
   );
 }
+
