@@ -30,6 +30,7 @@ export interface ParentUser {
     id: string;
     name: string;
     email: string;
+    password:string;
     phone: string;
     country: string;
     codeCountry: string;

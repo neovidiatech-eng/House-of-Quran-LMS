@@ -29,6 +29,7 @@ export interface Teacher {
         id: string;
         email: string;
         name: string;
+        password:string;
         phone: string;
         code_country: string;
         status: string;

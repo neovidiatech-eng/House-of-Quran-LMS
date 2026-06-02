@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Eye, Pencil, Trash2, Plus } from 'lucide-react';
+import { Search, Eye, Pencil, Trash2, Plus, Check, Copy } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import AddUserModal from '../../../components/modals/AddUserModal';
 import EditUserModal from '../../../components/modals/EditUserModal';
@@ -18,6 +18,7 @@ const toModalUser = (item: StuffItem) => ({
   name: item.user.name,
   email: item.user.email,
   phone: item.user.phone,
+  password: item.user.password || '',
   countryCode: item.user.code_country || '+20',
   role: item.role?.name || '',
   status: (item.user.status as 'active' | 'inactive') || 'active',
@@ -34,6 +35,8 @@ export default function Users() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<ModalUser | null>(null);
+    const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
+
   const itemsPerPage = 7;
 
   // ── API hooks ──────────────────────────────────────────────────────────
@@ -105,6 +108,12 @@ export default function Users() {
     }
   };
 
+    const handleCopyPassword = (userId: string, password: string) => {
+    navigator.clipboard.writeText(password);
+    setCopiedPasswordId(userId);
+    setTimeout(() => setCopiedPasswordId(null), 2000);
+  };
+
   const handleViewUser = (user: ModalUser) => {
     setSelectedUser(user);
     setIsViewModalOpen(true);
@@ -167,6 +176,8 @@ export default function Users() {
                 <tr>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('name')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('email')}</th>
+                                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('password')}</th>
+
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('phone')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('role')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('status')}</th>
@@ -204,6 +215,24 @@ export default function Users() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-600">{user.email}</span>
+                      </td>
+                          <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 group">
+                          <span className="text-sm text-gray-600">{user.password || '-'}</span>
+                          {user.password && (
+                            <button
+                              onClick={() => handleCopyPassword(user.id, user.password)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                              title={t('copy')}
+                            >
+                              {copiedPasswordId === user.id ? (
+                                <Check className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Copy className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <WhatsAppPhone

@@ -22,7 +22,7 @@ export interface StuffItem {
 export interface User {
     id: string;
     email: string;
-    password?: string; // Optional if you don't always want to expose the hash
+    password: string; // Optional if you don't always want to expose the hash
     name: string;
     phone: string;
     provider: string;

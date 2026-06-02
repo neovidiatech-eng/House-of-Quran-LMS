@@ -14,6 +14,7 @@ export interface Parent {
   id: string;
   name: string;
   email: string;
+  password:string;
   phone: string;
   code_country: string;
   status: string;

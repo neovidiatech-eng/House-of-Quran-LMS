@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, Edit2, Trash2 } from 'lucide-react';
+import { Search, Plus, Eye, Edit2, Trash2, Check, Copy } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import AddParentModal from '../../../components/modals/AddParentModal';
 import EditParentModal from '../../../components/modals/EditParentModal';
@@ -19,6 +19,8 @@ export default function Parents() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
+      const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const { confirm, ConfirmDialog } = useConfirm();
   const itemsPerPage = 7;
@@ -37,6 +39,12 @@ const parents = parentsData?.data?.parents || [];
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentParents = filteredParents.slice(startIndex, endIndex);
+
+   const handleCopyPassword = (userId: string, password: string) => {
+    navigator.clipboard.writeText(password);
+    setCopiedPasswordId(userId);
+    setTimeout(() => setCopiedPasswordId(null), 2000);
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -118,13 +126,16 @@ const parents = parentsData?.data?.parents || [];
     search: { ar: 'البحث بالاسم أو البريد الإلكتروني...', en: 'Search by name or email...' },
     parentName: { ar: 'ولي الأمر', en: 'Parent Name' },
     email: { ar: 'البريد الإلكتروني', en: 'Email' },
+    password: { ar: 'كلمة المرور', en: 'Password' },
     phone: { ar: 'الهاتف', en: 'Phone' },
     children: { ar: 'عدد الأبناء', en: 'Number of Children' },
     actions: { ar: 'الإجراءات', en: 'Actions' },
     showing: { ar: 'الصفحة 1 من 1 / إجمالي', en: 'Showing 1 of 1 / Total' },
     previous: { ar: 'السابق', en: 'Previous' },
     next: { ar: 'التالي', en: 'Next' },
-    students: { ar: 'طالب', en: 'students' }
+    students: { ar: 'طالب', en: 'students' },
+    copy: { ar: 'نسخ كلمة المرور', en: 'Copy Password' },
+
   };
 
   return (
@@ -165,6 +176,7 @@ const parents = parentsData?.data?.parents || [];
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.email[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.phone[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.children[language]}</th>
+                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.password[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.actions[language]}</th>
               </tr>
             </thead>
@@ -180,6 +192,24 @@ const parents = parentsData?.data?.parents || [];
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-700 text-start">{parent.email}</td>
+                  <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 group">
+                          <span className="text-sm text-gray-600">{parent.password || '-'}</span>
+                          {parent.password && (
+                            <button
+                              onClick={() => handleCopyPassword(parent.id, parent.password)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                              title={text.copy[language]}
+                            >
+                              {copiedPasswordId === parent.id ? (
+                                <Check className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Copy className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </td>       
                   <td className="px-6 py-4 text-gray-700 text-start">{parent.phone}</td>
                   <td className="px-6 py-4 text-start">
                     <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary-light text-white rounded-full text-sm font-medium">

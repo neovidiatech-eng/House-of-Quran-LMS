@@ -3,7 +3,12 @@ import { z } from "zod";
 export const getLoginSchema = (t: (key: string, options?: any) => string) => z.object({
   email: z.string()
     .min(1, t("validation.required"))
-    .email(t("validation.email")),
+    .email(t("validation.emailOrPhoneInvalid")).or(
+      z.string()
+        .min(7, t("validation.min", { count: 7 }))
+        .max(15, t("validation.max", { count: 15 }))
+        .regex(/^[0-9]+$/, t("validation.emailOrPhoneInvalid"))
+    ),
  password: z
   .string()
   .min(8, t("validation.passwordMin", { count: 8 }))
