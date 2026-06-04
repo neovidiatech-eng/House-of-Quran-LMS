@@ -206,7 +206,7 @@ export default function ViewSubscriptionDetailsModal({
               </div>
                <div className="bg-white rounded-lg p-4 border border-blue-200">
                 <p className="text-sm text-gray-600 mb-1">{text.scheduledSoon[language]}</p>
-                <p className="text-2xl font-bold text-blue-600">{subscription.totalSessions - subscription.attendedSessions}</p>
+                <p className="text-2xl font-bold text-blue-600">{subscription.totalSessions - subscription.sessionsRemaining}</p>
               </div>
               <div className="bg-white rounded-lg p-4 border border-yellow-200">
                 <p className="text-sm text-gray-600 mb-1">{text.rating[language]}</p>

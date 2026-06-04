@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import { Search , Eye, CreditCard } from "lucide-react";
+import { Search, Eye, CreditCard } from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Pagination from "../../../components/ui/Pagination";
 import ViewSubscriptionDetailsModal from "../../../components/modals/ViewSubscriptionDetailsModal";
 import CustomSelect from "../../../components/ui/CustomSelect";
 import { TableSkeleton } from "../../../components/ui/CustomSkeleton";
-import { useSubscription } from "../hooks/useSubscription";
+import { useRenewSubscription, useSubscription } from "../hooks/useSubscription";
 import { SubscriptionData } from "../../../types/subscription";
 import WhatsAppPhone from "../../../components/ui/WhatsAppPhone";
 
@@ -48,6 +48,16 @@ export default function AllSubscriptions() {
   const itemsPerPage = 10;
 
   const { data, isLoading } = useSubscription();
+  const { mutate: renewSubscription } = useRenewSubscription();
+
+  const handleRenew = (id: string) => {
+    const originalSub = data?.find((s: SubscriptionData) => s.id === id);
+    if (!originalSub) return;
+    renewSubscription({
+      studentId: originalSub.student.id,
+      plan_id: originalSub.plan.id,
+    });
+  };
 
   const text = {
     title: { ar: "كل الاشتراكات", en: "All Subscriptions" },
@@ -161,10 +171,10 @@ export default function AllSubscriptions() {
     }
   };
 
- const calculateProgress = (attended: number, total: number) => {
-  if (total === 0) return 0;
-  return (attended / total) * 100;
-};
+  const calculateProgress = (attended: number, total: number) => {
+    if (total === 0) return 0;
+    return (attended / total) * 100;
+  };
 
   const handleView = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
@@ -382,7 +392,17 @@ export default function AllSubscriptions() {
                         >
                           <Eye className="w-5 h-5" />
                         </button>
-                      
+
+                        {subscription.sessionsRemaining === 0 && (
+                          <button
+                            onClick={() => handleRenew(subscription.id)}
+                            className="p-2 bg-primary text-sm text-white rounded-lg hover:bg-green-200 transition"
+                            title="Renew Subscription"
+                          >
+                            Renew Subscription
+                          </button>
+                        )}
+
                       </div>
                     </td>
                   </tr>
