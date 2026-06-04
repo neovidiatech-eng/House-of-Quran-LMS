@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -19,7 +19,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getRegisterSchema, RegisterInput } from "../lib/schemas/RegisterSchema";
 import { register as registerService } from "../services/AuthServices";
-import { GetCountries } from "react-country-state-city";
+import { DEFAULT_COUNTRIES } from "../consts";
 
 interface RegisterProps {
   onRegisterSuccess: () => void;
@@ -29,7 +29,6 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
-  const [countryCodes, setCountryCodes] = useState<Array<{ value: string; label: string; country: string }>>([{ value: "+20", label: "Egypt (+20)", country: "Egypt" }]);
   const { data: plansData } = usePlans();
 
   const {
@@ -57,38 +56,40 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
 
   const selectedPackage = watch("plan_id");
 
-  const countries = [
-    { value: "egypt", label: t("egypt") },
-    { value: "saudi", label: t("saudiArabia") },
-    { value: "uae", label: t("uae") },
-    { value: "kuwait", label: t("kuwait") },
-  ];
+
 
   const genders = [
     { value: "male", label: t("male") },
     { value: "female", label: t("female") },
   ];
-  useEffect(() => {
-    const displayNames = new Intl.DisplayNames([language === "ar" ? "ar" : "en"], { type: "region" });
-    GetCountries()
-      .then((data) => {
-        if (!data?.length) return;
-        const uniqueCodes = Array.from(
-          new Map(
-            data.map((item) => [
-              `+${item.phone_code}`,
-              {
-                value: `+${item.phone_code}`,
-                label: `${displayNames.of(item.iso2) || item.name} (+${item.phone_code})`,
-                country: displayNames.of(item.iso2) || item.name,
-              },
-            ])
-          ).values()
-        );
-        setCountryCodes(uniqueCodes);
-      })
-      .catch(() => setCountryCodes([{ value: "+20", label: "Egypt (+20)", country: "Egypt" }]));
-  }, [language]);
+
+  const displayNames = new Intl.DisplayNames(
+  [language === "ar" ? "ar" : "en"],
+  { type: "region" }
+);
+
+const countries = DEFAULT_COUNTRIES.map((country) => ({
+  value: country.name,
+  label: `${country.emoji} ${displayNames.of(country.iso2) || country.name}`,
+}));
+
+
+const countryCodes = Array.from(
+  new Map(
+    DEFAULT_COUNTRIES.map((country) => [
+      `+${country.phone_code}`,
+      {
+        value: `+${country.phone_code}`,
+        label: `${country.emoji} ${
+          displayNames.of(country.iso2) || country.name
+        } (+${country.phone_code})`,
+        country: displayNames.of(country.iso2) || country.name,
+      },
+    ])
+  ).values()
+);
+
+
 
   const onSubmit = async (data: RegisterInput) => {
     try {

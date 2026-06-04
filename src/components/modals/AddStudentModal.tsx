@@ -60,12 +60,6 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
     { value: 'female', label: t('female') },
   ];
 
-  const countryOptions = [
-    { value: 'egypt', label: t('egypt') },
-    { value: 'saudi', label: t('saudiArabia') },
-    { value: 'uae', label: t('uae') },
-    { value: 'kuwait', label: t('kuwait') },
-  ];
 
   const statusOptions = [
     { value: 'approved', label: t('active') },
@@ -82,6 +76,16 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
   const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
 
 
+
+const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
+  value: country.iso2,
+  label: (
+    <div className="flex items-center gap-2">
+      <span>{country.emoji}</span>
+      <span>{displayNames.of(country.iso2) || country.name}</span>
+    </div>
+  ),
+}));
 
   const countryCodeOptions = uniqueCountryCodes.map((c) => ({
     value: `+${c.phone_code}`,
