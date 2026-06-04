@@ -42,7 +42,7 @@ import { TeacherSubject } from '../../types/teachers';
 interface AddSessionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (data: any) => void;
+  onAdd: (data: any) => Promise<void>;
 }
 
 const DAYS: DayOfWeek[] = [
@@ -314,14 +314,14 @@ export default function AddSessionModal({
     };
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     if (sessionsExceedRemaining) {
       setSessionsLimitError(sessionsLimitMessage);
       return;
     }
 
     if (schedulingMode === 'single') {
-      onAdd(data as SessionFormData);
+      await onAdd(data as SessionFormData);
     } else {
       const batchData: MultipleSessionsPayload = {
         formData: data as MultipleSessionsFormData,
@@ -338,7 +338,7 @@ export default function AddSessionModal({
         })),
       };
 
-      onAdd(batchData);
+      await onAdd(batchData);
     }
 
     reset();

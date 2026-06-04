@@ -140,6 +140,7 @@ export default function Plans() {
       setSelectedPlan(null);
     } catch (error) {
       console.log(error);
+      throw error;
     }
   };
 

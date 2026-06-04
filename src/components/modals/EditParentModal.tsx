@@ -11,7 +11,7 @@ import { useStudents } from '../../features/admin/hooks/useStudents';
 interface EditParentModalProps {
   parent: Parent;
   onClose: () => void;
-  onSubmit: (parentData: ParentFormData) => void;
+  onSubmit: (parentData: ParentFormData) => Promise<void>;
 }
 
 export default function EditParentModal({
@@ -63,8 +63,8 @@ export default function EditParentModal({
     }
   }, [parent, reset]);
 
-  const handleOnSubmit = (data: ParentFormData) => {
-    onSubmit({
+  const handleOnSubmit = async (data: ParentFormData) => {
+    await onSubmit({
       ...data,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });

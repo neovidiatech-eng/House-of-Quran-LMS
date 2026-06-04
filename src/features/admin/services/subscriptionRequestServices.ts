@@ -52,4 +52,4 @@ export const changeSubscriptionRequestStatus = async (
   }
 };
 
-// https://github.com/neovidiatech-eng/lms_front
+// https://github.com/House of Qurantech-eng/lms_front

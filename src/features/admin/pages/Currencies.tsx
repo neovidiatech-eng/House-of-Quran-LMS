@@ -24,8 +24,8 @@ export default function Currencies() {
   }, [searchQuery]);
 
   const { data, isError, error, isLoading, isFetching } = useCurrency(debouncedSearch);
-  const { mutate: addCurrency } = useAddCurrency();
-  const { mutate: updateCurrency } = useUpdateCurrency();
+  const { mutateAsync: addCurrency } = useAddCurrency();
+  const { mutateAsync: updateCurrency } = useUpdateCurrency();
   const { mutate: deleteCurrency } = useDeleteCurrency();
   const { data: currencyDetails } = useCurrencyById(selectedCurrency?.id);
 
@@ -54,13 +54,13 @@ export default function Currencies() {
 
   const currencies = data?.currencies ?? [];
 
-  const handleSaveCurrency = (formData: CurrencyFormData & { id?: string }) => {
+  const handleSaveCurrency = async (formData: CurrencyFormData & { id?: string }) => {
     if (formData.id) {
       const { id, ...rest } = formData;
-      updateCurrency({ id, data: rest });
+      await updateCurrency({ id, data: rest });
     } else {
       const { id: _id, ...rest } = formData as CurrencyFormData & { id?: string };
-      addCurrency(rest as Omit<Currency, 'id' | 'createdAt' | 'updatedAt'>);
+      await addCurrency(rest as Omit<Currency, 'id' | 'createdAt' | 'updatedAt'>);
     }
     setShowAddModal(false);
     setSelectedCurrency(null);

@@ -6,7 +6,7 @@ import { UserFormData, getUserSchema } from '../../lib/schemas/UserSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useRoles } from '../../features/admin/hooks/useRoles';
-import { GetCountries } from 'react-country-state-city';
+import { DEFAULT_COUNTRIES } from '../../consts/countries';
 // import { CustomCheckbox } from '../ui/CustomCheckbox';
 //import { usePermissions } from '../../hooks/usePermissions';
 
@@ -14,13 +14,10 @@ import { GetCountries } from 'react-country-state-city';
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (userData: UserFormData & { id: string }) => void;
+  onSubmit: (userData: UserFormData & { id: string }) => Promise<void>;
   userData: UserFormData & { id: string };
 }
 // Static permission list removed in favor of dynamic fetching
-
-
-const fallbackPhoneCodes = [{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }];
 
 export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: EditUserModalProps) {
   const { language, t } = useLanguage();
@@ -51,19 +48,9 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(fallbackPhoneCodes);
+  const [countryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(DEFAULT_COUNTRIES);
   const { data: rolesData } = useRoles();
   const dynamicRoles = rolesData?.data || [];
-
-  useEffect(() => {
-    GetCountries()
-      .then((data) => {
-        if (data?.length) setCountryCodes(data);
-      })
-      .catch(() => setCountryCodes(fallbackPhoneCodes));
-  }, []);
-
-
 
   useEffect(() => {
     if (userData && isOpen) {
@@ -73,13 +60,16 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
 
   if (!isOpen) return null;
 
-  const onFormSubmit = (data: UserFormData) => {
-    onSubmit({
-      ...data,
-      id: userData.id,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    });
-    onClose();
+  const onFormSubmit = async (data: UserFormData) => {
+    try {
+      await onSubmit({
+        ...data,
+        id: userData.id,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const uniqueCountryCodes = Array.from(

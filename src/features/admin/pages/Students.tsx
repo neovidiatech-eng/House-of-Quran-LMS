@@ -30,8 +30,7 @@ export default function Students() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-    const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
-
+  const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
   const itemsPerPage = 7;
 
   useEffect(() => {
@@ -120,12 +119,13 @@ export default function Students() {
   }, [debouncedSearch, selectedGrade, selectedCountry]);
 
 
-
  const handleCopyPassword = (userId: string, password: string) => {
     navigator.clipboard.writeText(password);
     setCopiedPasswordId(userId);
     setTimeout(() => setCopiedPasswordId(null), 2000);
   };
+
+
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -268,12 +268,13 @@ export default function Students() {
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('studentInfo')}
                   </th>
-                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('password')}
                   </th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('phone')}
                   </th>
+
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('plan')}
                   </th>
@@ -317,7 +318,7 @@ export default function Students() {
                           </div>
                         </div>
                       </td>
-                       <td className="px-6 py-4">
+                         <td className="px-6 py-4">
                         <div className="flex items-center gap-2 group">
                           <span className="text-sm text-gray-600">{student.user?.password || '-'}</span>
                           {student.user?.password && (
@@ -335,7 +336,7 @@ export default function Students() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-start">
+                          <td className="px-6 py-4 text-start">
                         <WhatsAppPhone
                           phone={`${student.user.code_country} ${student.user.phone}`}
                           className="text-sm text-gray-900"
@@ -453,6 +454,7 @@ export default function Students() {
           } catch (error) {
             console.error('Error adding student:', error);
             // Detailed error is handled by axios interceptor
+            throw error;
           }
         }}
       />
@@ -512,6 +514,7 @@ export default function Students() {
           } catch (error) {
             console.error('Error updating student:', error);
             // Detailed error is handled by axios interceptor
+            throw error;
           }
         }}
       />

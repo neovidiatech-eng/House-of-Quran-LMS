@@ -53,6 +53,7 @@ export default function Sessions() {
       setSelectedSession(null);
     } catch (error) {
       console.error("Update session failed:", error);
+      throw error;
     }
   };
 
@@ -131,6 +132,7 @@ export default function Sessions() {
       setShowAddModal(false);
     } catch (error) {
       console.error("Add session failed:", error);
+      throw error;
     }
   };
 

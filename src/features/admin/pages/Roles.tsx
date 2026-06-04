@@ -19,7 +19,7 @@ export default function Roles() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRole, setSelectedRole] = useState<any>(null);
     const { data: roles, isLoading } = useSearchRoles(debouncedSearch);
-    const { mutate: addRole, isPending: isAdding } = useAddRole();
+    const { mutateAsync: addRole, isPending: isAdding } = useAddRole();
     const { mutate: updateRole, isPending: isUpdating } = useUpdateRole();
     const { mutate: deleteRole } = useDeleteRole();
     const { mutateAsync: assignPermissions } = useAddPermissionsToRole();
@@ -87,13 +87,11 @@ export default function Roles() {
                 setSelectedRole(null);
             } catch (error) {
                 console.error("Failed to update role permissions:", error);
+                throw error;
             }
         } else {
-            addRole({ name: data.name, permissionIds: data.permissionIds || [] }, {
-                onSuccess: () => {
-                    setIsModalOpen(false);
-                }
-            });
+            await addRole({ name: data.name, permissionIds: data.permissionIds || [] });
+            setIsModalOpen(false);
         }
     };
 

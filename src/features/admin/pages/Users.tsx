@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Eye, Pencil, Trash2, Plus, Check, Copy } from 'lucide-react';
+import { Search, Eye, Pencil, Trash2, Plus, Copy, Check } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import AddUserModal from '../../../components/modals/AddUserModal';
 import EditUserModal from '../../../components/modals/EditUserModal';
@@ -18,10 +18,10 @@ const toModalUser = (item: StuffItem) => ({
   name: item.user.name,
   email: item.user.email,
   phone: item.user.phone,
-  password: item.user.password || '',
   countryCode: item.user.code_country || '+20',
   role: item.role?.name || '',
   status: (item.user.status as 'active' | 'inactive') || 'active',
+  password: item.user.password || '',
   permissions: [] as string[],
 });
 
@@ -35,8 +35,7 @@ export default function Users() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<ModalUser | null>(null);
-    const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
-
+  const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
   const itemsPerPage = 7;
 
   // ── API hooks ──────────────────────────────────────────────────────────
@@ -54,8 +53,14 @@ export default function Users() {
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
-  const handleAddUser = (userData: UserFormData) => {
-    addStaff.mutate(
+  const handleCopyPassword = (userId: string, password: string) => {
+    navigator.clipboard.writeText(password);
+    setCopiedPasswordId(userId);
+    setTimeout(() => setCopiedPasswordId(null), 2000);
+  };
+
+  const handleAddUser = async (userData: UserFormData) => {
+    await addStaff.mutateAsync(
       {
         name: userData.name,
         email: userData.email,
@@ -63,7 +68,7 @@ export default function Users() {
         codeCountry: userData.countryCode,
         phone: userData.phone,
         roleId: userData.role,
-        timezone: userData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        // timezone: userData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       {
         onSuccess: () => {
@@ -73,8 +78,8 @@ export default function Users() {
     );
   };
 
-  const handleEditUser = (userData: UserFormData & { id: string }) => {
-    updateStaff.mutate(
+  const handleEditUser = async (userData: UserFormData & { id: string }) => {
+    await updateStaff.mutateAsync(
       {
         id: userData.id,
         staff: {
@@ -83,7 +88,7 @@ export default function Users() {
           codeCountry: userData.countryCode,
           phone: userData.phone,
           roleId: userData.role,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          // timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           ...(userData.password ? { password: userData.password } : {}),
         },
       },
@@ -106,12 +111,6 @@ export default function Users() {
         onSuccess: () => {},
       });
     }
-  };
-
-    const handleCopyPassword = (userId: string, password: string) => {
-    navigator.clipboard.writeText(password);
-    setCopiedPasswordId(userId);
-    setTimeout(() => setCopiedPasswordId(null), 2000);
   };
 
   const handleViewUser = (user: ModalUser) => {
@@ -176,8 +175,7 @@ export default function Users() {
                 <tr>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('name')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('email')}</th>
-                                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('password')}</th>
-
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('password')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('phone')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('role')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('status')}</th>
@@ -216,7 +214,7 @@ export default function Users() {
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-600">{user.email}</span>
                       </td>
-                          <td className="px-6 py-4">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-2 group">
                           <span className="text-sm text-gray-600">{user.password || '-'}</span>
                           {user.password && (

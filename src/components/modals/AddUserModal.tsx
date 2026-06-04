@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { X, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -6,7 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { UserFormData, getUserSchema } from '../../lib/schemas/UserSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRoles } from '../../features/admin/hooks/useRoles';
-import { GetCountries } from 'react-country-state-city';
+import { DEFAULT_COUNTRIES } from '../../consts/countries';
 // import { CustomCheckbox } from '../ui/CustomCheckbox';
 //import { usePermissions } from '../../hooks/usePermissions';
 
@@ -26,24 +26,12 @@ interface AddUserModalProps {
 
 // Static permission list removed in favor of dynamic fetching
 
-const fallbackPhoneCodes = [{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }];
-
-
-
 export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
-  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(fallbackPhoneCodes);
+  const [countryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(DEFAULT_COUNTRIES);
   const { data: rolesData } = useRoles();
   const dynamicRoles = rolesData?.data || [];
-
-  useEffect(() => {
-    GetCountries()
-      .then((data) => {
-        if (data?.length) setCountryCodes(data);
-      })
-      .catch(() => setCountryCodes(fallbackPhoneCodes));
-  }, []);
 
 
   // const { data: permsData } = usePermissions();

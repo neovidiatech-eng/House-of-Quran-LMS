@@ -8,7 +8,7 @@ interface EditSessionModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: Schedule | null;
-  onSave: (id: string, data: any) => void;
+  onSave: (id: string, data: any) => Promise<void>;
 }
 
 export default function EditSessionModal({ isOpen, onClose, session, onSave }: EditSessionModalProps) {
@@ -56,9 +56,9 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
 
   if (!isOpen || !session) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(session.id, {
+    await onSave(session.id, {
       title: formData.title,
       description: formData.description,
       link: formData.link,
@@ -75,7 +75,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
+    <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
       <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-[1000px] max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
         
         {/* Header */}
@@ -334,7 +334,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
           <button 
             type="submit"
             onClick={handleSubmit}
-            className="flex-1 px-8 py-3 bg-primary hover:bg-primary-700 text-white text-xs font-bold rounded-2xl transition-all shadow-[0_10px_20px_-5px_rgba(79,70,229,0.3)] active:scale-95"
+            className="flex-1 px-8 py-3 bg-primary hover:bg-primary text-white text-xs font-bold rounded-2xl transition-all shadow-[0_10px_20px_-5px_rgba(79,70,229,0.3)] active:scale-95"
           >
             {t('saveChanges')}
           </button>

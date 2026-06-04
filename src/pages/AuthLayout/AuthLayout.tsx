@@ -40,7 +40,7 @@ const AuthLayout = () => {
                 className="w-14 h-14 rounded-2xl object-cover border border-white/20 bg-white/10 p-1"
               />
               <div className="text-start">
-                <h2 className="text-2xl font-black tracking-wide">{academyNameAr}</h2>
+                <h2 className="text-2xl font-black tracking-wide">{t("academyName")}</h2>
                 <p className="text-xs text-white/70">{t("academySubtitle")}</p>
               </div>
             </div>

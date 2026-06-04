@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { X, Users, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -9,18 +9,18 @@ import { CustomCheckbox } from '../ui/CustomCheckbox';
 import { useCurrency } from '../../features/admin/hooks/useCurrency';
 import { useMemo } from 'react';
 import { useSubjects } from '../../features/admin/hooks/useSubjects';
-import { GetCountries } from 'react-country-state-city';
+import { DEFAULT_COUNTRIES } from '../../consts/countries';
 
 interface AddTeacherModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (teacherData: TeacherFormData) => void;
+  onSubmit: (teacherData: TeacherFormData) => Promise<void>;
 }
 
 export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeacherModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
-  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]);
+  const [countryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(DEFAULT_COUNTRIES);
   const { data: currenciesData } = useCurrency();
   const { data: subjectsData, isLoading: isLoadingSubjects, error, isError } = useSubjects();
 
@@ -49,16 +49,10 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
     }));
   }, [currenciesData, language]);
 
-  useEffect(() => {
-    GetCountries()
-      .then((data) => {
-        if (data?.length) setCountryCodes(data);
-      })
-      .catch(() => setCountryCodes([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]));
-  }, []);
 
-  const handleOnSubmit = (data: TeacherFormData) => {
-    onSubmit({
+
+  const handleOnSubmit = async (data: TeacherFormData) => {
+    await onSubmit({
       ...data,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });

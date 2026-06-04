@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, Edit2, Trash2, Check, Copy } from 'lucide-react';
+import { Search, Plus, Eye, Edit2, Trash2, Copy, Check } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import AddParentModal from '../../../components/modals/AddParentModal';
 import EditParentModal from '../../../components/modals/EditParentModal';
@@ -19,8 +19,8 @@ export default function Parents() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
-      const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
-
+    const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const { confirm, ConfirmDialog } = useConfirm();
   const itemsPerPage = 7;
@@ -40,12 +40,6 @@ const parents = parentsData?.data?.parents || [];
   const endIndex = startIndex + itemsPerPage;
   const currentParents = filteredParents.slice(startIndex, endIndex);
 
-   const handleCopyPassword = (userId: string, password: string) => {
-    navigator.clipboard.writeText(password);
-    setCopiedPasswordId(userId);
-    setTimeout(() => setCopiedPasswordId(null), 2000);
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -54,6 +48,14 @@ const parents = parentsData?.data?.parents || [];
   const { mutateAsync: deleteParentMutate } = useDeleteParent();
   const { mutateAsync: updateParentMutate } = useUpdateParentStatus();
 
+
+   const handleCopyPassword = (userId: string, password: string) => {
+    navigator.clipboard.writeText(password);
+    setCopiedPasswordId(userId);
+    setTimeout(() => setCopiedPasswordId(null), 2000);
+  };
+
+
   const handleAddParent = async (parentData: ParentFormData) => {
     try {
       await createParentMutate(parentData);
@@ -61,6 +63,7 @@ const parents = parentsData?.data?.parents || [];
       setShowAddModal(false);
     } catch (error: any) {
       message.error(error.response?.data?.message || (language === 'ar' ? 'حدث خطأ أثناء إضافة ولي الأمر' : 'Failed to add parent'));
+      throw error;
     }
   };
 
@@ -90,6 +93,7 @@ const parents = parentsData?.data?.parents || [];
         setSelectedParent(null);
       } catch (error: any) {
         message.error(error.response?.data?.message || (language === 'ar' ? 'حدث خطأ أثناء تحديث ولي الأمر' : 'Failed to update parent'));
+        throw error;
       }
     }
   };
@@ -135,7 +139,6 @@ const parents = parentsData?.data?.parents || [];
     next: { ar: 'التالي', en: 'Next' },
     students: { ar: 'طالب', en: 'students' },
     copy: { ar: 'نسخ كلمة المرور', en: 'Copy Password' },
-
   };
 
   return (
@@ -174,9 +177,9 @@ const parents = parentsData?.data?.parents || [];
               <tr>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.parentName[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.email[language]}</th>
+                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.password[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.phone[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.children[language]}</th>
-                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.password[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.actions[language]}</th>
               </tr>
             </thead>
@@ -192,7 +195,7 @@ const parents = parentsData?.data?.parents || [];
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-700 text-start">{parent.email}</td>
-                  <td className="px-6 py-4">
+<td className="px-6 py-4">
                         <div className="flex items-center gap-2 group">
                           <span className="text-sm text-gray-600">{parent.password || '-'}</span>
                           {parent.password && (
@@ -209,8 +212,7 @@ const parents = parentsData?.data?.parents || [];
                             </button>
                           )}
                         </div>
-                      </td>       
-                  <td className="px-6 py-4 text-gray-700 text-start">{parent.phone}</td>
+                      </td>                  <td className="px-6 py-4 text-gray-700 text-start">{parent.phone}</td>
                   <td className="px-6 py-4 text-start">
                     <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary-light text-white rounded-full text-sm font-medium">
                       {parent.students?.length} {text.students[language]}

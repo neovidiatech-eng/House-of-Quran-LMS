@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { X, GraduationCap, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -8,18 +8,18 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePlans } from '../../features/admin/hooks/usePlans';
 import { Plan } from '../../types/plan';
-import { GetCountries } from 'react-country-state-city';
+import { DEFAULT_COUNTRIES } from '../../consts/countries';
 
 interface AddStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (studentData: StudentFormData) => void;
+  onSubmit: (studentData: StudentFormData) => Promise<void>;
 }
 
 export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStudentModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
-  const [countryCodes, setCountryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]);
+  const [countryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(DEFAULT_COUNTRIES);
   const { data: plansData } = usePlans();
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(getStudentSchema(t)),
@@ -31,22 +31,15 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
       country: 'مصر'
     }
   });
-  const onFormSubmit = (data: StudentFormData) => {
-    onSubmit({
+  
+  const onFormSubmit = async (data: StudentFormData) => {
+    await onSubmit({
       ...data,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      //timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     reset();
     onClose();
   };
-
-  useEffect(() => {
-    GetCountries()
-      .then((data) => {
-        if (data?.length) setCountryCodes(data);
-      })
-      .catch(() => setCountryCodes([{ name: 'Egypt', phone_code: '20', emoji: '🇪🇬', iso2: 'EG' }]));
-  }, []);
 
   if (!isOpen) return null;
 
@@ -83,7 +76,12 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
   const uniqueCountryCodes = Array.from(
     new Map(countryCodes.map((c) => [`+${c.phone_code}`, c])).values()
   );
+
+
+  console.log('Unique Country Codes:', uniqueCountryCodes);
   const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
+
+
 
   const countryCodeOptions = uniqueCountryCodes.map((c) => ({
     value: `+${c.phone_code}`,

@@ -10,7 +10,7 @@ import { useStudents } from '../../features/admin/hooks/useStudents';
 interface AddParentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (parent: ParentFormData) => void;
+  onAdd: (parent: ParentFormData) => Promise<void>;
 }
 
 export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) {
@@ -36,8 +36,8 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
     },
   });
 
-  const handleOnSubmit = (data: ParentFormData) => {
-    onAdd({
+  const handleOnSubmit = async (data: ParentFormData) => {
+    await onAdd({
       ...data,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });

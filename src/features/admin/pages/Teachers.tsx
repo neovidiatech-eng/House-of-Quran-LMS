@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, lazy, useCallback } from 'react';
-import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, Check, Copy } from 'lucide-react';
+import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX , Copy, Check} from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 // import AddTeacherModal from '../../../components/modals/AddTeacherModal';
 // import ViewTeacherModal from '../../../components/modals/ViewTeacherModal';
@@ -29,8 +29,7 @@ export default function Teachers() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
-    const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
-
+  const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
   const itemsPerPage = 7;
 
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -134,9 +133,7 @@ export default function Teachers() {
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
   }, []);
-
-
-   const handleCopyPassword = (userId: string, password: string) => {
+  const handleCopyPassword = (userId: string, password: string) => {
     navigator.clipboard.writeText(password);
     setCopiedPasswordId(userId);
     setTimeout(() => setCopiedPasswordId(null), 2000);
@@ -177,6 +174,7 @@ export default function Teachers() {
     } catch (error) {
       console.error('Error adding teacher:', error);
       // Detailed error is handled by axios interceptor
+      throw error;
     }
   };
 
@@ -190,6 +188,7 @@ export default function Teachers() {
     } catch (error) {
       console.error('Error updating teacher:', error);
       // Detailed error is handled by axios interceptor
+      throw error;
     }
   };
 
@@ -296,7 +295,7 @@ export default function Teachers() {
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('email')}
                   </th>
-                      <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('password')}
                   </th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
@@ -342,7 +341,7 @@ export default function Teachers() {
                       <td className="px-6 py-4 text-start">
                         <span className="text-sm text-gray-600">{teacher.user?.email || '-'}</span>
                       </td>
-                                          <td className="px-6 py-4">
+                    <td className="px-6 py-4">
                         <div className="flex items-center gap-2 group">
                           <span className="text-sm text-gray-600">{teacher.user?.password || '-'}</span>
                           {teacher.user?.password && (

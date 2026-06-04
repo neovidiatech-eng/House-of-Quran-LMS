@@ -12,7 +12,7 @@ import { Currency } from '../../types/currency';
 interface AddPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (plan: PlanFormData & { id?: string }) => void;
+  onSave: (plan: PlanFormData & { id?: string }) => Promise<void>;
   initialData?: (PlanFormData & { id: string }) | null;
 }
 
@@ -114,8 +114,8 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
     featurePlaceholder: { ar: 'اكتب الميزة...', en: 'Enter feature...' }
   };
 
-  const onSubmit = (data: PlanFormData) => {
-    onSave({
+  const onSubmit = async (data: PlanFormData) => {
+    await onSave({
       ...data,
       id: initialData?.id
     });

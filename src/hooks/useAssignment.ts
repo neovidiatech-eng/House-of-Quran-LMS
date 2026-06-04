@@ -55,6 +55,11 @@ export const useCreateAssignment = () => {
         onSuccess: (data: any) => {
             queryClient.invalidateQueries({ queryKey: ["assignments"] });
             message.success(data.message || "Assignment created successfully");
+        },
+        onError: (error: any) => {    
+        const errorMessage = error.response?.data?.message || error.message || "An error occurred while creating the assignment";
+        console.log(errorMessage);
+        
         }
     });
 };
