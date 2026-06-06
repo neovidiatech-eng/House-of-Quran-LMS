@@ -1,4 +1,4 @@
-import {  useState } from "react";
+import { useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -64,30 +64,29 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
   ];
 
   const displayNames = new Intl.DisplayNames(
-  [language === "ar" ? "ar" : "en"],
-  { type: "region" }
-);
+    [language === "ar" ? "ar" : "en"],
+    { type: "region" }
+  );
 
-const countries = DEFAULT_COUNTRIES.map((country) => ({
-  value: country.name,
-  label: `${country.emoji} ${displayNames.of(country.iso2) || country.name}`,
-}));
+  const countries = DEFAULT_COUNTRIES.map((country) => ({
+    value: country.name,
+    label: `${country.emoji} ${displayNames.of(country.iso2) || country.name}`,
+  }));
 
 
-const countryCodes = Array.from(
-  new Map(
-    DEFAULT_COUNTRIES.map((country) => [
-      `+${country.phone_code}`,
-      {
-        value: `+${country.phone_code}`,
-        label: `${country.emoji} ${
-          displayNames.of(country.iso2) || country.name
-        } (+${country.phone_code})`,
-        country: displayNames.of(country.iso2) || country.name,
-      },
-    ])
-  ).values()
-);
+  const countryCodes = Array.from(
+    new Map(
+      DEFAULT_COUNTRIES.map((country) => [
+        `+${country.phone_code}`,
+        {
+          value: `+${country.phone_code}`,
+          label: `${country.emoji} ${displayNames.of(country.iso2) || country.name
+            } (+${country.phone_code})`,
+          country: displayNames.of(country.iso2) || country.name,
+        },
+      ])
+    ).values()
+  );
 
 
 
@@ -155,7 +154,7 @@ const countryCodes = Array.from(
 
         <form onSubmit={handleFormSubmit(onSubmit)} className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
+
             {/* Name */}
             <div className="text-start">
               <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -208,7 +207,7 @@ const countryCodes = Array.from(
                     <Select
                       {...field}
                       options={countryCodes}
-                      className="h-12 w-44 text-slate-600 font-medium"
+                      className="h-12 text-slate-600 font-medium"
                     />
                   )}
                 />
@@ -348,11 +347,10 @@ const countryCodes = Array.from(
                   key={pkg.id}
                   type="button"
                   onClick={() => setValue("plan_id", pkg.id, { shouldValidate: true })}
-                  className={`w-full p-2 rounded-xl border-2 transition-all text-start relative overflow-hidden flex flex-col justify-between min-h-[80px] cursor-pointer ${
-                    selectedPackage === pkg.id
+                  className={`w-full p-2 rounded-xl border-2 transition-all text-start relative overflow-hidden flex flex-col justify-between min-h-[80px] cursor-pointer ${selectedPackage === pkg.id
                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/5 scale-[1.01]"
                       : "border-slate-100 bg-slate-50/50 hover:border-slate-200 hover:bg-white"
-                  }`}
+                    }`}
                 >
                   {selectedPackage === pkg.id && (
                     <div className={`absolute top-0 ${language === 'ar' ? 'left-0 rounded-br-xl' : 'right-0 rounded-bl-xl'} w-6 h-6 bg-primary flex items-center justify-center`}>
