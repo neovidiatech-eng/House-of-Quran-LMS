@@ -11,6 +11,7 @@ import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } fro
 import { Student } from '../../../types/student';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
+import { usePlans } from '../hooks/usePlans';
 
 const AddStudentModal = lazy(() => import('../../../components/modals/AddStudentModal'));
 const ViewStudentModal = lazy(() => import('../../../components/modals/ViewStudentModal'));
@@ -30,7 +31,8 @@ export default function Students() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
+    const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
+
   const itemsPerPage = 7;
 
   useEffect(() => {
@@ -50,6 +52,9 @@ export default function Students() {
   }), [currentPage, itemsPerPage, debouncedSearch, selectedCountry, selectedGrade]);
 
   const { data: apiResponse, isLoading } = useStudents(studentsQueryParams);
+  const {data: plansData} = usePlans();
+
+  const plans = plansData?.length;
 
   const rawData: any = apiResponse?.data.studentsData;
   const studentsList: Student[] = Array.isArray(rawData) ? rawData : (rawData?.students || rawData?.data || []);
@@ -74,7 +79,7 @@ export default function Students() {
     {
       id: 'active',
       label: t('activeStudents'),
-      value: studentsList.filter(student => student.status === 'approved').length,
+      value: studentsList.filter(student => student.active === true).length,
       icon: UserCheck,
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
@@ -92,7 +97,7 @@ export default function Students() {
     {
       id: 'plans',
       label: t('numberOfPlans'),
-      value: 3,
+      value: plans,
       icon: ClipboardList,
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
@@ -119,14 +124,6 @@ export default function Students() {
   }, [debouncedSearch, selectedGrade, selectedCountry]);
 
 
- const handleCopyPassword = (userId: string, password: string) => {
-    navigator.clipboard.writeText(password);
-    setCopiedPasswordId(userId);
-    setTimeout(() => setCopiedPasswordId(null), 2000);
-  };
-
-
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -150,6 +147,13 @@ export default function Students() {
     setIsEditModalOpen(false);
     setSelectedStudent(null);
   };
+
+   const handleCopyPassword = (userId: string, password: string) => {
+    navigator.clipboard.writeText(password);
+    setCopiedPasswordId(userId);
+    setTimeout(() => setCopiedPasswordId(null), 2000);
+  };
+
 
   const handleDeleteStudent = async (studentId: string) => {
     const confirmed = await confirm({
@@ -274,7 +278,6 @@ export default function Students() {
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('phone')}
                   </th>
-
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                     {t('plan')}
                   </th>
@@ -318,7 +321,8 @@ export default function Students() {
                           </div>
                         </div>
                       </td>
-                         <td className="px-6 py-4">
+
+  <td className="px-6 py-4">
                         <div className="flex items-center gap-2 group">
                           <span className="text-sm text-gray-600">{student.user?.password || '-'}</span>
                           {student.user?.password && (
@@ -336,7 +340,8 @@ export default function Students() {
                           )}
                         </div>
                       </td>
-                          <td className="px-6 py-4 text-start">
+
+                      <td className="px-6 py-4 text-start">
                         <WhatsAppPhone
                           phone={`${student.user.code_country} ${student.user.phone}`}
                           className="text-sm text-gray-900"
@@ -453,7 +458,6 @@ export default function Students() {
             setSelectedStudent(null);
           } catch (error) {
             console.error('Error adding student:', error);
-            // Detailed error is handled by axios interceptor
             throw error;
           }
         }}
@@ -513,7 +517,6 @@ export default function Students() {
             setSelectedStudent(null);
           } catch (error) {
             console.error('Error updating student:', error);
-            // Detailed error is handled by axios interceptor
             throw error;
           }
         }}

@@ -583,7 +583,6 @@
     "logsCount": "سجل",
     "failedLoadLogs": "فشل تحميل سجل النشاطات",
     "noActivityLogs": "لا توجد نشاطات",
-    "user": "المستخدم",
     "emailColumn": "البريد الإلكتروني",
     "role": "الدور",
     "action": "الإجراء",
@@ -605,6 +604,8 @@
   "confirm_delete_course": "هل أنت متأكد من حذف هذا الكورس ؟",
   "noLogs": "لا توجد سجلات حالياً",
   "logs": "السجلات",
-  "endSession": "إنهاء الحصة"
+  "endSession": "إنهاء الحصة",
+  "renewSubscription":"تجديد الاشتراك"
+
 
 }

@@ -532,12 +532,11 @@
   "90minutes": "90 minutes",
   "120minutes": "120 minutes",
   "leaveSession": "leave Session",
- "dashboard": {
+  "dashboard": {
     "totalStudents": "Total Students",
     "totalTeachers": "Total Teachers",
     "todaySessions": "Today's Sessions",
     "pendingRequests": "Pending Requests",
-
     "student": "Student",
     "teacher": "Teacher",
     "session": "Session",
@@ -546,22 +545,14 @@
     "instructors": "Instructors",
     "user": "user",
     "activeUser": "Active user",
-
     "totalOverall": "Overall Total",
     "total": "Total",
     "scheduledToday": "Scheduled for Today",
     "waitingReview": "Waiting for Review",
-
     "scheduledSoon": "Scheduled Soon",
-
-    "loadErrorTitle":
-      "Failed to load dashboard data",
-
-    "loadErrorDescription":
-      "An error occurred while connecting to the server. Please check your network and try again.",
-
+    "loadErrorTitle": "Failed to load dashboard data",
+    "loadErrorDescription": "An error occurred while connecting to the server. Please check your network and try again.",
     "upcomingSessions": "Upcoming Sessions",
-
     "subject": "Subject / Title",
     "teacherColumn": "Teacher",
     "studentColumn": "Student",
@@ -584,24 +575,18 @@
     "april": "April",
     "november": "November",
     "december": "December",
-        "activityLogs": "Activity Logs",
+    "activityLogs": "Activity Logs",
     "logsCount": "Logs",
     "failedLoadLogs": "Failed to load activity logs",
     "noActivityLogs": "No activity logs found",
-    "user": "User",
     "emailColumn": "Email",
     "role": "Role",
     "action": "Action",
     "statusColumn": "Status",
     "timeColumn": "Time",
-
-    "noUpcomingSessions":
-      "No upcoming sessions",
-
-    "scheduledSessionsAppear":
-      "Scheduled sessions will appear here"
+    "noUpcomingSessions": "No upcoming sessions",
+    "scheduledSessionsAppear": "Scheduled sessions will appear here"
   },
-
   "common": {
     "retry": "Retry"
   },
@@ -614,8 +599,6 @@
   "ActivityLogs": "Activity Logs",
   "noLogs": "No logs for now",
   "logs": "Logs",
-  "endSession": "End Session"
-
-   
-  
+  "endSession": "End Session",
+  "renewSubscription": "Renew Subscription"
 }

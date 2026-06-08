@@ -3,6 +3,7 @@ import { Search, Eye, CreditCard } from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Pagination from "../../../components/ui/Pagination";
 import ViewSubscriptionDetailsModal from "../../../components/modals/ViewSubscriptionDetailsModal";
+import PlanSelectionModal from "../../../components/modals/PlanSelectionModal";
 import CustomSelect from "../../../components/ui/CustomSelect";
 import { TableSkeleton } from "../../../components/ui/CustomSkeleton";
 import { useRenewSubscription, useSubscription } from "../hooks/useSubscription";
@@ -42,8 +43,9 @@ export default function AllSubscriptions() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedSubscription, setSelectedSubscription] =
-    useState<Subscription | null>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [renewSubData, setRenewSubData] = useState<SubscriptionData | null>(null);
 
   const itemsPerPage = 10;
 
@@ -53,10 +55,8 @@ export default function AllSubscriptions() {
   const handleRenew = (id: string) => {
     const originalSub = data?.find((s: SubscriptionData) => s.id === id);
     if (!originalSub) return;
-    renewSubscription({
-      studentId: originalSub.student.id,
-      plan_id: originalSub.plan.id,
-    });
+    setRenewSubData(originalSub);
+    setShowPlanModal(true);
   };
 
   const text = {
@@ -96,6 +96,7 @@ export default function AllSubscriptions() {
       ar: "هل أنت متأكد من حذف هذا الاشتراك؟",
       en: "Are you sure you want to delete this subscription?",
     },
+    renewSubscription: { ar: "تجديد الاشتراك", en: "Renew Subscription" }
   };
 
   const mapApiToSubscription = (apiData: SubscriptionData): Subscription => {
@@ -181,6 +182,16 @@ export default function AllSubscriptions() {
     setShowViewModal(true);
   };
 
+  const handleConfirmPlan = (planId: string) => {
+    if (renewSubData) {
+      renewSubscription({
+        studentId: renewSubData.student.id,
+        plan_id: planId,
+      });
+      setShowPlanModal(false);
+      setRenewSubData(null);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -397,9 +408,9 @@ export default function AllSubscriptions() {
                           <button
                             onClick={() => handleRenew(subscription.id)}
                             className="p-2 bg-primary text-sm text-white rounded-lg hover:bg-green-200 transition"
-                            title="Renew Subscription"
+                            title={text.renewSubscription[language]}
                           >
-                            Renew Subscription
+                            {text.renewSubscription[language]}
                           </button>
                         )}
 
@@ -436,6 +447,13 @@ export default function AllSubscriptions() {
             subscription={selectedSubscription}
           />
         </>
+      )}
+      {showPlanModal && (
+        <PlanSelectionModal
+          isOpen={showPlanModal}
+          onClose={() => setShowPlanModal(false)}
+          onConfirm={handleConfirmPlan}
+        />
       )}
     </div>
   );
