@@ -444,7 +444,6 @@ export default function Students() {
               birth_date: (studentData.birthDate && studentData.birthDate !== "") ? new Date(studentData.birthDate).toISOString() : null,
               gender: studentData.gender,
               country: studentData.country,
-              nationality: studentData.nationality,
               active: studentData.status === 'approved',
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
@@ -487,7 +486,6 @@ export default function Students() {
               status: (selectedStudent.status || 'pending') as any,
               gender: selectedStudent.gender || 'male',
               plan: selectedStudent.planId || '',
-              nationality: selectedStudent.nationality || '',
               password: '',
               birthDate: selectedStudent.birth_date ? selectedStudent.birth_date.split('T')[0] : '',
             }
@@ -501,7 +499,6 @@ export default function Students() {
               phone: updatedData.phone,
               phone_code: updatedData.phone_code,
               country: updatedData.country,
-              nationality: updatedData.nationality,
               birth_date: (updatedData.birthDate && updatedData.birthDate !== "") ? new Date(updatedData.birthDate).toISOString() : null,
               gender: updatedData.gender,
               active: updatedData.status === 'approved',
