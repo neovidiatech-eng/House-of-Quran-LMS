@@ -26,15 +26,15 @@ export default function SessionPreview({
   requestedSessionsCount = 0,
   remainingSessions = 0,
 }: SessionPreviewProps) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
 
   return (
     <div className="w-full lg:w-[42%] bg-[#fcfdfe] border-l border-gray-100 overflow-y-auto">
       <div className="p-6 border-b border-gray-100">
-        <h3 className="font-bold text-gray-900">Schedule Preview</h3>
+        <h3 className="font-bold text-gray-900">{t('addSession_schedulePreview')}</h3>
         <p className="text-xs text-gray-400 mt-1">
-          {previewSessions.length} Sessions
+          {previewSessions.length} {t('sessions')}
         </p>
       </div>
 
@@ -45,13 +45,14 @@ export default function SessionPreview({
               <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-red-700">
-                  {language === 'ar' ? 'لا يمكن إنشاء هذه الحصص' : 'Cannot create these sessions'}
+                  {t('addSession_cannotCreateSessions')}
                 </p>
                 <p className="text-xs text-red-600 mt-1">{sessionsLimitError}</p>
                 <p className="text-xs text-red-500 mt-2">
-                  {language === 'ar'
-                    ? `المطلوب: ${requestedSessionsCount} - المتبقي: ${remainingSessions}`
-                    : `Requested: ${requestedSessionsCount} - Remaining: ${remainingSessions}`}
+                  {t('addSession_requestedRemaining', {
+                    requestedSessionsCount,
+                    remainingSessions,
+                  })}
                 </p>
               </div>
             </div>
@@ -82,7 +83,7 @@ export default function SessionPreview({
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <h4 className="text-sm font-bold text-gray-900">
-                        {watchTitle || 'Untitled Session'}
+                        {watchTitle || t('addSession_untitledSession')}
                       </h4>
                       <span
                         className={`text-[10px] px-2 py-1 rounded-full font-bold ${
@@ -91,7 +92,7 @@ export default function SessionPreview({
                             : 'bg-red-100 text-red-600'
                         }`}
                       >
-                        {session.available ? 'Available' : 'Conflict'}
+                        {session.available ? t('addSession_available') : t('addSession_conflict')}
                       </span>
                     </div>
 
@@ -100,7 +101,7 @@ export default function SessionPreview({
                         ? (language === 'ar'
                           ? (selectedSubject.name_ar || selectedSubject.name_en)
                           : (selectedSubject.name_en || selectedSubject.name_ar))
-                        : 'No Subject'}
+                        : t('addSession_noSubject')}
                     </p>
 
                     <p className="text-xs text-gray-400 mt-2">
@@ -114,7 +115,7 @@ export default function SessionPreview({
         ) : (
           <div className="text-center py-20">
             <Calendar className="w-10 h-10 mx-auto text-gray-300 mb-3" />
-            <p className="text-sm text-gray-400">No sessions generated yet</p>
+            <p className="text-sm text-gray-400">{t('addSession_noSessionsGenerated')}</p>
           </div>
         )}
 
@@ -123,7 +124,7 @@ export default function SessionPreview({
             type="button"
             className="w-full text-indigo-600 text-sm font-bold flex items-center justify-center gap-1"
           >
-            View More
+            {t('viewMore')}
             <ChevronDown className="w-4 h-4" />
           </button>
         )}

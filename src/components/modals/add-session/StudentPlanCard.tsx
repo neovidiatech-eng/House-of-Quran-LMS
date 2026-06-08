@@ -1,4 +1,5 @@
 import { Layers } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface StudentPlanCardProps {
   studentPlanInfo: {
@@ -12,6 +13,8 @@ interface StudentPlanCardProps {
 export default function StudentPlanCard({
   studentPlanInfo,
 }: StudentPlanCardProps) {
+  const { t } = useTranslation();
+
   if (!studentPlanInfo) return null;
 
   return (
@@ -19,27 +22,27 @@ export default function StudentPlanCard({
       <div className="flex items-center gap-2 mb-4">
         <Layers className="w-4 h-4 text-indigo-600" />
         <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700">
-          Student Plan
+          {t('packageInfo')}
         </h3>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <p className="text-xs text-gray-500 mb-1">Plan</p>
+          <p className="text-xs text-gray-500 mb-1">{t('packageName')}</p>
           <p className="font-bold text-sm">
-            {studentPlanInfo.planName || 'No Plan'}
+            {studentPlanInfo.planName || t('noPlan')}
           </p>
         </div>
 
         <div>
-          <p className="text-xs text-gray-500 mb-1">Remaining</p>
+          <p className="text-xs text-gray-500 mb-1">{t('sessionsRemaining')}</p>
           <p className="font-black text-emerald-600">
             {studentPlanInfo.sessionsRemaining}
           </p>
         </div>
 
         <div>
-          <p className="text-xs text-gray-500 mb-1">Attended</p>
+          <p className="text-xs text-gray-500 mb-1">{t('addSession_attended')}</p>
           <p className="font-black text-amber-500">
             {studentPlanInfo.sessionsAttended}
           </p>

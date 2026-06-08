@@ -279,9 +279,10 @@ export default function AddSessionModal({
     !!selectedStudentData && requestedSessionsCount > remainingSessions;
 
   const sessionsLimitMessage = sessionsExceedRemaining
-    ? language === 'ar'
-      ? `عدد الحصص المختارة ${requestedSessionsCount} أكبر من المتبقي للطالب. المتبقي ${remainingSessions} حصة فقط.`
-      : `Selected sessions (${requestedSessionsCount}) exceed the student's remaining sessions. Remaining: ${remainingSessions}.`
+    ? t('addSession_sessionsLimitMessage', {
+        requestedSessionsCount,
+        remainingSessions,
+      })
     : '';
 
   useEffect(() => {
@@ -291,7 +292,7 @@ export default function AddSessionModal({
   const formatDateCard = (date: string) => {
     if (!date) {
       return {
-        month: 'N/A',
+        month: '-',
         day: 0,
       };
     }
@@ -300,14 +301,14 @@ export default function AddSessionModal({
     const [year, month, day] = datePart.split('-').map(Number);
     if (isNaN(year) || isNaN(month) || isNaN(day)) {
       return {
-        month: 'N/A',
+        month: '-',
         day: 0,
       };
     }
     const d = new Date(year, month - 1, day);
 
     return {
-      month: d.toLocaleDateString('en-US', {
+      month: d.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
         month: 'short',
       }),
       day: d.getDate(),
@@ -361,11 +362,11 @@ export default function AddSessionModal({
 
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                Create New Session
+                {t('addSingleSession_title')}
               </h2>
 
               <p className="text-sm text-gray-400">
-                Configure and schedule sessions.
+                {t('addSession_subtitle')}
               </p>
             </div>
           </div>
@@ -537,7 +538,7 @@ export default function AddSessionModal({
               <div>
                 <label className="label">
                   <Layers className="w-3.5 h-3.5" />
-                  Language
+                  {t('language')}
                 </label>
 
                 <Controller
@@ -546,8 +547,8 @@ export default function AddSessionModal({
                   render={({ field }) => (
                     <CustomSelect
                       options={[
-                        { value: 'en', label: 'English' },
-                        { value: 'ar', label: 'Arabic' },
+                        { value: 'en', label: t('english') },
+                        { value: 'ar', label: t('arabic') },
                       ]}
                       value={field.value}
                       onChange={field.onChange}
@@ -594,12 +595,12 @@ export default function AddSessionModal({
             <div className="mb-6">
               <label className="label">
                 <AlertTriangle className="w-3.5 h-3.5" />
-                Notes
+                {t('notes')}
               </label>
 
               <textarea
                 {...register('notes')}
-                placeholder="Private notes..."
+                placeholder={t('addSession_privateNotesPlaceholder')}
                 className="textarea"
               />
             </div>
@@ -614,7 +615,7 @@ export default function AddSessionModal({
                 onClick={onClose}
                 className="secondary-btn"
               >
-                Cancel
+                {t('cancel')}
               </button>
 
               <button
@@ -623,8 +624,8 @@ export default function AddSessionModal({
                 className={`primary-btn ${sessionsExceedRemaining ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {schedulingMode === 'single'
-                  ? 'Create Session'
-                  : 'Schedule Batch'}
+                  ? t('addSession_create')
+                  : t('addSession_scheduleBatch')}
               </button>
             </div>
           </div>

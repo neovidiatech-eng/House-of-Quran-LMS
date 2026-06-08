@@ -1,6 +1,7 @@
 import { DayOfWeek } from '../../../types/scheduales';
 import { UseFormRegister, UseFormSetValue, Control, Controller } from 'react-hook-form';
 import DatePickerField from '../../ui/DatePickerField';
+import { useTranslation } from 'react-i18next';
 
 interface SchedulingSettingsProps {
   schedulingMode: 'single' | 'batch';
@@ -21,6 +22,23 @@ export default function SchedulingSettings({
   DAYS,
   control,
 }: SchedulingSettingsProps) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language.split('-')[0];
+
+  const getDayLabel = (day: DayOfWeek) => {
+    const dayKeyMap: Record<DayOfWeek, string> = {
+      Sunday: 'sun',
+      Monday: 'mon',
+      Tuesday: 'tue',
+      Wednesday: 'wed',
+      Thursday: 'thu',
+      Friday: 'fri',
+      Saturday: 'sat',
+    };
+
+    return t(dayKeyMap[day]);
+  };
+
   return (
     <>
       {/* Toggle */}
@@ -32,7 +50,7 @@ export default function SchedulingSettings({
             className={`toggle-btn ${schedulingMode === 'single' ? 'active-toggle' : ''
               }`}
           >
-            Single
+            {t('addSession_singleMode')}
           </button>
 
           <button
@@ -41,7 +59,7 @@ export default function SchedulingSettings({
             className={`toggle-btn ${schedulingMode === 'batch' ? 'active-toggle' : ''
               }`}
           >
-            Batch
+            {t('addSession_batchMode')}
           </button>
         </div>
       </div>
@@ -55,7 +73,7 @@ export default function SchedulingSettings({
               control={control}
               render={({ field }) => (
                 <DatePickerField
-                  label="Session Date"
+                  label={t('sessionDate')}
                   value={field.value}
                   onChange={field.onChange}
                 />
@@ -64,7 +82,7 @@ export default function SchedulingSettings({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Start</label>
+                <label className="label">{t('startTime')}</label>
                 <input
                   type="time"
                   {...register('startTime')}
@@ -73,7 +91,7 @@ export default function SchedulingSettings({
               </div>
 
               <div>
-                <label className="label">End</label>
+                <label className="label">{t('endTime')}</label>
                 <input
                   type="time"
                   {...register('endTime')}
@@ -92,7 +110,7 @@ export default function SchedulingSettings({
               control={control}
               render={({ field }) => (
                 <DatePickerField
-                  label="Start Date"
+                  label={t('fromDate')}
                   value={field.value}
                   onChange={field.onChange}
                 />
@@ -103,7 +121,7 @@ export default function SchedulingSettings({
               control={control}
               render={({ field }) => (
                 <DatePickerField
-                  label="End Date"
+                  label={t('toDate')}
                   value={field.value}
                   onChange={field.onChange}
                 />
@@ -112,12 +130,12 @@ export default function SchedulingSettings({
           </div>
 
           <div className="mb-5">
-            <label className="label">Start Time</label>
+            <label className="label">{t('startTime')}</label>
             <input type="time" {...register('startTime')} className="input" />
           </div>
 
           <div>
-            <label className="label">Weekly Schedule</label>
+            <label className="label">{t('scheduledDays')}</label>
             <div className="flex flex-wrap gap-2">
               {DAYS.map((day) => {
                 const selected = watchSelectedDays.includes(day);
@@ -139,7 +157,7 @@ export default function SchedulingSettings({
                     className={`day-btn ${selected ? 'bg-primary text-white' : 'bg-white'
                       }`}
                   >
-                    {day.slice(0, 3)}
+                    {language === 'ar' ? getDayLabel(day) : day.slice(0, 3)}
                   </button>
                 );
               })}
