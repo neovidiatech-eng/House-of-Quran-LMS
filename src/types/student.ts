@@ -47,5 +47,8 @@ export interface StudentsFetchResponse {
             totalPages: number;
             hasNextPage: boolean;
         };
+        "totalCount": number;
+        "activeCount": number,
+        "inactiveCount": number
     };
 }

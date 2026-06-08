@@ -431,7 +431,7 @@
   "logout": "Logout",
   "earningsFormula_ar": "الأرباح = عدد الساعات × {rate} {currency}/ساعة",
   "earningsFormula_en": "Earnings = Hours × {rate} {currency}/hour",
-  "pendingStudents": "Pending Students",
+  "inactiveStudents": "Pending Students",
   "studentInfo": "Student Info",
   "TransactionRequests": "Transaction Requests",
   "sidebar_permissions": "Permissions",

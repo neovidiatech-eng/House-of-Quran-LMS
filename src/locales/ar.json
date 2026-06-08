@@ -430,7 +430,7 @@
   "AddRequest": "طلب جديد",
   "VideoURL": "رابط الفيديو",
   "enterVideoURL": "أدخل رابط الفيديو",
-  "pendingStudents": "الطلاب المعلقين",
+  "inactiveStudents": "الطلاب المعلقين",
   "studentInfo": "معلومات الطالب",
   "TransactionRequests": "طلبات السحب",
   "sidebar_student_requests": "طلبات الطلاب",

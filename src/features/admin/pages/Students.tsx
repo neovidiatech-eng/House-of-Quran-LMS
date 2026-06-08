@@ -31,7 +31,7 @@ export default function Students() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-    const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
+  const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
 
   const itemsPerPage = 7;
 
@@ -52,7 +52,7 @@ export default function Students() {
   }), [currentPage, itemsPerPage, debouncedSearch, selectedCountry, selectedGrade]);
 
   const { data: apiResponse, isLoading } = useStudents(studentsQueryParams);
-  const {data: plansData} = usePlans();
+  const { data: plansData } = usePlans();
 
   const plans = plansData?.length;
 
@@ -60,6 +60,8 @@ export default function Students() {
   const studentsList: Student[] = Array.isArray(rawData) ? rawData : (rawData?.students || rawData?.data || []);
   const pagination = apiResponse?.data?.pagination;
   const totalItems = pagination?.totalItems ?? 0;
+  const activeItems = apiResponse?.data?.activeCount ?? 0;
+  const inactiveItems = apiResponse?.data?.inactiveCount ?? 0;
   const totalPages = pagination?.totalPages ?? 1;
   const { mutateAsync: createStudent } = useCreateStudent();
   const { mutateAsync: updateStudent } = useUpdateStudent();
@@ -79,16 +81,16 @@ export default function Students() {
     {
       id: 'active',
       label: t('activeStudents'),
-      value: studentsList.filter(student => student.active === true).length,
+      value: activeItems,
       icon: UserCheck,
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
       valueColor: 'text-green-600',
     },
     {
-      id: 'pending',
-      label: t('pendingStudents'),
-      value: studentsList.filter(student => student.status === 'pending').length,
+      id: 'inactive',
+      label: t('inactiveStudents'),
+      value: inactiveItems,
       icon: UserX,
       bgColor: 'bg-orange-50',
       iconColor: 'text-orange-600',
@@ -148,7 +150,7 @@ export default function Students() {
     setSelectedStudent(null);
   };
 
-   const handleCopyPassword = (userId: string, password: string) => {
+  const handleCopyPassword = (userId: string, password: string) => {
     navigator.clipboard.writeText(password);
     setCopiedPasswordId(userId);
     setTimeout(() => setCopiedPasswordId(null), 2000);
@@ -322,7 +324,7 @@ export default function Students() {
                         </div>
                       </td>
 
-  <td className="px-6 py-4">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-2 group">
                           <span className="text-sm text-gray-600">{student.user?.password || '-'}</span>
                           {student.user?.password && (
@@ -414,7 +416,7 @@ export default function Students() {
             </table>
           </div>
 
-          
+
         )}
 
         {!isLoading && (
@@ -442,6 +444,7 @@ export default function Students() {
               birth_date: (studentData.birthDate && studentData.birthDate !== "") ? new Date(studentData.birthDate).toISOString() : null,
               gender: studentData.gender,
               country: studentData.country,
+              nationality: studentData.nationality,
               active: studentData.status === 'approved',
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
@@ -484,6 +487,7 @@ export default function Students() {
               status: (selectedStudent.status || 'pending') as any,
               gender: selectedStudent.gender || 'male',
               plan: selectedStudent.planId || '',
+              nationality: selectedStudent.nationality || '',
               password: '',
               birthDate: selectedStudent.birth_date ? selectedStudent.birth_date.split('T')[0] : '',
             }
@@ -497,6 +501,7 @@ export default function Students() {
               phone: updatedData.phone,
               phone_code: updatedData.phone_code,
               country: updatedData.country,
+              nationality: updatedData.nationality,
               birth_date: (updatedData.birthDate && updatedData.birthDate !== "") ? new Date(updatedData.birthDate).toISOString() : null,
               gender: updatedData.gender,
               active: updatedData.status === 'approved',

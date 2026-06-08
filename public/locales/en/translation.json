@@ -418,7 +418,7 @@
   "packageName": "Package",
   "sessionsRemaining": "Sessions Remaining",
   "scheduledDays": "Recurring Day",
-  "pendingStudents": "Pending Students",
+  "inactiveStudents": "Inactive Students",
   "grid": "Grid",
   "list": "List",
   "studentInfo": "Student Info",
