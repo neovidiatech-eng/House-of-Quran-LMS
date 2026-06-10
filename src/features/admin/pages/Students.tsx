@@ -43,6 +43,7 @@ export default function Students() {
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
+  
   const studentsQueryParams = useMemo(() => ({
     page: currentPage,
     limit: itemsPerPage,
