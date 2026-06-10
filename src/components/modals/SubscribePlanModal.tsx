@@ -48,7 +48,7 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
         '12 حصة شهرياً',
         'دعم فني على مدار الساعة',
         'وصول للمواد التعليمية',
-        'تقارير الأداء الأسبوعية'
+        'تقارير الأداء الأسببيت القرانة'
       ],
       isPopular: false,
       status: 'active'
@@ -128,8 +128,8 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
                 <div
                   key={plan.id}
                   className={`bg-white rounded-3xl shadow-lg transition-all hover:-translate-y-2 hover:shadow-xl relative flex flex-col h-full bg-clip-padding border-2 ${plan.isPopular
-                      ? 'border-blue-500 scale-105 z-10'
-                      : 'border-gray-100'
+                    ? 'border-blue-500 scale-105 z-10'
+                    : 'border-gray-100'
                     }`}
                 >
                   {plan.isPopular && (
@@ -170,8 +170,8 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
 
                     <button
                       className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${plan.isPopular
-                          ? 'bg-primary text-white hover:bg-primary-700 shadow-md hover:shadow-lg'
-                          : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                        ? 'bg-primary text-white hover:bg-primary-700 shadow-md hover:shadow-lg'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                         }`}
                     >
                       {text.subscribe[language]}
