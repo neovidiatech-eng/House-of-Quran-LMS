@@ -82,12 +82,12 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
 
 
 
-  const planOptions = [
+/*   const planOptions = [
     ...(plansData || []).map((p: any) => ({
       value: p.id,
       label: language === 'ar' ? p.name_ar : p.name_en,
     }))
-  ];
+  ]; */
 
   const statusOptions = [
     { value: 'approved', label: language === 'ar' ? 'نشط' : 'Active' },
@@ -190,7 +190,7 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
             />
 
             {/* Plan */}
-            <Controller
+            {/* <Controller
               name="plan"
               control={control}
               render={({ field: { value, onChange } }) => (
@@ -201,11 +201,8 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
                   onChange={onChange}
                 />
               )}
-            />
-          </div>
-
-          {/* Status */}
-          <Controller
+            /> */}
+             <Controller
             name="status"
             control={control}
             render={({ field: { value, onChange } }) => (
@@ -217,6 +214,9 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
               />
             )}
           />
+          </div>
+
+       
 
           <div className="flex gap-3 mt-8 pt-6 border-t">
             <button type="button" onClick={onClose} className="flex-1 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">{t('cancel')}</button>
