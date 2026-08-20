@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Eye, Trash2, Edit } from "lucide-react";
+import { Search, Plus, Eye, Trash2, Edit, Calendar } from "lucide-react";
 import Pagination from "../../../components/ui/Pagination";
 import { useTranslation } from "react-i18next";
 import {
@@ -64,7 +64,7 @@ export default function Sessions() {
   const confirmDelete = async () => {
     if (!sessionToDelete) return;
     try {
-      if (sessionToDelete.is_recurring) {
+      if (!hasDateFilter && sessionToDelete.is_recurring) {
         await deleteGroupedSchedule.mutateAsync(
           sessionToDelete.parent_recurring_id || sessionToDelete.id,
         );
@@ -154,6 +154,7 @@ export default function Sessions() {
   const { data: searchResults } = useSearchSchedules(debouncedSearch, currentPage, itemsPerPage, dateFilters);
 
   const scheduleData: Schedule[] = searchResults?.data?.schedule ?? [];
+  const hasDateFilter = Boolean(fromDate || toDate);
 
   const groupedSchedules: Schedule[] = [];
   const seenParents = new Set<string>();
@@ -209,7 +210,9 @@ export default function Sessions() {
   const totalItems = searchResults?.data?.pagination?.totalItems || 0;
   const totalPages = searchResults?.data?.pagination?.totalPages || 1;
 
-  const displaySchedules = groupedSchedules.filter((session) => {
+  const targetList = hasDateFilter ? scheduleData : groupedSchedules;
+
+  const displaySchedules = targetList.filter((session) => {
     const sessionDate = new Date(session.start_time);
     const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
     const to = toDate ? new Date(`${toDate}T23:59:59.999`) : null;
@@ -354,30 +357,39 @@ export default function Sessions() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            <label className="block text-start">
-              <span className="block text-xs font-medium text-gray-500 mb-1">
-                {language === "ar" ? "من تاريخ" : "From Date"}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-2 mb-2.5 text-gray-700 font-medium text-sm">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span>
+                {language === "ar" ? "ابحث بتاريخ الحصة" : "Search by session date"}
               </span>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
-              />
-            </label>
-            <label className="block text-start">
-              <span className="block text-xs font-medium text-gray-500 mb-1">
-                {language === "ar" ? "إلى تاريخ" : "To Date"}
-              </span>
-              <input
-                type="date"
-                value={toDate}
-                min={fromDate || undefined}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
-              />
-            </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block text-start">
+                <span className="block text-xs font-medium text-gray-500 mb-1">
+                  {language === "ar" ? "من تاريخ" : "From Date"}
+                </span>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
+                />
+              </label>
+              <label className="block text-start">
+                <span className="block text-xs font-medium text-gray-500 mb-1">
+                  {language === "ar" ? "إلى تاريخ" : "To Date"}
+                </span>
+                <input
+                  type="date"
+                  value={toDate}
+                  min={fromDate || undefined}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
+                />
+              </label>
+            </div>
           </div>
 
           {(fromDate || toDate) && (
@@ -489,7 +501,7 @@ export default function Sessions() {
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         onClick={() => {
-                          const grouped = session.parent_recurring_id
+                          const grouped = (!hasDateFilter && session.parent_recurring_id)
                             ? scheduleData.filter(
                                 (s: Schedule) =>
                                   s.parent_recurring_id ===

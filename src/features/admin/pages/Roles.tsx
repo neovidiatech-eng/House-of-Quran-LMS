@@ -72,7 +72,17 @@ export default function Roles() {
                 (p: any) => !data.permissionIds?.includes(p.id)
             ).map((p: any) => p.id) || [];
             try {
-                const promises = [];
+                const promises: Promise<any>[] = [];
+
+                // Update role name/data
+                if (data.name !== selectedRole.name) {
+                    promises.push(
+                        new Promise((resolve, reject) =>
+                            updateRole({ id: selectedRole.id, role: { name: data.name } }, { onSuccess: resolve, onError: reject })
+                        )
+                    );
+                }
+
                 if (permissionsToAdd.length > 0) {
                     promises.push(assignPermissions({ roleId: selectedRole.id, permissionIds: permissionsToAdd }));
                 }
@@ -86,7 +96,7 @@ export default function Roles() {
                 setIsModalOpen(false);
                 setSelectedRole(null);
             } catch (error) {
-                console.error("Failed to update role permissions:", error);
+                console.error("Failed to update role:", error);
                 throw error;
             }
         } else {

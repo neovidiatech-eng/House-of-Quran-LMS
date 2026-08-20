@@ -22,7 +22,7 @@ export const updateRole = async ({
     role,
 }: {
     id: string;
-    role: { name: string; permissionIds?: string[] };
+    role: { name?: string; permissionIds?: string[] };
 }): Promise<RolesResponse> => {
     const response = await api.patch(`/system/roles/${id}`, role);
     return response.data;

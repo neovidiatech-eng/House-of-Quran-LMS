@@ -102,6 +102,22 @@ export interface ScheduleSubject {
     updatedAt: string;
 }
 
+export interface ScheduleLogs {
+    id?: string;
+    scheduleId?: string;
+    joinTime_student?: string | null;
+    leaveTime_student?: string | null;
+    joinTime_teacher?: string | null;
+    leaveTime_teacher?: string | null;
+    duration_student?: number | null;
+    duration_teacher?: number | null;
+    isTeacherLate?: boolean;
+    isTeacherCompleted?: boolean;
+    isStudentAttended?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export interface Schedule {
     id: string;
     teacherId: string;
@@ -123,6 +139,7 @@ export interface Schedule {
     student: Student;
     teacher: Teacher;
     subject?: ScheduleSubject;
+    scheduleLogs?: ScheduleLogs | null;
 }
 
 export interface Pagination {
