@@ -19,8 +19,6 @@ import {
   MultipleSessionsPayload,
 } from "../../../lib/schemas/SessionSchema";
 
-import { useSubjects } from "../hooks/useSubjects";
-import { Subject } from "../../../types/subject";
 
 export default function Sessions() {
   const { t, i18n } = useTranslation();
@@ -300,8 +298,6 @@ export default function Sessions() {
     }
   };
 
-  const { data: subjects } = useSubjects();
-  const dynamicsubjects = subjects?.subjects || [];
 
   const getSubjectName = (session: Schedule) => {
     if (session.subject) {
@@ -309,14 +305,7 @@ export default function Sessions() {
         ? session.subject.name_ar
         : session.subject.name_en;
     }
-    const subject = dynamicsubjects.find(
-      (s: Subject) => s.id === session.subjectId,
-    );
-    return subject
-      ? language === "ar"
-        ? subject.name_ar
-        : subject.name_en
-      : "subject";
+  
   };
 
   return (

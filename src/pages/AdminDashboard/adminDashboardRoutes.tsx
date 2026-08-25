@@ -22,9 +22,10 @@ import {
   Coins,
   ShieldCheck,
   Repeat,
-  KeyRound
+  MessageSquare
 } from 'lucide-react';
 import TransactionRequests from "../../features/admin/pages/TransactionRequests";
+import FeedbackPage from "../../features/admin/pages/Feedback";
 
 export interface RouteConfig {
   id: string;
@@ -61,7 +62,6 @@ const SubjectsPage = lazy(() => import("../../features/admin/pages/Subjects"));
 const LMSCoursesPage = lazy(() => import("../../features/admin/pages/LMSCourses/LMSCourses"));
 const SettingsPage = lazy(() => import("../../features/admin/pages/Settings"));
 const RolesPage = lazy(() => import("../../features/admin/pages/Roles"));
-const PermissionsPage = lazy(() => import("../../features/admin/pages/Permissions"));
 
 export const adminDashboardRoutes: RouteConfig[] = [
   {
@@ -157,12 +157,20 @@ export const adminDashboardRoutes: RouteConfig[] = [
         element: <SessionsPage />,
       },
       {
+        id: "feedback",
+        label: "sidebar_feedback",
+        icon: MessageSquare,
+        path: "feedback",
+        element: <FeedbackPage/>,
+      },
+      {
         id: "agenda",
         label: "sidebar_agenda",
         icon: Calendar,
         path: "agenda",
         element: <AgendaPage />,
       },
+
       {
         id: "exams",
         label: "sidebar_exams",
