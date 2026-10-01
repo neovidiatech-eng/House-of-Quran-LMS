@@ -90,3 +90,9 @@ export const updateSchedule = async (
     );
     return response.data;
 };
+
+
+export const syncStatuses = async () => {
+    const response = await api.post('/schedules/sync-statuses')
+    return response.data
+}

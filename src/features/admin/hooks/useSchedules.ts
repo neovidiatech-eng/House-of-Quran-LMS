@@ -15,6 +15,7 @@ import {
   getAllSchedules,
   searchSchedules,
   getSchedulesForTeacher,
+  syncStatuses,
 } from "../services/SessionsServices";
 import { message } from "antd";
 
@@ -117,3 +118,17 @@ export const useUpdateSchedule = () => {
   });
 };
 
+export const useSyncStatuses = ()=>{
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ()=> syncStatuses(),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] })
+      message.success(data.message || 'Statuses Synced Successfully');
+    },
+    onError: (error: any) => {
+      message.error(error.message || 'Failed to Sync Statuses');
+    }
+  }
+  )
+}

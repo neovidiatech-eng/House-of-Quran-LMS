@@ -5,9 +5,9 @@ export interface CreateSchedulePayload {
     teacherId: string;
     subject_id: string;
     title: string;
-    description: string;
+    description?: string;
     link: string;
-    notes: string;
+    notes?: string;
     start_time: string;
     // type: ScheduleType;
     notification_Time: string;
@@ -15,9 +15,9 @@ export interface CreateSchedulePayload {
 
 export interface UpdateSchedulePayload {
     title: string;
-    description: string;
+    description?: string;
     link: string;
-    notes: string;
+    notes?: string;
     status: string;
     start_time: string;
     // type: ScheduleType;
@@ -37,9 +37,9 @@ export interface CreateRecurringSchedulePayload {
     teacherId: string;
     subject_id: string;
     title: string;
-    description: string;
+    description?: string;
     link: string;
-    notes: string;
+    notes?: string;
     startTime: string;
     days: DayOfWeek[];
     startDate: string;

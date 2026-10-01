@@ -6,12 +6,12 @@ import ViewSessionModal from '../../../components/modals/ViewSessionModal';
 import { Schedule } from '../../../types/scheduales';
 import { useSubjects } from '../../../features/admin/hooks/useSubjects';
 import { Subject } from '../../../types/subject';
-import { useJoinToSession, useUserSessions } from '../../../hooks/useSessions';
+import { useJoinToSession, useEndSession, useUserSessions } from '../../../hooks/useSessions';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
 import CreateRequestModal from '../../../components/modals/CreateRequestModal';
 import FeedbackModal from '../components/FeedbackModal';
 import { useSettings } from '../../../contexts/SettingsContext';
-import { leaveSession } from '../../../services/SessionsServices';
+
 
 
 
@@ -49,6 +49,7 @@ export default function Sessions() {
 
   const { data: sessionResponse, isLoading } = useUserSessions(debouncedSearch);
   const { mutateAsync: joinToSession, isPending: isJoining } = useJoinToSession();
+  const { mutateAsync: endSessionMutation, isPending: isEnding } = useEndSession();
   useEffect(() => {
     if (searchTerm.length > 2) {
       setDebouncedSearch(searchTerm);
@@ -305,21 +306,24 @@ export default function Sessions() {
                         <button
                           onClick={async () => {
                             try {
-                              await leaveSession(session.id);
+                              await endSessionMutation(session.id);
                               setSessionForFeedback(session);
                               setShowFeedbackModal(true);
                             } catch (error) {
                               console.log(error);
                             }
                           }}
-                          disabled={session.status?.toLowerCase() === 'completed'}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${session.status?.toLowerCase() === 'completed'
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md'
+                          disabled={isEnding || session.status?.toLowerCase() === 'completed'}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${
+                            session.status?.toLowerCase() === 'completed'
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : isEnding
+                              ? 'bg-red-400 text-white cursor-wait opacity-70'
+                              : 'bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md'
                           }`}
                         >
                           <X className="w-4 h-4" />
-                          <span className="text-sm">{t('endSession') || 'End Session'}</span>
+                          <span className="text-sm">{isEnding ? (language === 'ar' ? 'جارٍ الإنهاء...' : 'Ending...') : (t('endSession') || 'End Session')}</span>
                         </button>
                       </td>
 

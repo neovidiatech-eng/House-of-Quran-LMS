@@ -15,3 +15,8 @@ export const leaveSession = async (id:string) =>{
     const response = await api.post(`/schedules/${id}/leave`);
     return response.data;
 }
+
+export const endSession = async (id:string) =>{
+    const response = await api.post(`/schedules/${id}/end`);
+    return response.data;
+}

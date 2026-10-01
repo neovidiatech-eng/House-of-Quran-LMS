@@ -7,7 +7,6 @@ import {
   GraduationCap,
   Video,
   FileText,
-  Bell,
   ExternalLink,
   Repeat,
   Activity,
@@ -28,6 +27,7 @@ interface ViewSessionModalProps {
   session: Schedule | null;
   groupedSessions?: Schedule[];
   allSessions?: Schedule[];
+  onEdit?: (session: Schedule) => void;
 }
 
 export default function ViewSessionModal({
@@ -35,7 +35,6 @@ export default function ViewSessionModal({
   onClose,
   session,
   groupedSessions,
-  allSessions = [],
 }: ViewSessionModalProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
@@ -169,16 +168,15 @@ export default function ViewSessionModal({
 
   const hasRecurringGroup = Boolean(
     (activeSession.is_recurring || activeSession.parent_recurring_id) &&
-      groupedSessions &&
-      groupedSessions.length > 1
+    groupedSessions &&
+    groupedSessions.length > 1
   );
 
   return (
     <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
       <div
-        className={`bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full ${
-          hasRecurringGroup ? 'max-w-[1020px]' : 'max-w-[640px]'
-        } max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300`}
+        className={`bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full ${hasRecurringGroup ? 'max-w-[1020px]' : 'max-w-[640px]'
+          } max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300`}
       >
         {/* Header */}
         <div className="px-6 sm:px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-white shrink-0">
@@ -216,9 +214,8 @@ export default function ViewSessionModal({
         <div className="flex flex-col lg:flex-row overflow-hidden flex-1">
           {/* Main Column - Session Details */}
           <div
-            className={`w-full ${
-              hasRecurringGroup ? 'lg:w-[58%]' : 'w-full'
-            } p-5 sm:p-7 bg-white overflow-y-auto custom-scrollbar space-y-5`}
+            className={`w-full ${hasRecurringGroup ? 'lg:w-[58%]' : 'w-full'
+              } p-5 sm:p-7 bg-white overflow-y-auto custom-scrollbar space-y-5`}
           >
             {/* People */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -431,7 +428,7 @@ export default function ViewSessionModal({
                       </div>
                       <div className="flex items-center gap-1.5">
                         {activeSession.scheduleLogs.isStudentAttended ||
-                        activeSession.scheduleLogs.joinTime_student ? (
+                          activeSession.scheduleLogs.joinTime_student ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
                             <CheckCircle2 className="w-2.5 h-2.5" />
                             {t('studentAttended')}
@@ -537,11 +534,10 @@ export default function ViewSessionModal({
                     <div
                       key={s.id}
                       onClick={() => setActiveSession(s)}
-                      className={`bg-white border rounded-2xl p-3.5 transition-all cursor-pointer ${
-                        isCurrent
+                      className={`bg-white border rounded-2xl p-3.5 transition-all cursor-pointer ${isCurrent
                           ? 'border-indigo-300 ring-2 ring-indigo-500/15 shadow-sm bg-indigo-50/10'
                           : 'border-gray-100 hover:border-gray-200 hover:shadow-xs'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1">
@@ -616,8 +612,8 @@ export default function ViewSessionModal({
                           <span className="text-[9px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                             {s.scheduleLogs?.duration_teacher
                               ? formatDurationMinutes(
-                                  s.scheduleLogs.duration_teacher
-                                )
+                                s.scheduleLogs.duration_teacher
+                              )
                               : 'Logs available'}
                           </span>
                         )}

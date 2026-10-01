@@ -9,6 +9,7 @@ import {
   useUpdateSchedule,
   useDeleteSchedule,
   useDeleteGroupedSchedule,
+  useSyncStatuses,
 } from "../hooks/useSchedules";
 import AddSessionModal from "../../../components/modals/AddSessionModal";
 import ViewSessionModal from "../../../components/modals/ViewSessionModal";
@@ -40,6 +41,7 @@ export default function Sessions() {
   const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
+  const syncStatuses = useSyncStatuses();
 
   const handleUpdateSession = async (
     id: string,
@@ -98,9 +100,9 @@ export default function Sessions() {
           teacherId: formData.teacher,
           subject_id: formData.subject,
           title: formData.title,
-          description: formData.description || "",
+          ...(formData.description?.trim() ? { description: formData.description.trim() } : {}),
           link: formData.meetingLink || "",
-          notes: formData.notes || "",
+          ...(formData.notes?.trim() ? { notes: formData.notes.trim() } : {}),
           startTime: sessions[0]?.time || "00:00",
           days: selectedDays,
           startDate,
@@ -119,9 +121,9 @@ export default function Sessions() {
           teacherId: data.teacher,
           subject_id: data.subject,
           title: data.title,
-          description: data.description || "",
+          ...(data.description?.trim() ? { description: data.description.trim() } : {}),
           link: data.meetingLink || "",
-          notes: data.notes || "",
+          ...(data.notes?.trim() ? { notes: data.notes.trim() } : {}),
           start_time: localDate.toISOString(),
           // type: data.type,
           notification_Time: data.notification_Time,
@@ -134,7 +136,7 @@ export default function Sessions() {
     }
   };
 
- 
+
 
   useEffect(() => {
     if (searchTerm.length > 2) {
@@ -227,15 +229,15 @@ export default function Sessions() {
 
   const calculateDuration = (startTime: any, endTime: any) => {
     if (!startTime || !endTime) return 0;
-    
+
     // Check if they are full ISO/Date strings by trying to parse them with Date
     const start = new Date(startTime).getTime();
     const end = new Date(endTime).getTime();
-    
+
     if (!isNaN(start) && !isNaN(end)) {
       return Math.max(0, Math.round((end - start) / 60000));
     }
-    
+
     // If not parseable as full dates, fall back to "HH:MM" string split
     try {
       const getMinutes = (timeStr: string) => {
@@ -246,7 +248,7 @@ export default function Sessions() {
         const m = Number(parts[1]) || 0;
         return h * 60 + m;
       };
-      
+
       const startTotal = getMinutes(String(startTime));
       const endTotal = getMinutes(String(endTime));
       let diff = endTotal - startTotal;
@@ -305,7 +307,7 @@ export default function Sessions() {
         ? session.subject.name_ar
         : session.subject.name_en;
     }
-  
+
   };
 
   return (
@@ -342,18 +344,34 @@ export default function Sessions() {
                 <Plus className="w-5 h-5" />
                 {t("singleSession")}
               </button>
-            
+
             </div>
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-100">
+           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 mb-2.5 text-gray-700 font-medium text-sm">
               <Calendar className="w-4 h-4 text-primary" />
               <span>
                 {language === "ar" ? "ابحث بتاريخ الحصة" : "Search by session date"}
               </span>
             </div>
-
+            <div className="col-span-2 flex items-center justify-end">
+              <button
+                className="btn-primary px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-colors font-medium whitespace-nowrap"
+                onClick={() => syncStatuses.mutate()}
+                disabled={syncStatuses.isPending}
+              >
+                {syncStatuses.isPending
+                  ? language === "ar"
+                    ? "جاري المزامنة..."
+                    : "Syncing..."
+                  : language === "ar"
+                    ? "مزامنة الحالات"
+                    : "Sync Statuses"}
+              </button>
+            </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="block text-start">
                 <span className="block text-xs font-medium text-gray-500 mb-1">
@@ -378,7 +396,9 @@ export default function Sessions() {
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
                 />
               </label>
+
             </div>
+
           </div>
 
           {(fromDate || toDate) && (
@@ -492,10 +512,10 @@ export default function Sessions() {
                         onClick={() => {
                           const grouped = (!hasDateFilter && session.parent_recurring_id)
                             ? scheduleData.filter(
-                                (s: Schedule) =>
-                                  s.parent_recurring_id ===
-                                  session.parent_recurring_id,
-                              )
+                              (s: Schedule) =>
+                                s.parent_recurring_id ===
+                                session.parent_recurring_id,
+                            )
                             : [session];
                           setGroupedSessions(grouped);
                           setSelectedSession(session);
@@ -508,6 +528,14 @@ export default function Sessions() {
                       </button>
                       <button
                         onClick={() => {
+                          const grouped = (!hasDateFilter && session.parent_recurring_id)
+                            ? scheduleData.filter(
+                              (s: Schedule) =>
+                                s.parent_recurring_id ===
+                                session.parent_recurring_id,
+                            )
+                            : [session];
+                          setGroupedSessions(grouped);
                           setSelectedSession(session);
                           setShowEditModal(true);
                         }}
@@ -562,8 +590,10 @@ export default function Sessions() {
         onClose={() => {
           setShowEditModal(false);
           setSelectedSession(null);
+          setGroupedSessions([]);
         }}
         session={selectedSession}
+        groupedSessions={groupedSessions}
         onSave={handleUpdateSession}
       />
 

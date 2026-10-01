@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getUserSessions, joinToSession, leaveSession } from "../services/SessionsServices";
+import { getUserSessions, joinToSession, leaveSession, endSession } from "../services/SessionsServices";
 import { message } from "antd";
 
 export const useUserSessions = (search: string) => {
@@ -33,6 +33,22 @@ export const useLeaveSession = () => {
     },
     onError: (error: any) => {
       console.error("Failed to leave session:", error);
+    },
+  });
+};
+
+export const useEndSession = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => endSession(id),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      message.success(data?.message || "Session ended successfully");
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || error?.message || "Failed to end session";
+      message.error(msg);
     },
   });
 };
