@@ -388,8 +388,6 @@ export default function Sessions() {
                           <span className="text-sm">{isRtl ? 'إنهاء الجلسة' : 'End Session'}</span>
                         </button>
                       </td>
-                        </button>
-                      </td>
 
                       <td className="px-3 py-3 text-start">
                         <button
