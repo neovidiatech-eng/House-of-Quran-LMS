@@ -26,7 +26,7 @@ jobs:
       - name: Deploy dist to server
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -rlvz --delete --omit-dir-times --no-perms --omit-link-times --exclude=.user.ini
+          switches: -rlvz --delete --omit-dir-times --no-perms --omit-link-times --exclude=.user.ini --exclude=.well-known --exclude=.well-known/**
           path: dist/
           remote_path: /www/wwwroot/dashboard.bayt-alquran.net  # المسار اللي Nginx بيسيرف منه
           remote_host: ${{ secrets.SSH_HOST }}
