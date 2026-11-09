@@ -15,10 +15,11 @@ export const useJoinToSession = () => {
     mutationFn: (id: string) => joinToSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
-      message.success("You have joined the session");
+      message.success("تم الانضمام للجلسة بنجاح");
     },
     onError: (error: any) => {
       console.error("Failed to join session:", error);
+      message.error(error?.response?.data?.message || "فشل الانضمام للجلسة");
     },
   });
 };
@@ -29,10 +30,11 @@ export const useLeaveSession = () => {
     mutationFn: (id: string) => leaveSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
-      message.success("You have left the session");
+      message.success("تمت مغادرة الجلسة");
     },
     onError: (error: any) => {
       console.error("Failed to leave session:", error);
+      message.error(error?.response?.data?.message || "فشل مغادرة الجلسة");
     },
   });
 };
@@ -44,10 +46,10 @@ export const useEndSession = () => {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
-      message.success(data?.message || "Session ended successfully");
+      message.success(data?.message || "تم إنهاء الجلسة بنجاح");
     },
     onError: (error: any) => {
-      const msg = error?.response?.data?.message || error?.message || "Failed to end session";
+      const msg = error?.response?.data?.message || error?.message || "فشل إنهاء الجلسة";
       message.error(msg);
     },
   });

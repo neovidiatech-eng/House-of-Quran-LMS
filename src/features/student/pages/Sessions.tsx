@@ -12,6 +12,7 @@ import { useSettings } from '../../../contexts/SettingsContext';
 import CreateRequestModal from '../../../components/modals/CreateRequestModal';
 import { leaveSession } from '../../../services/SessionsServices';
 import FeedbackModal from '../../teacher/components/FeedbackModal';
+import JitsiMeetingModal, { JitsiRoomData } from '../../../components/modals/JitsiMeetingModal';
 
 export default function Sessions() {
   const { t, i18n } = useTranslation();
@@ -25,6 +26,10 @@ export default function Sessions() {
   const [now, setNow] = useState(new Date());
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [sessionForFeedback, setSessionForFeedback] = useState<Schedule | null>(null);
+  const [activeMeeting, setActiveMeeting] = useState<{
+    session: Schedule;
+    roomData: JitsiRoomData;
+  } | null>(null);
 
   const { settings } = useSettings();
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -36,12 +41,26 @@ export default function Sessions() {
     return () => clearInterval(timer);
   }, []);
 
-  const isJoinable = (startTime: string, endTime: string, link: string) => {
-    if (!link) return false;
+  const isJoinable = (startTime: string, endTime: string, _link?: string) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    const oneMinuteBefore = new Date(start.getTime() - 60000);
-    return now >= oneMinuteBefore && now <= end;
+    // Allow join 5 minutes before scheduled start until end time
+    const fiveMinutesBefore = new Date(start.getTime() - 5 * 60000);
+    return now >= fiveMinutesBefore && now <= end;
+  };
+
+  const handleLeaveActiveMeeting = async () => {
+    if (!activeMeeting) return;
+    const currentSession = activeMeeting.session;
+    try {
+      await leaveSession(currentSession.id);
+    } catch (err) {
+      console.error('Leave session error:', err);
+    } finally {
+      setActiveMeeting(null);
+      setSessionForFeedback(currentSession);
+      setShowFeedbackModal(true);
+    }
   };
 
   useEffect(() => {
@@ -231,10 +250,17 @@ export default function Sessions() {
                         <button
                           onClick={async () => {
                             try {
-                              await joinToSession(session.id);
-                              window.open(session.link, '_blank');
+                              const res = await joinToSession(session.id);
+                              if (res?.data) {
+                                setActiveMeeting({
+                                  session,
+                                  roomData: res.data,
+                                });
+                              } else if (session.link) {
+                                window.open(session.link, '_blank');
+                              }
                             } catch (error) {
-                              console.log(error);
+                              console.error('Join session error:', error);
                             }
                           }}
                           disabled={isJoining || !isJoinable(session.start_time, session.end_time, session.link)}
@@ -345,6 +371,16 @@ export default function Sessions() {
         }}
         sessionId={sessionForFeedback?.id || ""}
         sessionTitle={sessionForFeedback?.title || ""}
+      />
+      <JitsiMeetingModal
+        isOpen={!!activeMeeting}
+        onClose={() => setActiveMeeting(null)}
+        roomData={activeMeeting?.roomData || null}
+        sessionTitle={activeMeeting?.session.title}
+        isTeacher={false}
+        onLeave={handleLeaveActiveMeeting}
+        userName={activeMeeting?.session.student?.user?.name || localStorage.getItem('email')?.split('@')[0] || 'Student'}
+        userEmail={activeMeeting?.session.student?.user?.email || localStorage.getItem('email') || ''}
       />
     </div>
   );

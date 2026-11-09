@@ -5,7 +5,6 @@ import {
   Video,
   AlertCircle,
   Calendar,
-  MonitorPlay,
   AlertTriangle,
   BookOpen,
   Layers,
@@ -97,7 +96,7 @@ export default function AddSessionModal({
       description: '',
       notes: '',
       platform: 'zoom',
-      meetingLink: '',
+      meetingLink: `https://meet.bayt-alquran.net/bayt-session-${Date.now().toString(36)}`,
       sessionDate: (() => {
         const tom = new Date();
         tom.setDate(tom.getDate() + 1);
@@ -189,7 +188,8 @@ export default function AddSessionModal({
 
   useEffect(() => {
     if (selectedTeacherData) {
-      setValue('meetingLink', selectedTeacherData.meeting_link || '');
+      const defaultJitsi = `https://meet.bayt-alquran.net/bayt-session-${Date.now().toString(36)}`;
+      setValue('meetingLink', selectedTeacherData.meeting_link?.trim() || defaultJitsi);
     }
   }, [selectedTeacherData, setValue]);
 
@@ -567,29 +567,6 @@ export default function AddSessionModal({
               DAYS={DAYS}
               control={control}
             />
-
-            {/* Meeting Link */}
-            <div className="grid grid-cols-1 gap-5 mb-6">
-              <div>
-                <label className="label">
-                  <MonitorPlay className="w-3.5 h-3.5" />
-                  {t('meetingLink') || 'Meeting Link'}
-                </label>
-
-                <input
-                  type="url"
-                  {...register('meetingLink')}
-                  placeholder="https://zoom.us/j/..."
-                  className="input"
-                />
-
-                {errors.meetingLink && (
-                  <p className="error-text">
-                    {errors.meetingLink.message as string}
-                  </p>
-                )}
-              </div>
-            </div>
 
             {/* Notes */}
             <div className="mb-6">

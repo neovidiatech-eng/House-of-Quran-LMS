@@ -95,13 +95,16 @@ export default function Sessions() {
         const startDate = rawStartDate < tomorrowStr ? tomorrowStr : rawStartDate;
         const endDate = rawEndDate;
 
+        const generateJitsiLink = () =>
+          `https://meet.bayt-alquran.net/bayt-session-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
         await createRecurringSchedule.mutateAsync({
           studentId: formData.student,
           teacherId: formData.teacher,
           subject_id: formData.subject,
           title: formData.title,
           ...(formData.description?.trim() ? { description: formData.description.trim() } : {}),
-          link: formData.meetingLink || "",
+          link: formData.meetingLink?.trim() || generateJitsiLink(),
           ...(formData.notes?.trim() ? { notes: formData.notes.trim() } : {}),
           startTime: sessions[0]?.time || "00:00",
           days: selectedDays,
@@ -116,13 +119,16 @@ export default function Sessions() {
         const [hour, minute] = data.startTime.split(":").map(Number);
         const localDate = new Date(year, month - 1, day, hour, minute);
 
+        const generateJitsiLink = () =>
+          `https://meet.bayt-alquran.net/bayt-session-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
         await createSchedule.mutateAsync({
           studentId: data.student,
           teacherId: data.teacher,
           subject_id: data.subject,
           title: data.title,
           ...(data.description?.trim() ? { description: data.description.trim() } : {}),
-          link: data.meetingLink || "",
+          link: data.meetingLink?.trim() || generateJitsiLink(),
           ...(data.notes?.trim() ? { notes: data.notes.trim() } : {}),
           start_time: localDate.toISOString(),
           // type: data.type,

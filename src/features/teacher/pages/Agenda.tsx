@@ -11,6 +11,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { AgendaSession } from "../../../types/Agenda";
 import SessionsDayModal from "../../../components/modals/SessionsDayModal";
 import { formatDateLocal, getLocalDateKey } from "../../../utils/dateUtils";
+import { useJoinToSession } from "../../../hooks/useSessions";
 import { useTeacherAgenda } from "../hooks/useTeacherAgende";
 
 export default function Agenda() {
@@ -18,6 +19,7 @@ export default function Agenda() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const { mutateAsync: joinToSession } = useJoinToSession();
   const locale = language === "ar" ? "ar-EG" : "en-US";
   // 📌 Month range
   const startDate = useMemo(() => {
@@ -274,12 +276,24 @@ export default function Agenda() {
 
                   <p className="text-lg mt-1">{s.status}</p>
 
-                  {s.link && (
+                  {s.status !== 'completed' && s.status !== 'cancelled' && (
                     <button
-                      onClick={() => window.open(s.link, "_blank")}
-                      className="w-full mt-3 bg-green-600 text-white py-2 rounded-lg text-sm"
+                      onClick={async () => {
+                        try {
+                          const res = await joinToSession(s.id);
+                          if (res?.data?.url) {
+                            window.open(res.data.url, "_blank");
+                          } else if (s.link) {
+                            window.open(s.link, "_blank");
+                          }
+                        } catch (err) {
+                          console.error("Join error:", err);
+                          if (s.link) window.open(s.link, "_blank");
+                        }
+                      }}
+                      className="w-full mt-3 bg-green-600 text-white py-2 rounded-lg text-sm hover:bg-green-700 transition-colors"
                     >
-                      Join Session
+                      {language === 'ar' ? 'انضمام للجلسة' : 'Join Session'}
                     </button>
                   )}
                 </div>

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, Plus, Video, X } from 'lucide-react';
+import { Search, Eye, Plus, Video, X, LogOut, PhoneOff } from 'lucide-react';
 import Pagination from '../../../components/ui/Pagination';
 import { useTranslation } from 'react-i18next';
 import ViewSessionModal from '../../../components/modals/ViewSessionModal';
+import ConfirmModal from '../../../components/modals/ConfirmModal';
+import JitsiMeetingModal, { JitsiRoomData } from '../../../components/modals/JitsiMeetingModal';
 import { Schedule } from '../../../types/scheduales';
 import { useSubjects } from '../../../features/admin/hooks/useSubjects';
 import { Subject } from '../../../types/subject';
-import { useJoinToSession, useEndSession, useUserSessions } from '../../../hooks/useSessions';
+import { useJoinToSession, useUserSessions, useEndSession } from '../../../hooks/useSessions';
+import { leaveSession } from '../../../services/SessionsServices';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
 import CreateRequestModal from '../../../components/modals/CreateRequestModal';
 import FeedbackModal from '../components/FeedbackModal';
@@ -27,6 +30,11 @@ export default function Sessions() {
   const [now, setNow] = useState(new Date());
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [sessionForFeedback, setSessionForFeedback] = useState<Schedule | null>(null);
+  const [sessionToEnd, setSessionToEnd] = useState<Schedule | null>(null);
+  const [activeMeeting, setActiveMeeting] = useState<{
+    session: Schedule;
+    roomData: JitsiRoomData;
+  } | null>(null);
 
   const { settings } = useSettings();
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -39,17 +47,52 @@ export default function Sessions() {
     return () => clearInterval(timer);
   }, []);
 
-  const isJoinable = (startTime: string, endTime: string, link: string) => {
-    if (!link) return false;
+  const isJoinable = (startTime: string, endTime: string, _link?: string) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    const oneMinuteBefore = new Date(start.getTime() - 60000);
-    return now >= oneMinuteBefore && now <= end;
+    // Allow join 5 minutes before scheduled start until end time
+    const fiveMinutesBefore = new Date(start.getTime() - 5 * 60000);
+    return now >= fiveMinutesBefore && now <= end;
   };
 
   const { data: sessionResponse, isLoading } = useUserSessions(debouncedSearch);
   const { mutateAsync: joinToSession, isPending: isJoining } = useJoinToSession();
   const { mutateAsync: endSessionMutation, isPending: isEnding } = useEndSession();
+  const handleConfirmEndSession = async () => {
+    if (!sessionToEnd) return;
+    try {
+      await endSessionMutation(sessionToEnd.id);
+      setSessionToEnd(null);
+    } catch (error) {
+      console.error('End session error:', error);
+    }
+  };
+
+  const handleLeaveActiveMeeting = async () => {
+    if (!activeMeeting) return;
+    const currentSession = activeMeeting.session;
+    try {
+      await leaveSession(currentSession.id);
+    } catch (err) {
+      console.error('Leave session error:', err);
+    } finally {
+      setActiveMeeting(null);
+      setSessionForFeedback(currentSession);
+      setShowFeedbackModal(true);
+    }
+  };
+
+  const handleEndActiveMeeting = async () => {
+    if (!activeMeeting) return;
+    const currentSession = activeMeeting.session;
+    try {
+      await endSessionMutation(currentSession.id);
+    } catch (err) {
+      console.error('End session error:', err);
+    } finally {
+      setActiveMeeting(null);
+    }
+  };
   useEffect(() => {
     if (searchTerm.length > 2) {
       setDebouncedSearch(searchTerm);
@@ -206,7 +249,7 @@ export default function Sessions() {
 
         <div className="overflow-x-auto">
           {isLoading ? (
-            <TableSkeleton rows={itemsPerPage} columns={7} />
+            <TableSkeleton rows={itemsPerPage} columns={11} />
           ) : (
             <table className="w-full" dir={language === "ar" ? "rtl" : "ltr"}>
               <thead className="bg-gray-50 border-b border-gray-100">
@@ -219,6 +262,7 @@ export default function Sessions() {
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('status')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('joinSession')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('leaveSession')}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{isRtl ? 'إنهاء الجلسة للجميع' : 'End Session'}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('AddRequest')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('actions')}</th>
                 </tr>
@@ -285,10 +329,17 @@ export default function Sessions() {
                         <button
                           onClick={async () => {
                             try {
-                              await joinToSession(session.id);
-                              window.open(session.link, '_blank');
+                              const res = await joinToSession(session.id);
+                              if (res?.data) {
+                                setActiveMeeting({
+                                  session,
+                                  roomData: res.data,
+                                });
+                              } else if (session.link) {
+                                window.open(session.link, '_blank');
+                              }
                             } catch (error) {
-                              console.log(error);
+                              console.error('Join session error:', error);
                             }
                           }}
                           disabled={isJoining || !isJoinable(session.start_time, session.end_time, session.link)}
@@ -302,28 +353,41 @@ export default function Sessions() {
                         </button>
                       </td>
 
-                        <td className="px-6 py-4 text-start">
+                      <td className="px-6 py-4 text-start">
                         <button
                           onClick={async () => {
                             try {
-                              await endSessionMutation(session.id);
+                              await leaveSession(session.id);
                               setSessionForFeedback(session);
                               setShowFeedbackModal(true);
                             } catch (error) {
-                              console.log(error);
+                              console.error('Leave session error:', error);
                             }
                           }}
-                          disabled={isEnding || session.status?.toLowerCase() === 'completed'}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${
-                            session.status?.toLowerCase() === 'completed'
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              : isEnding
-                              ? 'bg-red-400 text-white cursor-wait opacity-70'
-                              : 'bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md'
+                          disabled={session.status?.toLowerCase() === 'completed'}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${session.status?.toLowerCase() === 'completed'
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-amber-600 text-white hover:bg-amber-700 shadow-sm hover:shadow-md'
                           }`}
                         >
-                          <X className="w-4 h-4" />
-                          <span className="text-sm">{isEnding ? (language === 'ar' ? 'جارٍ الإنهاء...' : 'Ending...') : (t('endSession') || 'End Session')}</span>
+                          <LogOut className="w-4 h-4" />
+                          <span className="text-sm">{t('leaveSession') || (isRtl ? 'مغادرة' : 'Leave')}</span>
+                        </button>
+                      </td>
+
+                      <td className="px-6 py-4 text-start">
+                        <button
+                          onClick={() => setSessionToEnd(session)}
+                          disabled={isEnding || session.status?.toLowerCase() === 'completed'}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${session.status?.toLowerCase() === 'completed'
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md'
+                          }`}
+                        >
+                          <PhoneOff className="w-4 h-4" />
+                          <span className="text-sm">{isRtl ? 'إنهاء الجلسة' : 'End Session'}</span>
+                        </button>
+                      </td>
                         </button>
                       </td>
 
@@ -362,7 +426,7 @@ export default function Sessions() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={11} className="px-6 py-4 text-center text-gray-500">
                       {t('No Sessions')}
                     </td>
                   </tr>
@@ -399,15 +463,43 @@ export default function Sessions() {
         sessionTitle={sessionForRequest?.title}
       />
 
- <FeedbackModal
-  visible={showFeedbackModal}
-  onClose={() => {
-    setShowFeedbackModal(false);
-    setSessionForFeedback(null);
-  }}
-  sessionId={sessionForFeedback?.id || ""}
-  sessionTitle={sessionForFeedback?.title || ""}
-/>
+  <FeedbackModal
+   visible={showFeedbackModal}
+   onClose={() => {
+     setShowFeedbackModal(false);
+     setSessionForFeedback(null);
+   }}
+   sessionId={sessionForFeedback?.id || ""}
+   sessionTitle={sessionForFeedback?.title || ""}
+ />
+
+      {/* Confirmation Modal for Ending Session from Table */}
+      <ConfirmModal
+        isOpen={!!sessionToEnd}
+        onClose={() => setSessionToEnd(null)}
+        onConfirm={handleConfirmEndSession}
+        title={isRtl ? 'إنهاء الجلسة للجميع' : 'End Session for Everyone'}
+        message={
+          isRtl
+            ? `هل أنت متأكد من رغبتك في إنهاء الجلسة "${sessionToEnd?.title || ''}" للجميع؟ سيتم إغلاق الجلسة واحتساب مستحقات الحصة.`
+            : 'Are you sure you want to end this session for everyone? This will complete the session and record earnings.'
+        }
+        confirmText={isRtl ? 'نعم، أنهِ الجلسة' : 'Yes, End Session'}
+        cancelText={isRtl ? 'إلغاء' : 'Cancel'}
+      />
+
+      {/* Live Jitsi Meeting Modal */}
+      <JitsiMeetingModal
+        isOpen={!!activeMeeting}
+        onClose={() => setActiveMeeting(null)}
+        roomData={activeMeeting?.roomData || null}
+        sessionTitle={activeMeeting?.session.title}
+        isTeacher={true}
+        onLeave={handleLeaveActiveMeeting}
+        onEndSession={handleEndActiveMeeting}
+        userName={localStorage.getItem('name') || (isRtl ? 'المعلم' : 'Teacher')}
+        userEmail={localStorage.getItem('email') || ''}
+      />
     </div>
   );
 }

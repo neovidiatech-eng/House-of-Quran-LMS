@@ -11,7 +11,7 @@ const getBaseSession = (t: TFunc) => z.object({
   description: z.string().optional(),
   // type: z.enum(['full', 'half']),
   notification_Time: z.string(),
-  meetingLink: z.string().min(1, t("validation.required")).url(t("validation.email")),
+  meetingLink: z.string().url(t("validation.email")).optional().or(z.literal('')),
   notes: z.string().optional(),
 });
 

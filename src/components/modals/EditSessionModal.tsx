@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, FileText, User, GraduationCap, Bell, MonitorPlay, Video, AlertTriangle, Repeat, ExternalLink, Pencil } from 'lucide-react';
+import { X, Calendar, Clock, FileText, User, GraduationCap, Bell, Video, AlertTriangle, Repeat, ExternalLink, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Schedule } from '../../types/scheduales';
@@ -69,7 +69,8 @@ export default function EditSessionModal({ isOpen, onClose, session, groupedSess
     e.preventDefault();
     const payload: any = {
       title: formData.title,
-      link: formData.link,
+      link: formData.link?.trim() || currentSession.link || `https://meet.bayt-alquran.net/bayt-session-${currentSession.id}`,
+      notes: formData.notes,
       status: formData.status,
       start_time: formData.start_time ? new Date(formData.start_time).toISOString() : currentSession.start_time,
       notification_Time: formData.notification_Time,
@@ -261,36 +262,21 @@ export default function EditSessionModal({ isOpen, onClose, session, groupedSess
               </div>
             </div>
 
-            {/* Notification & Link */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-              <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <Bell className="w-3.5 h-3.5" /> {t('notificationTime')}
-                </label>
-                <CustomSelect
-                  value={formData.notification_Time}
-                  onChange={(val) => handleChange('notification_Time', val as string)}
-                  options={[
-                    { value: '10', label: language === 'ar' ? 'قبل 10 دقائق' : '10 minutes before' },
-                    { value: '30', label: language === 'ar' ? 'قبل 30 دقيقة' : '30 minutes before' },
-                    { value: '60', label: language === 'ar' ? 'قبل ساعة' : '1 hour before' },
-                  ]}
-                  className="rounded-2xl border-none bg-gray-50"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <MonitorPlay className="w-3.5 h-3.5" /> {t('meetingLink')}
-                </label>
-                <input
-                  type="url"
-                  value={formData.link}
-                  onChange={(e) => handleChange('link', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-indigo-500/10 transition-all placeholder:text-gray-300"
-                  dir="ltr"
-                  placeholder="https://zoom.us/..."
-                />
-              </div>
+            {/* Notification Time */}
+            <div className="mb-6">
+              <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                <Bell className="w-3.5 h-3.5" /> {t('notificationTime')}
+              </label>
+              <CustomSelect
+                value={formData.notification_Time}
+                onChange={(val) => handleChange('notification_Time', val as string)}
+                options={[
+                  { value: '10', label: language === 'ar' ? 'قبل 10 دقائق' : '10 minutes before' },
+                  { value: '30', label: language === 'ar' ? 'قبل 30 دقيقة' : '30 minutes before' },
+                  { value: '60', label: language === 'ar' ? 'قبل ساعة' : '1 hour before' },
+                ]}
+                className="rounded-2xl border-none bg-gray-50"
+              />
             </div>
 
             {/* Notes */}
