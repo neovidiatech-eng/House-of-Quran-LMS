@@ -27,7 +27,9 @@
     "passwordComplex": "Password must include uppercase, lowercase, number, and special character (@$!%*?&^#)",
     "passwordMatch": "Passwords do not match",
     "invalidPhone": "Invalid phone number for the selected country",
-    "invalidUrl": "Please enter a valid URL"
+    "invalidUrl": "Please enter a valid URL",
+    "emailOrPhoneInvalid": "Please enter a valid email or phone number",
+    "url": "Please enter a valid URL"
   },
   "login": "Login",
   "academyName": "House of Quran Academy",
@@ -635,5 +637,36 @@
   "viewLogs": "View Logs",
   "hideLogs": "Hide Logs",
   "notJoinedYet": "Not joined yet",
-  "recurringSessions": "Recurring Sessions"
+  "recurringSessions": "Recurring Sessions",
+  "emailorphone": "Email or Phone Number",
+  "sessionFeedback": "Session Feedback",
+  "shareFeedbackFor": "Share your feedback for:",
+  "rateSession": "Rate the Session",
+  "rateTheSession": "Rate the Session",
+  "additionalComments": "Additional Comments",
+  "feedbackCommentPlaceholder": "How was the session? Any specific notes or points for improvement?",
+  "sendFeedback": "Send Feedback",
+  "feedbackSentSuccess": "Feedback sent successfully",
+  "No Sessions": "No Sessions",
+  "joining...": "Joining...",
+  "loading": "Loading...",
+  "date": "Date",
+  "time": "Time",
+  "copy": "Copy",
+  "selectAll": "Select All",
+  "deselectAll": "Deselect All",
+  "missed": "Missed",
+  "save_changes": "Save Changes",
+  "update": "Update",
+  "errorLoadingData": "Error loading data",
+  "noTeachersFound": "No teachers found",
+  "searchUsersPlaceholder": "Search users...",
+  "rejected": "Rejected",
+  "permissionMethod": "Method",
+  "permissionResource": "Resource",
+  "errors": {
+    "failedToLoadProfile": "Failed to load profile"
+  },
+  "secondary1": "Secondary 1",
+  "secondary2": "Secondary 2"
 }
