@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   X,
   Calendar,
@@ -17,9 +17,9 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { Schedule } from '../../types/scheduales';
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Schedule } from "../../types/scheduales";
 
 interface ViewSessionModalProps {
   isOpen: boolean;
@@ -37,8 +37,8 @@ export default function ViewSessionModal({
   groupedSessions,
 }: ViewSessionModalProps) {
   const { t, i18n } = useTranslation();
-  const language = i18n.language.split('-')[0];
-  const isParent = localStorage.getItem('role') === 'parent';
+  const language = i18n.language.split("-")[0];
+  const isParent = localStorage.getItem("role") === "parent";
 
   const [activeSession, setActiveSession] = useState<Schedule | null>(session);
   const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({});
@@ -56,67 +56,67 @@ export default function ViewSessionModal({
 
   const getStatusStyle = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'scheduled':
-      case 'planned':
-        return 'bg-primary-50 text-blue-600 border-blue-100';
-      case 'completed':
-        return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'cancelled':
-        return 'bg-red-50 text-red-600 border-red-100';
+      case "scheduled":
+      case "planned":
+        return "bg-primary-50 text-blue-600 border-blue-100";
+      case "completed":
+        return "bg-emerald-50 text-emerald-600 border-emerald-100";
+      case "cancelled":
+        return "bg-red-50 text-red-600 border-red-100";
       default:
-        return 'bg-gray-50 text-gray-600 border-gray-100';
+        return "bg-gray-50 text-gray-600 border-gray-100";
     }
   };
 
   const formatDateTime = (dateString: string) => {
-    if (!dateString) return { date: '', time: '' };
+    if (!dateString) return { date: "", time: "" };
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return { date: dateString, time: '' };
+      if (isNaN(date.getTime())) return { date: dateString, time: "" };
       const formattedDate = date.toLocaleDateString(
-        language === 'ar' ? 'ar-EG' : 'en-US',
+        language === "ar" ? "ar-EG" : "en-US",
         {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        }
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        },
       );
       const formattedTime = date.toLocaleTimeString(
-        language === 'ar' ? 'ar-EG' : 'en-US',
+        language === "ar" ? "ar-EG" : "en-US",
         {
-          hour: '2-digit',
-          minute: '2-digit',
-        }
+          hour: "2-digit",
+          minute: "2-digit",
+        },
       );
       return { date: formattedDate, time: formattedTime };
     } catch {
-      return { date: dateString, time: '' };
+      return { date: dateString, time: "" };
     }
   };
 
   const formatTimeOnly = (dateString?: string | null) => {
-    if (!dateString) return '—';
+    if (!dateString) return "—";
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
+      return date.toLocaleTimeString(language === "ar" ? "ar-EG" : "en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
-      return dateString || '—';
+      return dateString || "—";
     }
   };
 
   const formatDurationMinutes = (minutes?: number | null) => {
-    if (minutes === null || minutes === undefined || isNaN(minutes)) return '—';
+    if (minutes === null || minutes === undefined || isNaN(minutes)) return "—";
     const totalMins = Math.round(minutes);
     if (totalMins < 60) {
-      return `${totalMins} ${t('minutes')}`;
+      return `${totalMins} ${t("minutes")}`;
     }
     const hours = Math.floor(totalMins / 60);
     const remainingMins = totalMins % 60;
-    if (language === 'ar') {
+    if (language === "ar") {
       return remainingMins > 0
         ? `${hours} س ${remainingMins} د`
         : `${hours} ساعة`;
@@ -136,10 +136,10 @@ export default function ViewSessionModal({
 
     try {
       const getMinutes = (timeStr: string) => {
-        const cleanTime = timeStr.includes('T')
-          ? timeStr.split('T')[1]
+        const cleanTime = timeStr.includes("T")
+          ? timeStr.split("T")[1]
           : timeStr;
-        const parts = cleanTime.split(':');
+        const parts = cleanTime.split(":");
         const h = Number(parts[0]) || 0;
         const m = Number(parts[1]) || 0;
         return h * 60 + m;
@@ -158,25 +158,26 @@ export default function ViewSessionModal({
   if (!isOpen || !activeSession) return null;
 
   const { date: sessionDate, time: sessionTime } = formatDateTime(
-    activeSession.start_time
+    activeSession.start_time,
   );
   const { time: endTime } = formatDateTime(activeSession.end_time);
   const duration = calculateDuration(
     activeSession.start_time,
-    activeSession.end_time
+    activeSession.end_time,
   );
 
   const hasRecurringGroup = Boolean(
     (activeSession.is_recurring || activeSession.parent_recurring_id) &&
     groupedSessions &&
-    groupedSessions.length > 1
+    groupedSessions.length > 1,
   );
 
   return (
     <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
       <div
-        className={`bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full ${hasRecurringGroup ? 'max-w-[1020px]' : 'max-w-[640px]'
-          } max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300`}
+        className={`bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full ${
+          hasRecurringGroup ? "max-w-[1020px]" : "max-w-[640px]"
+        } max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300`}
       >
         {/* Header */}
         <div className="px-6 sm:px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-white shrink-0">
@@ -186,7 +187,7 @@ export default function ViewSessionModal({
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">
-                {t('sessionDetails')}
+                {t("sessionDetails")}
               </h2>
               <p className="text-xs sm:text-[13px] font-semibold text-gray-400 mt-0.5">
                 {activeSession.title}
@@ -196,10 +197,10 @@ export default function ViewSessionModal({
           <div className="flex items-center gap-3">
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-widest ${getStatusStyle(
-                activeSession.status
+                activeSession.status,
               )}`}
             >
-              {t(activeSession.status?.toLowerCase() || '')}
+              {t(activeSession.status?.toLowerCase() || "")}
             </span>
             <button
               onClick={onClose}
@@ -214,8 +215,9 @@ export default function ViewSessionModal({
         <div className="flex flex-col lg:flex-row overflow-hidden flex-1">
           {/* Main Column - Session Details */}
           <div
-            className={`w-full ${hasRecurringGroup ? 'lg:w-[58%]' : 'w-full'
-              } p-5 sm:p-7 bg-white overflow-y-auto custom-scrollbar space-y-5`}
+            className={`w-full ${
+              hasRecurringGroup ? "lg:w-[58%]" : "w-full"
+            } p-5 sm:p-7 bg-white overflow-y-auto custom-scrollbar space-y-5`}
           >
             {/* People */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,10 +227,10 @@ export default function ViewSessionModal({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-                    {t('studentLabel')}
+                    {t("studentLabel")}
                   </p>
                   <p className="text-sm font-bold text-gray-900 truncate">
-                    {activeSession.student?.user?.name || '—'}
+                    {activeSession.student?.user?.name || "—"}
                   </p>
                 </div>
               </div>
@@ -239,10 +241,10 @@ export default function ViewSessionModal({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-                    {t('teacherLabel')}
+                    {t("teacherLabel")}
                   </p>
                   <p className="text-sm font-bold text-gray-900 truncate">
-                    {activeSession.teacher?.user?.name || '—'}
+                    {activeSession.teacher?.user?.name || "—"}
                   </p>
                 </div>
               </div>
@@ -254,7 +256,7 @@ export default function ViewSessionModal({
                 <div className="flex items-center justify-center sm:justify-start gap-1.5 mb-1.5 text-indigo-400">
                   <Calendar className="w-3.5 h-3.5" />
                   <p className="text-[10px] font-bold uppercase tracking-wider">
-                    {t('date')}
+                    {t("date")}
                   </p>
                 </div>
                 <p className="text-xs sm:text-sm font-black text-indigo-700 truncate">
@@ -265,7 +267,7 @@ export default function ViewSessionModal({
                 <div className="flex items-center justify-center sm:justify-start gap-1.5 mb-1.5 text-emerald-400">
                   <Clock className="w-3.5 h-3.5" />
                   <p className="text-[10px] font-bold uppercase tracking-wider">
-                    {t('time')}
+                    {t("time")}
                   </p>
                 </div>
                 <p
@@ -279,20 +281,20 @@ export default function ViewSessionModal({
                 <div className="flex items-center justify-center sm:justify-start gap-1.5 mb-1.5 text-amber-400">
                   <Clock className="w-3.5 h-3.5" />
                   <p className="text-[10px] font-bold uppercase tracking-wider">
-                    {t('duration')}
+                    {t("duration")}
                   </p>
                 </div>
                 <p className="text-xs sm:text-sm font-black text-amber-700 truncate">
-                  {duration} {t('minutes')}
+                  {duration} {t("minutes")}
                 </p>
               </div>
             </div>
 
             {/* Meeting Link */}
-            {activeSession.link && !isParent && (
+            {/* {activeSession.link && !isParent && (
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                  {t('meetingLink')}
+                  {t("meetingLink")}
                 </p>
                 <div className="flex items-center gap-3">
                   <a
@@ -302,7 +304,7 @@ export default function ViewSessionModal({
                     className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-700 text-white rounded-xl transition-all text-xs font-bold shadow-sm active:scale-95 shrink-0"
                   >
                     <Video className="w-3.5 h-3.5" />
-                    {t('joinSession')}
+                    {t("joinSession")}
                   </a>
                   <span
                     className="text-xs text-gray-400 break-all truncate"
@@ -312,7 +314,7 @@ export default function ViewSessionModal({
                   </span>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Attendance & Session Logs */}
             <div className="bg-slate-50/70 rounded-2xl p-4 sm:p-5 border border-slate-200/80">
@@ -323,7 +325,7 @@ export default function ViewSessionModal({
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-gray-900 leading-tight">
-                      {t('sessionLogs')}
+                      {t("sessionLogs")}
                     </h4>
                   </div>
                 </div>
@@ -340,10 +342,10 @@ export default function ViewSessionModal({
                         </div>
                         <div>
                           <p className="text-xs font-bold text-gray-900">
-                            {t('teacherAttendance')}
+                            {t("teacherAttendance")}
                           </p>
                           <p className="text-[10px] text-gray-400 font-medium truncate max-w-[180px]">
-                            {activeSession.teacher?.user?.name || '—'}
+                            {activeSession.teacher?.user?.name || "—"}
                           </p>
                         </div>
                       </div>
@@ -351,21 +353,21 @@ export default function ViewSessionModal({
                         {activeSession.scheduleLogs.isTeacherLate ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
                             <Clock className="w-2.5 h-2.5" />
-                            {t('teacherLate')}
+                            {t("teacherLate")}
                           </span>
                         ) : activeSession.scheduleLogs.joinTime_teacher ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
                             <CheckCircle2 className="w-2.5 h-2.5" />
-                            {t('teacherOnTime')}
+                            {t("teacherOnTime")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">
-                            {t('notJoinedYet')}
+                            {t("notJoinedYet")}
                           </span>
                         )}
                         {activeSession.scheduleLogs.isTeacherCompleted && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-200">
-                            {t('teacherCompleted')}
+                            {t("teacherCompleted")}
                           </span>
                         )}
                       </div>
@@ -375,11 +377,14 @@ export default function ViewSessionModal({
                       <div className="bg-slate-50/70 rounded-lg p-2">
                         <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-gray-400 mb-0.5">
                           <LogIn className="w-3 h-3 text-emerald-500" />
-                          <span>{t('joinTime')}</span>
+                          <span>{t("joinTime")}</span>
                         </div>
-                        <p className="text-xs font-bold text-gray-800" dir="ltr">
+                        <p
+                          className="text-xs font-bold text-gray-800"
+                          dir="ltr"
+                        >
                           {formatTimeOnly(
-                            activeSession.scheduleLogs.joinTime_teacher
+                            activeSession.scheduleLogs.joinTime_teacher,
                           )}
                         </p>
                       </div>
@@ -387,11 +392,14 @@ export default function ViewSessionModal({
                       <div className="bg-slate-50/70 rounded-lg p-2">
                         <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-gray-400 mb-0.5">
                           <LogOut className="w-3 h-3 text-rose-400" />
-                          <span>{t('leaveTime')}</span>
+                          <span>{t("leaveTime")}</span>
                         </div>
-                        <p className="text-xs font-bold text-gray-800" dir="ltr">
+                        <p
+                          className="text-xs font-bold text-gray-800"
+                          dir="ltr"
+                        >
                           {formatTimeOnly(
-                            activeSession.scheduleLogs.leaveTime_teacher
+                            activeSession.scheduleLogs.leaveTime_teacher,
                           )}
                         </p>
                       </div>
@@ -399,11 +407,11 @@ export default function ViewSessionModal({
                       <div className="bg-slate-50/70 rounded-lg p-2">
                         <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-gray-400 mb-0.5">
                           <Timer className="w-3 h-3 text-indigo-500" />
-                          <span>{t('attendedDuration')}</span>
+                          <span>{t("attendedDuration")}</span>
                         </div>
                         <p className="text-xs font-black text-indigo-600">
                           {formatDurationMinutes(
-                            activeSession.scheduleLogs.duration_teacher
+                            activeSession.scheduleLogs.duration_teacher,
                           )}
                         </p>
                       </div>
@@ -419,24 +427,24 @@ export default function ViewSessionModal({
                         </div>
                         <div>
                           <p className="text-xs font-bold text-gray-900">
-                            {t('studentAttendance')}
+                            {t("studentAttendance")}
                           </p>
                           <p className="text-[10px] text-gray-400 font-medium truncate max-w-[180px]">
-                            {activeSession.student?.user?.name || '—'}
+                            {activeSession.student?.user?.name || "—"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5">
                         {activeSession.scheduleLogs.isStudentAttended ||
-                          activeSession.scheduleLogs.joinTime_student ? (
+                        activeSession.scheduleLogs.joinTime_student ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
                             <CheckCircle2 className="w-2.5 h-2.5" />
-                            {t('studentAttended')}
+                            {t("studentAttended")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
                             <AlertCircle className="w-2.5 h-2.5" />
-                            {t('studentAbsent')}
+                            {t("studentAbsent")}
                           </span>
                         )}
                       </div>
@@ -446,11 +454,14 @@ export default function ViewSessionModal({
                       <div className="bg-slate-50/70 rounded-lg p-2">
                         <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-gray-400 mb-0.5">
                           <LogIn className="w-3 h-3 text-emerald-500" />
-                          <span>{t('joinTime')}</span>
+                          <span>{t("joinTime")}</span>
                         </div>
-                        <p className="text-xs font-bold text-gray-800" dir="ltr">
+                        <p
+                          className="text-xs font-bold text-gray-800"
+                          dir="ltr"
+                        >
                           {formatTimeOnly(
-                            activeSession.scheduleLogs.joinTime_student
+                            activeSession.scheduleLogs.joinTime_student,
                           )}
                         </p>
                       </div>
@@ -458,11 +469,14 @@ export default function ViewSessionModal({
                       <div className="bg-slate-50/70 rounded-lg p-2">
                         <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-gray-400 mb-0.5">
                           <LogOut className="w-3 h-3 text-rose-400" />
-                          <span>{t('leaveTime')}</span>
+                          <span>{t("leaveTime")}</span>
                         </div>
-                        <p className="text-xs font-bold text-gray-800" dir="ltr">
+                        <p
+                          className="text-xs font-bold text-gray-800"
+                          dir="ltr"
+                        >
                           {formatTimeOnly(
-                            activeSession.scheduleLogs.leaveTime_student
+                            activeSession.scheduleLogs.leaveTime_student,
                           )}
                         </p>
                       </div>
@@ -470,11 +484,11 @@ export default function ViewSessionModal({
                       <div className="bg-slate-50/70 rounded-lg p-2">
                         <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-gray-400 mb-0.5">
                           <Timer className="w-3 h-3 text-indigo-500" />
-                          <span>{t('attendedDuration')}</span>
+                          <span>{t("attendedDuration")}</span>
                         </div>
                         <p className="text-xs font-black text-indigo-600">
                           {formatDurationMinutes(
-                            activeSession.scheduleLogs.duration_student
+                            activeSession.scheduleLogs.duration_student,
                           )}
                         </p>
                       </div>
@@ -485,7 +499,7 @@ export default function ViewSessionModal({
                 <div className="p-4 bg-white rounded-xl border border-dashed border-gray-200 text-center">
                   <Clock className="w-5 h-5 text-gray-300 mx-auto mb-1" />
                   <p className="text-xs font-semibold text-gray-400">
-                    {t('noLogsAvailable')}
+                    {t("noLogsAvailable")}
                   </p>
                 </div>
               )}
@@ -497,7 +511,7 @@ export default function ViewSessionModal({
                 <div className="flex items-center gap-2 mb-1.5">
                   <FileText className="w-3.5 h-3.5 text-gray-400" />
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    {t('notes')}
+                    {t("notes")}
                   </p>
                 </div>
                 <p className="text-xs sm:text-sm font-medium text-gray-700 leading-relaxed">
@@ -514,11 +528,11 @@ export default function ViewSessionModal({
                 <div className="flex items-center gap-2">
                   <Repeat className="w-4 h-4 text-indigo-500" />
                   <h3 className="font-bold text-gray-900 text-sm">
-                    {t('recurringSessions')}
+                    {t("recurringSessions")}
                   </h3>
                 </div>
                 <span className="px-3 py-1 bg-primary-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold rounded-full uppercase tracking-wider shadow-sm">
-                  {groupedSessions.length} {t('sessions')}
+                  {groupedSessions.length} {t("sessions")}
                 </span>
               </div>
 
@@ -534,18 +548,19 @@ export default function ViewSessionModal({
                     <div
                       key={s.id}
                       onClick={() => setActiveSession(s)}
-                      className={`bg-white border rounded-2xl p-3.5 transition-all cursor-pointer ${isCurrent
-                          ? 'border-indigo-300 ring-2 ring-indigo-500/15 shadow-sm bg-indigo-50/10'
-                          : 'border-gray-100 hover:border-gray-200 hover:shadow-xs'
-                        }`}
+                      className={`bg-white border rounded-2xl p-3.5 transition-all cursor-pointer ${
+                        isCurrent
+                          ? "border-indigo-300 ring-2 ring-indigo-500/15 shadow-sm bg-indigo-50/10"
+                          : "border-gray-100 hover:border-gray-200 hover:shadow-xs"
+                      }`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                              {t(s.day_of_week?.toLowerCase() || '') ||
+                              {t(s.day_of_week?.toLowerCase() || "") ||
                                 s.day_of_week ||
-                                '—'}
+                                "—"}
                             </span>
 
                             {isCurrent && (
@@ -570,10 +585,10 @@ export default function ViewSessionModal({
                         <div className="flex flex-col items-end gap-2">
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-widest ${getStatusStyle(
-                              s.status
+                              s.status,
                             )}`}
                           >
-                            {t(s.status?.toLowerCase() || '')}
+                            {t(s.status?.toLowerCase() || "")}
                           </span>
 
                           {s.link && (
@@ -599,7 +614,7 @@ export default function ViewSessionModal({
                         >
                           <Activity className="w-3 h-3" />
                           <span>
-                            {isExpanded ? t('hideLogs') : t('attendanceLogs')}
+                            {isExpanded ? t("hideLogs") : t("attendanceLogs")}
                           </span>
                           {isExpanded ? (
                             <ChevronUp className="w-3 h-3" />
@@ -612,9 +627,9 @@ export default function ViewSessionModal({
                           <span className="text-[9px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                             {s.scheduleLogs?.duration_teacher
                               ? formatDurationMinutes(
-                                s.scheduleLogs.duration_teacher
-                              )
-                              : 'Logs available'}
+                                  s.scheduleLogs.duration_teacher,
+                                )
+                              : "Logs available"}
                           </span>
                         )}
                       </div>
@@ -628,24 +643,24 @@ export default function ViewSessionModal({
                               <div className="space-y-1">
                                 <div className="flex items-center gap-1 font-bold text-emerald-700 text-[10px]">
                                   <GraduationCap className="w-3 h-3 shrink-0" />
-                                  <span>{t('teacherAttendance')}</span>
+                                  <span>{t("teacherAttendance")}</span>
                                 </div>
                                 <div className="text-gray-500" dir="ltr">
-                                  <span className="text-gray-400">In:</span>{' '}
+                                  <span className="text-gray-400">In:</span>{" "}
                                   {formatTimeOnly(
-                                    s.scheduleLogs.joinTime_teacher
+                                    s.scheduleLogs.joinTime_teacher,
                                   )}
                                 </div>
                                 <div className="text-gray-500" dir="ltr">
-                                  <span className="text-gray-400">Out:</span>{' '}
+                                  <span className="text-gray-400">Out:</span>{" "}
                                   {formatTimeOnly(
-                                    s.scheduleLogs.leaveTime_teacher
+                                    s.scheduleLogs.leaveTime_teacher,
                                   )}
                                 </div>
                                 {s.scheduleLogs.duration_teacher != null && (
                                   <div className="font-bold text-indigo-600">
                                     {formatDurationMinutes(
-                                      s.scheduleLogs.duration_teacher
+                                      s.scheduleLogs.duration_teacher,
                                     )}
                                   </div>
                                 )}
@@ -655,24 +670,24 @@ export default function ViewSessionModal({
                               <div className="space-y-1 border-s border-gray-200 ps-2">
                                 <div className="flex items-center gap-1 font-bold text-blue-700 text-[10px]">
                                   <User className="w-3 h-3 shrink-0" />
-                                  <span>{t('studentAttendance')}</span>
+                                  <span>{t("studentAttendance")}</span>
                                 </div>
                                 <div className="text-gray-500" dir="ltr">
-                                  <span className="text-gray-400">In:</span>{' '}
+                                  <span className="text-gray-400">In:</span>{" "}
                                   {formatTimeOnly(
-                                    s.scheduleLogs.joinTime_student
+                                    s.scheduleLogs.joinTime_student,
                                   )}
                                 </div>
                                 <div className="text-gray-500" dir="ltr">
-                                  <span className="text-gray-400">Out:</span>{' '}
+                                  <span className="text-gray-400">Out:</span>{" "}
                                   {formatTimeOnly(
-                                    s.scheduleLogs.leaveTime_student
+                                    s.scheduleLogs.leaveTime_student,
                                   )}
                                 </div>
                                 {s.scheduleLogs.duration_student != null && (
                                   <div className="font-bold text-indigo-600">
                                     {formatDurationMinutes(
-                                      s.scheduleLogs.duration_student
+                                      s.scheduleLogs.duration_student,
                                     )}
                                   </div>
                                 )}
@@ -680,7 +695,7 @@ export default function ViewSessionModal({
                             </div>
                           ) : (
                             <p className="text-[10px] text-center text-gray-400 py-1 font-medium">
-                              {t('noLogsAvailable')}
+                              {t("noLogsAvailable")}
                             </p>
                           )}
                         </div>
@@ -699,7 +714,7 @@ export default function ViewSessionModal({
             onClick={onClose}
             className="w-full px-6 py-3 bg-gray-900 hover:bg-black text-white rounded-2xl transition-all font-bold text-xs shadow-md active:scale-95"
           >
-            {t('close')}
+            {t("close")}
           </button>
         </div>
       </div>

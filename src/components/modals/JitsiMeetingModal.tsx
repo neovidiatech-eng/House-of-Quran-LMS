@@ -42,6 +42,14 @@ export default function JitsiMeetingModal({
   const [isLeaving, setIsLeaving] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+  const canEndSession = Boolean(
+    isTeacher &&
+    role !== 'student' &&
+    role !== 'parent' &&
+    onEndSession
+  );
+
   if (!isOpen || !roomData) return null;
 
   const handleLeave = async () => {
@@ -57,7 +65,7 @@ export default function JitsiMeetingModal({
   };
 
   const handleConfirmEnd = async () => {
-    if (!onEndSession) return;
+    if (!canEndSession || !onEndSession) return;
     try {
       setIsEnding(true);
       await onEndSession();
@@ -144,7 +152,7 @@ export default function JitsiMeetingModal({
               </button>
 
               {/* Teacher Only: End Session for Everyone */}
-              {isTeacher && onEndSession && (
+              {canEndSession && (
                 <button
                   type="button"
                   onClick={() => setShowEndConfirm(true)}
@@ -195,7 +203,7 @@ export default function JitsiMeetingModal({
 
       {/* Confirmation Modal for Ending Session */}
       <ConfirmModal
-        isOpen={showEndConfirm}
+        isOpen={showEndConfirm && canEndSession}
         onClose={() => setShowEndConfirm(false)}
         onConfirm={handleConfirmEnd}
         title={isRtl ? 'إنهاء الجلسة للجميع' : 'End Session for Everyone'}

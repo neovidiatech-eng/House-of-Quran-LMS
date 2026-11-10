@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, Plus, Video, X, LogOut, PhoneOff } from 'lucide-react';
+import { Search, Eye, Plus, Video, X, LogOut } from 'lucide-react';
 import Pagination from '../../../components/ui/Pagination';
 import { useTranslation } from 'react-i18next';
 import ViewSessionModal from '../../../components/modals/ViewSessionModal';
-import ConfirmModal from '../../../components/modals/ConfirmModal';
 import JitsiMeetingModal, { JitsiRoomData } from '../../../components/modals/JitsiMeetingModal';
 import { Schedule } from '../../../types/scheduales';
 import { useSubjects } from '../../../features/admin/hooks/useSubjects';
@@ -30,7 +29,6 @@ export default function Sessions() {
   const [now, setNow] = useState(new Date());
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [sessionForFeedback, setSessionForFeedback] = useState<Schedule | null>(null);
-  const [sessionToEnd, setSessionToEnd] = useState<Schedule | null>(null);
   const [activeMeeting, setActiveMeeting] = useState<{
     session: Schedule;
     roomData: JitsiRoomData;
@@ -57,16 +55,7 @@ export default function Sessions() {
 
   const { data: sessionResponse, isLoading } = useUserSessions(debouncedSearch);
   const { mutateAsync: joinToSession, isPending: isJoining } = useJoinToSession();
-  const { mutateAsync: endSessionMutation, isPending: isEnding } = useEndSession();
-  const handleConfirmEndSession = async () => {
-    if (!sessionToEnd) return;
-    try {
-      await endSessionMutation(sessionToEnd.id);
-      setSessionToEnd(null);
-    } catch (error) {
-      console.error('End session error:', error);
-    }
-  };
+  const { mutateAsync: endSessionMutation } = useEndSession();
 
   const handleLeaveActiveMeeting = async () => {
     if (!activeMeeting) return;
@@ -249,7 +238,7 @@ export default function Sessions() {
 
         <div className="overflow-x-auto">
           {isLoading ? (
-            <TableSkeleton rows={itemsPerPage} columns={11} />
+            <TableSkeleton rows={itemsPerPage} columns={10} />
           ) : (
             <table className="w-full" dir={language === "ar" ? "rtl" : "ltr"}>
               <thead className="bg-gray-50 border-b border-gray-100">
@@ -262,7 +251,6 @@ export default function Sessions() {
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('status')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('joinSession')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('leaveSession')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{isRtl ? 'إنهاء الجلسة للجميع' : 'End Session'}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('AddRequest')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('actions')}</th>
                 </tr>
@@ -375,20 +363,6 @@ export default function Sessions() {
                         </button>
                       </td>
 
-                      <td className="px-6 py-4 text-start">
-                        <button
-                          onClick={() => setSessionToEnd(session)}
-                          disabled={isEnding || session.status?.toLowerCase() === 'completed'}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${session.status?.toLowerCase() === 'completed'
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md'
-                          }`}
-                        >
-                          <PhoneOff className="w-4 h-4" />
-                          <span className="text-sm">{isRtl ? 'إنهاء الجلسة' : 'End Session'}</span>
-                        </button>
-                      </td>
-
                       <td className="px-3 py-3 text-start">
                         <button
                           onClick={() => {
@@ -424,7 +398,7 @@ export default function Sessions() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={11} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={10} className="px-6 py-4 text-center text-gray-500">
                       {t('No Sessions')}
                     </td>
                   </tr>
@@ -470,21 +444,6 @@ export default function Sessions() {
    sessionId={sessionForFeedback?.id || ""}
    sessionTitle={sessionForFeedback?.title || ""}
  />
-
-      {/* Confirmation Modal for Ending Session from Table */}
-      <ConfirmModal
-        isOpen={!!sessionToEnd}
-        onClose={() => setSessionToEnd(null)}
-        onConfirm={handleConfirmEndSession}
-        title={isRtl ? 'إنهاء الجلسة للجميع' : 'End Session for Everyone'}
-        message={
-          isRtl
-            ? `هل أنت متأكد من رغبتك في إنهاء الجلسة "${sessionToEnd?.title || ''}" للجميع؟ سيتم إغلاق الجلسة واحتساب مستحقات الحصة.`
-            : 'Are you sure you want to end this session for everyone? This will complete the session and record earnings.'
-        }
-        confirmText={isRtl ? 'نعم، أنهِ الجلسة' : 'Yes, End Session'}
-        cancelText={isRtl ? 'إلغاء' : 'Cancel'}
-      />
 
       {/* Live Jitsi Meeting Modal */}
       <JitsiMeetingModal
