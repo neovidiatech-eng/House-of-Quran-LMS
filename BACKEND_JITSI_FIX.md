@@ -99,25 +99,40 @@ function generateJitsiToken({ user, roomName, isModerator }) {
 
 ---
 
-## 📌 4. ملاحظة إضافية بخصوص مسار إنشاء الحصة (`POST /schedules/create-one/`)
+## 🛑 4. مسار إنهاء الجلسة غير موجود على السيرفر (`Cannot POST /schedules/:id/end`)
 
-حسب ملف التوثيق المرسل سابقاً (`FRONTEND_SESSION_INTEGRATION.md`):
-- الـ Backend يقوم بتوليد الغرفة ورابط Jitsi تلقائياً لكل حصة عند استدعاء `/join`.
-- ولكن مسار الإنشاء الحالي يرفض الطلب ويعيد خطأ:
-  ```json
-  {
-    "message": "فشل التحقق من البيانات",
-    "status": 400,
-    "errors": [
-      "\"link\" is not allowed to be empty"
-    ]
-  }
+حسب ملف التوثيق المرفق سابقاً (`FRONTEND_SESSION_INTEGRATION.md` - قسم "إنهاء الجلسة End Session"):
+- عند قيام المعلم بإنهاء الحصة واستدعاء المسار:
+  ```http
+  POST https://api.bayt-alquran.net/schedules/:id/end
   ```
-- **المطلوب:** يرجى جعل حقل `link` اختيارياً في الـ Validation Schema لمسار الإنشاء (`create-one`)، طالما أن النظام يعتمد على إنشاء غرف Jitsi المباشرة تلقائياً.
+- يرد سيرفر الباك إند بخطأ `404 Not Found` بتنسيق HTML من Express:
+  ```html
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="utf-8">
+  <title>Error</title>
+  </head>
+  <body>
+  <pre>Cannot POST /schedules/c2c2f390-8e05-41ff-adde-b9bfa0816b6d/end</pre>
+  </body>
+  </html>
+  ```
+
+### 🔍 السبب والحل المطلوب:
+- رسالة `Cannot POST /schedules/:id/end` تدل على أن الـ Route غير معرّف أو غير مسجل في Express Router الخاص بـ `schedules` على السيرفر الحي.
+- أو تم تسميته بشكل مختلف في كود الباك إند (يرجى توضيح الاسم الصحيح إن وُجد).
+- **المطلوب:** التأكد من إضافة وتسجيل الـ Route في راوتر الـ `schedules`:
+  ```javascript
+  // schedules.routes.js
+  router.post('/:id/end', authMiddleware, schedulesController.endSession);
+  ```
+  ليقوم بتحديث حالة الحصة إلى `completed` واحتساب مستحقات المعلم وإرسال الإشعارات.
 
 ---
 
 ### ملخص الخطوات السريعة للتنفيذ:
 1. مطابقة `JITSI_APP_SECRET` في كود الـ Backend مع `app_secret` في سيرفر `meet.bayt-alquran.net`.
 2. مطابقة `iss` في التوكن مع `app_id` في السيرفر.
-3. جعل حقل `link` اختياري في مسار `create-one`.
+3. تفعيل وتسجيل مسار إنهاء الجلسة `POST /schedules/:id/end`.
