@@ -1,4 +1,4 @@
-# 📋 Frontend Integration Guide: Live Session Management (Join, Leave, End)
+# 📋 Frontend Integration Guide: Live Session Management (Join, Leave)
 
 دليل تكامل الواجهة الأمامية (Frontend) مع الـ Backend لإدارة جلسات الحصص المباشرة، مع توضيح الفروقات بين صلاحيات **المعلم** و**الطالب**.
 
@@ -10,7 +10,6 @@
 | :--- | :---: | :---: | :--- |
 | **Join Session** | ✅ متاح | ✅ متاح | الانضمام للجلسة وتسجيل وقت الحضور |
 | **Leave Session** | ✅ متاح | ✅ متاح | مغادرة الجلسة مؤقتاً/تسجيل وقت الخروج دون إنهائها |
-| **End Session** | ❌ **غير مسموح** | ✅ **مسموح** | **إنهاء الجلسة كلياً للجميع** وتسوية حالة الجلسة والمستحقات |
 
 ---
 
@@ -141,34 +140,6 @@
 
 ---
 
-### 3. إنهاء الجلسة (End Session) — 🔴 خاص بالمعلم فقط
-
-يستخدم عند قيام المعلم بالضغط على زر **"إنهاء الجلسة للجميع" (End Session)**.
-- **خاص بالمعلم المخصص لهذه الجلسة فقط** (أو الأدمن).
-- يقوم بحساب مستحقات المعلم، تحديث حالة الجلسة إلى `completed`، وتحديث سجل الحضور، وإرسال إشعار للطالب بانتهاء الحصة.
-
-- **Method:** `POST`
-- **URL:** `/schedules/:id/end`
-- **Headers:**
-  ```http
-  Authorization: Bearer <JWT_TOKEN>
-  ```
-- **Response Success (200 OK):**
-  ```json
-  {
-    "success": true,
-    "message": "Session ended successfully",
-    "data": {
-      "status": "completed"
-    }
-  }
-  ```
-- **Possible Errors:**
-  - `403 ONLY_TEACHER_CAN_END_SESSION`: إذا حاول الطالب استدعاء هذا المسار.
-  - `403 NOT_AUTHORIZED`: إذا حاول معلم آخر غير المعلم المخصص للجلسة إنهاءها.
-  - `400 SESSION_ALREADY_FINISHED`: إذا كانت الجلسة منتهية أو ملغاة بالفعل.
-
----
 
 ## 🖥️ أمثلة تطبيقية للـ UI / UX في الـ Frontend
 
@@ -223,10 +194,6 @@ export const sessionService = {
     return axiosInstance.post(`/schedules/${sessionId}/leave`);
   },
 
-  // إنهاء الجلسة (للمعلم فقط)
-  endSession: (sessionId: string) => {
-    return axiosInstance.post(`/schedules/${sessionId}/end`);
-  },
 
   // تقييم الجلسة بعد الانتهاء
   submitReview: (sessionId: string, data: { rating: number; comment?: string }) => {

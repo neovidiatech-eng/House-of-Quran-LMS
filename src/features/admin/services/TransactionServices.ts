@@ -10,8 +10,8 @@ interface TransactionFilters {
     search?: string;
     status?: string;
     type?: string;
-    fromDate?: string;
-    toDate?: string;
+    month_start?: string;
+    month_end?: string;
 }
 
 export const getTransactions = async (
@@ -28,16 +28,24 @@ export const getTransactions = async (
             search: filters.search || undefined,
             status: filters.status && filters.status !== "all" ? filters.status : undefined,
             type: filters.type && filters.type !== "all" ? filters.type : undefined,
-            fromDate: filters.fromDate || undefined,
-            toDate: filters.toDate || undefined,
+            month_start: filters.month_start || undefined,
+            month_end: filters.month_end || undefined,
         },
     });
     return response.data;
 }
 
-export const getTransactionStats = async (currencyId: string): Promise<TransactionStats> => {
+export const getTransactionStats = async (
+    currencyId: string,
+    month_start: string,
+    month_end: string,
+): Promise<TransactionStats> => {
     const response = await api.get<TransactionStatsResponse>("/transactions/stats", {
-        params: { currencyId },
+        params: {
+            currencyId,
+            month_start,
+            month_end,
+        },
     });
     return response.data.data;
 }
@@ -56,3 +64,10 @@ export const updateWithdrawalStatus = async (
     const response = await api.patch(`/withdrawals/${id}/${status}`, body);
     return response.data;
 }
+
+export const zeroing = async () => {
+    const response = await api.get('/transactions/zero');
+    return response.data;
+}
+
+

@@ -11,25 +11,32 @@ const fixedDashboardPaths: Record<string, string> = {
   teacher: "/teacher-dashboard",
   student: "/student-dashboard",
   parent: "/parent-dashboard",
+  moderator: "/supervisor-dashboard",
+  supervisor: "/supervisor-dashboard",
 };
 
 const adminRoles = ["super_admin", "admin"];
-const nonAdminDashboardRoles = ["teacher", "student", "parent"];
+const nonAdminDashboardRoles = ["teacher", "student", "parent", "moderator", "supervisor"];
 
 const routeResources: Record<string, string[]> = {
   dashboard: ["dashboard"],
   admins: ["users", "admins"],
+  moderators: ["moderators", "users", "admins"],
   students: ["students", "users"],
   parents: ["parents", "users"],
+  ranks: ["ranks"],
   teachers: ["teachers"],
   "teacher-availability": ["teachers"],
   subjects: ["subjects"],
   sessions: ["sessions"],
   agenda: ["calendar", "sessions"],
+  feedback: ["feedback"],
   exams: ["exams"],
+  "daily-quran": ["daily_quran", "daily_quran_recitation"],
   assignments: ["homework", "assignments"],
   "lms-courses": ["courses", "lectures"],
   "subscription-requests": ["subscriptions"],
+  "teacher-subscriptions": ["subscriptions", "teachers"],
   "all-subscriptions": ["subscriptions"],
   plans: ["plans"],
   roles: ["roles"],
@@ -38,16 +45,19 @@ const routeResources: Record<string, string[]> = {
   transactions: ["transactions", "finances"],
   "transaction-requests": ["withdrawals", "finances"],
   requests: ["requests"],
+  violations: ["violations"],
+  notifications: ["notifications", "dashboard"],
+  profile: ["profile", "dashboard"],
   settings: ["settings"],
 };
 
 export const getDashboardPathForRole = (role?: string | null) => {
-  if (!role) return "/login";
+  if (!role || role === "No role assigned") return "/login";
   return fixedDashboardPaths[role] || "/dashboard";
 };
 
 export const isAdminDashboardRole = (role?: string | null) => {
-  if (!role) return false;
+  if (!role || role === "No role assigned") return false;
   return !nonAdminDashboardRoles.includes(role);
 };
 

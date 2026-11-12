@@ -22,6 +22,8 @@ export interface Parent {
   createdAt: string;
   updatedAt: string;
   students: Student[];
+  age?: string;
+  city?: string;
 }
 
 export interface Student {

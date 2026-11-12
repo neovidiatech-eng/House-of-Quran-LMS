@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, lazy, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionsProvider } from './contexts/SessionsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import ErrorBoundary from './components/layout/ErrorBoundary';
@@ -16,22 +17,27 @@ import LanguageSwitcher from './components/ui/LanguageSwitcher';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { googleClientId } from './components/constants';
 
+import { lazyWithRetry } from './utils/lazyWithRetry';
+
 // --- Lazy Loading Core Layouts & Pages ---
-const AuthLayout = lazy(() => import('./pages/AuthLayout/AuthLayout'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const VerifyAccount = lazy(() => import('./pages/VerifyAccount'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard/AdminDashboard'));
-const StudentDashboard = lazy(() => import('./features/student/pages/StudentDashboard'));
-const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard/TeacherDashboard'));
+const AuthLayout = lazyWithRetry(() => import('./pages/AuthLayout/AuthLayout'));
+const Login = lazyWithRetry(() => import('./pages/Login'));
+const Register = lazyWithRetry(() => import('./pages/StudentRegister'));
+const TeacherRegister = lazyWithRetry(() => import('./pages/TeacherRegister'));
+const ForgotPassword = lazyWithRetry(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazyWithRetry(() => import('./pages/ResetPassword'));
+const VerifyAccount = lazyWithRetry(() => import('./pages/VerifyAccount'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard/AdminDashboard'));
+const StudentDashboard = lazyWithRetry(() => import('./features/student/pages/StudentDashboard'));
+const TeacherDashboard = lazyWithRetry(() => import('./pages/TeacherDashboard/TeacherDashboard'));
 import AuthGuard from './components/guards/AuthGuard';
 import GuestGuard from './components/guards/GuestGuard';
 import { Provider } from "react-redux";
 import { store } from './store/store';
 import { useChatSocket } from './hooks/useChat';
-const ParentDashboard = lazy(() => import('./features/parent/pages/ParentDashboard'));
+import { useFCM } from './hooks/useFCM';
+const ParentDashboard = lazyWithRetry(() => import('./features/parent/pages/ParentDashboard'));
+const SupervisorDashboard = lazyWithRetry(() => import('./pages/SupervisorDashboard/SupervisorDashboard'));
 
 // Centralized Loading Fallback UI
 const LoadingFallback = () => (
@@ -51,11 +57,13 @@ const queryClient = new QueryClient({
 });
 
 
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return !!localStorage.getItem("token") || !!sessionStorage.getItem("token");
   });
   const { i18n } = useTranslation();
+
 
   useEffect(() => {
     const lang = i18n.language.split('-')[0];
@@ -73,16 +81,23 @@ function SocketProvider() {
   useChatSocket();
   return null;
 }
+
+function FCMProvider() {
+  useFCM();
+  return null;
+}
   return (
     <Provider store={store}>
       <ErrorBoundary>
         <GoogleOAuthProvider clientId={googleClientId}>
           <QueryClientProvider client={queryClient}>
-            <SettingsProvider>
-              <SessionsProvider>
-                <Router >
+            <ThemeProvider>
+              <SettingsProvider>
+                <SessionsProvider>
+                  <Router >
                   {!isAuthenticated && <LanguageSwitcher />}
                   {isAuthenticated && <SocketProvider />}
+                  {isAuthenticated && <FCMProvider />}
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       {/* Auth Routes */}
@@ -90,6 +105,7 @@ function SocketProvider() {
                         <Route element={<AuthLayout />}>
                           <Route path="/login" element={<Login onLoginSuccess={handleLogin} />} />
                           <Route path="/register" element={<Register onRegisterSuccess={handleLogin} />} />
+                          <Route path="/teacher-register" element={<TeacherRegister />} />
                           <Route path="/forgot-password" element={<ForgotPassword />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="/verify-account" element={<VerifyAccount onVerifySuccess={handleLogin} />} />
@@ -115,6 +131,10 @@ function SocketProvider() {
                         <Route path="/parent-dashboard/*" element={<ParentDashboard />} />
                       </Route>
 
+                      <Route element={<AuthGuard allowedRoles={['supervisor', 'moderator', 'super_admin', 'admin']} />}>
+                        <Route path="/supervisor-dashboard/*" element={<SupervisorDashboard />} />
+                      </Route>
+
 
                       <Route path="/" element={<Navigate to="/login" replace />} />
                       <Route path="*" element={<Navigate to="/login" replace />} />
@@ -123,7 +143,8 @@ function SocketProvider() {
                 </Router>
               </SessionsProvider>
             </SettingsProvider>
-          </QueryClientProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
         </GoogleOAuthProvider>
       </ErrorBoundary>
     </Provider>

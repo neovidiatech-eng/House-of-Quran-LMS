@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { X, User, Mail, Phone, Lock, Users, Eye, EyeOff } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { X, User, Mail, Phone, Lock, Users, Eye, EyeOff, MapPin, CalendarDays, Globe } from 'lucide-react';
+import { useGetCities } from '../../features/teacher/hooks/useCity';
+import { DEFAULT_COUNTRIES } from '../../consts';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useForm, Controller, Resolver } from 'react-hook-form';
 import { ParentFormData, getParentSchema } from '../../lib/schemas/ParentSchema';
@@ -16,14 +18,14 @@ interface AddParentModalProps {
 export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
-  const { data: studentsData } = useStudents();
+  const { data: studentsData } = useStudents({ limit: 1000 });
 
   const studentOptions = (studentsData?.data?.studentsData || []).map((s) => ({
     value: s.id,
     label: s.user.name,
   }));
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<ParentFormData>({
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<ParentFormData>({
     resolver: zodResolver(getParentSchema(t)) as Resolver<ParentFormData>,
     defaultValues: {
       name: '',
@@ -32,9 +34,30 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
       password: '',
       codeCountry: '+20',
       country: 'Egypt',
-      students: []
+      students: [],
+      age: '',
+      city: ''
     },
   });
+
+  const selectedCountry = watch("country");
+  const selectedCountryObj = DEFAULT_COUNTRIES.find((c) => c.name === selectedCountry);
+  const countryCode = selectedCountryObj?.iso2?.toLowerCase() || "eg";
+  const { data: citiesData } = useGetCities(countryCode);
+  const cityOptions = citiesData ? citiesData.map((city: any) => ({
+    value: city.name,
+    label: city.name
+  })) : [];
+
+  const displayNames = useMemo(() => new Intl.DisplayNames(
+    [language === "ar" ? "ar" : "en"],
+    { type: "region" }
+  ), [language]);
+
+  const countries = useMemo(() => DEFAULT_COUNTRIES.map((c) => ({
+    value: c.name,
+    label: `${c.emoji} ${displayNames.of(c.iso2) || c.name}`,
+  })), [displayNames]);
 
   const handleOnSubmit = async (data: ParentFormData) => {
     await onAdd({
@@ -48,6 +71,9 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
     title: { ar: 'إضافة ولي أمر جديد', en: 'Add New Parent' },
     name: { ar: 'الاسم الكامل', en: 'Full Name' },
     email: { ar: 'البريد الإلكتروني', en: 'Email Address' },
+    country: { ar: 'الدولة', en: 'Country' },
+    age: { ar: 'السن', en: 'Age' },
+    city: { ar: 'المدينة', en: 'City' },
     phone: { ar: 'رقم الهاتف', en: 'Phone Number' },
     userName: { ar: 'اسم المستخدم / واتساب', en: 'WhatsApp Number' },
     password: { ar: 'كلمة المرور', en: 'Password' },
@@ -61,7 +87,7 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh]  overflow-y-auto no-scrollbar">
-        <div className="sticky top-0 bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl z-50">
           <h2 className="text-2xl font-bold text-white">{text.title[language]}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-white" />
@@ -72,7 +98,7 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {/* الاسم */}
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.name[language]}</label>
               <div className="relative">
                 <User className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -81,13 +107,66 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
               </div>
             </div>
 
-            {/* البريد الإلكتروني */}
+            {/* السن */}
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.age[language]}</label>
+              <div className="relative">
+                <User className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input type="text" {...register('age')} className="w-full pr-12 py-3 border border-gray-200 rounded-xl text-start" />
+                {errors.age && <p className="text-red-500 text-xs mt-1 text-start">{errors.age.message}</p>}
+              </div>
+            </div>
+
+            {/* البريد الإلكتروني */}
+            <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.email[language]}</label>
               <div className="relative">
                 <Mail className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input type="email" {...register('email')} className="w-full pr-12 py-3 border border-gray-200 rounded-xl text-start" />
                 {errors.email && <p className="text-red-500 text-xs mt-1 text-start">{errors.email.message}</p>}
+              </div>
+            </div>
+
+            {/* Country Data (Hidden codeCountry) */}
+            <input type="hidden" {...register('codeCountry')} value="+20" />
+
+            {/* الدولة */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.country[language]}</label>
+              <div className="relative">
+                <Controller
+                  name="country"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      options={countries}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={text.country[language]}
+                    />
+                  )}
+                />
+                {errors.country && <p className="text-red-500 text-xs mt-1 text-start">{errors.country.message}</p>}
+              </div>
+            </div>
+
+            {/* المدينة */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.city[language]}</label>
+              <div className="relative">
+                <Controller
+                  name="city"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      options={cityOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={text.city[language]}
+                    />
+                  )}
+                />
+                {errors.city && <p className="text-red-500 text-xs mt-1 text-start">{errors.city.message}</p>}
               </div>
             </div>
 
@@ -101,9 +180,7 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
               </div>
             </div>
 
-            {/* Country Data (Hidden or read-only, but let's keep it in data) */}
-            <input type="hidden" {...register('codeCountry')} value="+20" />
-            <input type="hidden" {...register('country')} value="Egypt" />
+
 
             {/* كلمة المرور */}
             <div className="md:col-span-2">

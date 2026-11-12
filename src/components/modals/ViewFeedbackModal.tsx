@@ -60,16 +60,16 @@ export default function ViewFeedbackModal({ isOpen, onClose, feedback }: ViewFee
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white p-4 rounded-lg shadow-sm border border-emerald-50">
                 <p className="text-sm text-gray-500 mb-1">{language === 'ar' ? 'عنوان الحصة' : 'Session Title'}</p>
-                <p className="font-semibold text-gray-900">{feedback.schedule?.title || (language === 'ar' ? 'جلسة' : 'Session')}</p>
+                <p className="font-semibold text-gray-900">{feedback.schedule.title}</p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow-sm border border-emerald-50">
                 <p className="text-sm text-gray-500 mb-1">{language === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</p>
                 <p className="font-semibold text-gray-900 flex items-center gap-2">
-                  {formatDate(feedback.schedule?.start_time || feedback.createdAt)}
+                  {formatDate(feedback.schedule.start_time)}
                 </p>
                 <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
                   <Clock className="w-3 h-3" />
-                  <span dir="ltr">{formatTime(feedback.schedule?.start_time || feedback.createdAt)} - {formatTime(feedback.schedule?.end_time || feedback.createdAt)}</span>
+                  <span dir="ltr">{formatTime(feedback.schedule.start_time)} - {formatTime(feedback.schedule.end_time)}</span>
                 </p>
               </div>
             </div>

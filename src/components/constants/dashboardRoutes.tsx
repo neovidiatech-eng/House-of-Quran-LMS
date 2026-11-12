@@ -1,4 +1,4 @@
-import { lazy, ReactNode } from "react";
+import { ReactNode } from "react";
 import {
   Home,
   Users,
@@ -21,7 +21,7 @@ import {
   Package,
   Coins,
   ShieldCheck,
-  Repeat
+  Repeat,
 } from 'lucide-react';
 import Roles from '../../features/admin/pages/Roles';
 
@@ -35,30 +35,36 @@ export interface RouteConfig {
   subItems?: RouteConfig[];
 }
 
+import { lazyWithRetry } from "../../utils/lazyWithRetry";
+
 // --- Lazy Loading Page Components ---
-const UsersPage = lazy(() => import("../../features/admin/pages/Users"));
-const StudentsPage = lazy(() => import("../../features/admin/pages/Students"));
-const TeachersPage = lazy(() => import("../../features/admin/pages/Teachers"));
-const ParentsPage = lazy(() => import("../../features/admin/pages/Parents"));
-const SessionsPage = lazy(() => import("../../features/admin/pages/Sessions"));
-const AgendaPage = lazy(() => import("../../features/admin/pages/Agenda"));
-const ExamsPage = lazy(() => import("../../features/admin/pages/Exams"));
-const AssignmentsPage = lazy(() => import("../../features/admin/pages/Assignments"));
-const SubscriptionRequestsPage = lazy(
+const UsersPage = lazyWithRetry(() => import("../../features/admin/pages/Users"));
+const ModeratorPage = lazyWithRetry(() => import("../../features/admin/pages/Moderator"));
+const StudentsPage = lazyWithRetry(() => import("../../features/admin/pages/Students"));
+const TeachersPage = lazyWithRetry(() => import("../../features/admin/pages/Teachers"));
+const ParentsPage = lazyWithRetry(() => import("../../features/admin/pages/Parents"));
+const SessionsPage = lazyWithRetry(() => import("../../features/admin/pages/Sessions"));
+const AgendaPage = lazyWithRetry(() => import("../../features/admin/pages/Agenda"));
+const ExamsPage = lazyWithRetry(() => import("../../features/admin/pages/Exams"));
+const AssignmentsPage = lazyWithRetry(() => import("../../features/admin/pages/Assignments"));
+const SubscriptionRequestsPage = lazyWithRetry(
   () => import("../../features/admin/pages/SubscriptionRequests"),
 );
-const AllSubscriptionsPage = lazy(() => import("../../features/admin/pages/AllSubscriptions"));
-const PlansPage = lazy(() => import("../../features/admin/pages/Plans"));
-const CurrenciesPage = lazy(() => import("../../features/admin/pages/Currencies"));
-const ExpensesPage = lazy(() => import("../../features/admin/pages/Expenses"));
-const TransactionsPage = lazy(() => import("../../features/admin/pages/Transactions"));
-const TeacherRequestsPage = lazy(() => import("../../features/admin/pages/TeacherRequests"));
-const TeacherAvailabilityPage = lazy(
+const AllSubscriptionsPage = lazyWithRetry(() => import("../../features/admin/pages/AllSubscriptions"));
+const PlansPage = lazyWithRetry(() => import("../../features/admin/pages/Plans"));
+const CurrenciesPage = lazyWithRetry(() => import("../../features/admin/pages/Currencies"));
+const ExpensesPage = lazyWithRetry(() => import("../../features/admin/pages/Expenses"));
+const TransactionsPage = lazyWithRetry(() => import("../../features/admin/pages/Transactions"));
+const TeacherRequestsPage = lazyWithRetry(() => import("../../features/admin/pages/TeacherRequests"));
+const TeacherSubscriptionsPage = lazyWithRetry(
+  () => import("../../features/admin/pages/TeacherSubscriptions"),
+);
+const TeacherAvailabilityPage = lazyWithRetry(
   () => import("../../features/admin/pages/TeacherAvailability"),
 );
-const SubjectsPage = lazy(() => import("../../features/admin/pages/Subjects"));
-const LMSCoursesPage = lazy(() => import("../../features/admin/pages/LMSCourses/LMSCourses"));
-const SettingsPage = lazy(() => import("../../features/admin/pages/Settings"));
+const SubjectsPage = lazyWithRetry(() => import("../../features/admin/pages/Subjects"));
+const LMSCoursesPage = lazyWithRetry(() => import("../../features/admin/pages/LMSCourses/LMSCourses"));
+const SettingsPage = lazyWithRetry(() => import("../../features/admin/pages/Settings"));
 
 export const dashboardRoutes: RouteConfig[] = [
   {
@@ -96,6 +102,13 @@ export const dashboardRoutes: RouteConfig[] = [
         element: <UsersPage />,
       },
       {
+        id: "moderators",
+        label: "sidebar_moderators",
+        icon: UserCheck,
+        path: "moderators",
+        element: <ModeratorPage />,
+      },
+      {
         id: "students",
         label: "sidebar_students",
         icon: GraduationCap,
@@ -123,6 +136,13 @@ export const dashboardRoutes: RouteConfig[] = [
         icon: GraduationCap,
         path: "teachers",
         element: <TeachersPage />,
+      },
+      {
+        id: "teacher-subscriptions",
+        label: "sidebar_teacher_subscriptions",
+        icon: UserCheck,
+        path: "teacher-subscriptions",
+        element: <TeacherSubscriptionsPage />,
       },
       {
         id: "requests",
@@ -167,6 +187,7 @@ export const dashboardRoutes: RouteConfig[] = [
         path: "agenda",
         element: <AgendaPage />,
       },
+      
       {
         id: "exams",
         label: "sidebar_exams",

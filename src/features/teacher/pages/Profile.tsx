@@ -46,20 +46,20 @@ export default function TeacherProfile() {
     );
   }
 
-  const profileData = response.data;
-  const teacher = profileData.teacher;
-  const apiStats = profileData.stats;
-  const wallet = teacher.wallet?.[0];
+  const profileData = response?.data || (response as any) || {};
+  const teacher = profileData?.teacher || (profileData as any)?.user || profileData || {};
+  const apiStats = profileData?.stats || {};
+  const wallet = teacher?.wallet?.[0];
   const balance = wallet?.balance ?? 0;
-  const currencySymbol = wallet.currency.symbol;
+  const currencySymbol = wallet?.currency?.symbol || '$';
 
   // Teacher Personal Info
   const teacherInfo = {
-    name: teacher.name || (isRtl ? 'أ. محمد الأحمدي' : 'Mr. Mohamed El-Ahmady'),
-    email: teacher.email || 'teacher@lms.com',
-    phone: teacher.phone || '+20 100 123 4567',
+    name: teacher?.name || (teacher as any)?.user?.name || (isRtl ? 'أ. معلم' : 'Teacher'),
+    email: teacher?.email || (teacher as any)?.user?.email || localStorage.getItem('email') || '',
+    phone: teacher?.phone || (teacher as any)?.user?.phone || '',
     title: isRtl ? 'معلم' : 'Teacher',
-    hourPrice: teacher.hourPrice,
+    hourPrice: teacher?.hourPrice || (teacher as any)?.hour_price || 0,
   };
 
   // Financial Stats
@@ -67,9 +67,9 @@ export default function TeacherProfile() {
   const financialInfo = {
     pendingBalance: balance,
     totalWithdrawn: withdrawals
-      ?.filter(w => w.status === 'completed')
-      .reduce((sum, w) => sum + w.amount, 0) || 0,
-    transactions: withdrawals.map(w => ({
+      ?.filter((w: any) => w.status === 'completed')
+      .reduce((sum: number, w: any) => sum + w.amount, 0) || 0,
+    transactions: withdrawals.map((w: any) => ({
       id: w.id,
       type: isRtl ? 'طلب سحب' : 'Withdrawal Request',
       amount: w.amount,
@@ -80,9 +80,9 @@ export default function TeacherProfile() {
 
   // Quick Stats
   const stats = [
-    { label: isRtl ? 'المواد' : 'Subjects', value: apiStats.totalSubjects.toString(), icon: BookOpen },
-    { label: isRtl ? 'الطلاب' : 'Students', value: apiStats.totalStudents.toString(), icon: Users },
-    { label: isRtl ? 'الحصص' : 'Sessions', value: apiStats.totalSessions.toString(), icon: Clock },
+    { label: isRtl ? 'المواد' : 'Subjects', value: (apiStats?.totalSubjects ?? 0).toString(), icon: BookOpen },
+    { label: isRtl ? 'الطلاب' : 'Students', value: (apiStats?.totalStudents ?? 0).toString(), icon: Users },
+    { label: isRtl ? 'الحصص' : 'Sessions', value: (apiStats?.totalSessions ?? 0).toString(), icon: Clock },
   ];
 
   const handleWithdraw = (amount: number) => {

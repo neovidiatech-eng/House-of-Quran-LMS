@@ -11,16 +11,46 @@ export const getUserSchema = (t: TFunc) => z.object({
     .min(7, t("validation.min", { count: 7 }))
     .max(15, t("validation.max", { count: 15 }))
     .regex(/^[0-9]+$/, t("validation.invalidPhone")),
-      role: z.string().min(1, t("validation.required")),
+  role: z.string().min(1, t("validation.required")),
   password: z
-  .string()
-  .min(8, t("validation.passwordMin", { count: 8 }))
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
-    t("validation.passwordComplex")
-  ),
+    .string()
+    .min(8, t("validation.passwordMin", { count: 8 }))
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+      t("validation.passwordComplex")
+    ),
   permissions: z.array(z.string()).optional(),
   timezone: z.string().optional(),
+  age: z.string().optional(),
+  country: z.string().optional(),
+  city: z.string().optional(),
+});
+
+export const getEditUserSchema = (t: TFunc) => z.object({
+  name: z.string().min(1, t("validation.required")),
+  email: z.string().email(t("validation.email")),
+  countryCode: z.string(),
+  phone: z
+    .string()
+    .min(7, t("validation.min", { count: 7 }))
+    .max(15, t("validation.max", { count: 15 }))
+    .regex(/^[0-9]+$/, t("validation.invalidPhone")),
+  role: z.string().min(1, t("validation.required")),
+  password: z.union([
+    z.string().length(0),
+    z.string()
+      .min(8, t("validation.passwordMin", { count: 8 }))
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+        t("validation.passwordComplex")
+      )
+  ]).optional(),
+  permissions: z.array(z.string()).optional(),
+  timezone: z.string().optional(),
+  age: z.string().optional(),
+  country: z.string().optional(),
+  city: z.string().optional(),
 });
 
 export type UserFormData = z.infer<ReturnType<typeof getUserSchema>>;
+export type EditUserFormData = z.infer<ReturnType<typeof getEditUserSchema>>;

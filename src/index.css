@@ -107,7 +107,7 @@
   .bg-\[\#eefcfc\],
   .bg-primary-50,
   .bg-primary-50 {
-    background-color: color-mix(in srgb, var(--color-primary) 12%, white) !important;
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent) !important;
   }
 
   .text-\[\#00a8a8\],

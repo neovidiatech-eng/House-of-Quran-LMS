@@ -41,7 +41,11 @@ api.interceptors.response.use(
 
     if (data) {
       if (typeof data === 'string') {
-        errorMessage = data;
+        if (data.trim().toLowerCase().startsWith('<!doctype html>') || data.toLowerCase().includes('<html')) {
+          errorMessage = status === 404 ? "The requested resource was not found." : "A server error occurred.";
+        } else {
+          errorMessage = data;
+        }
       } else if (data.error) {
         errorMessage = data.error;
       } else if (data.message) {

@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { Navigate, Outlet, Routes, Route } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import AdminSidebar from './AdminSidebar';
@@ -11,8 +11,10 @@ import {
   isFullAccessRole
 } from '../../utils/auth';
 
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
+
 // --- Lazy Loading Dashboard Home ---
-const AdminDashboardHome = lazy(() => import('../../features/admin/pages/Dashboard'));
+const AdminDashboardHome = lazyWithRetry(() => import('../../features/admin/pages/Dashboard'));
 
 export default function AdminDashboard() {
   const { i18n } = useTranslation();

@@ -1,11 +1,14 @@
 import { Notebook, Users, ClipboardList } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardCard from "../../../components/ui/Card";
 import Pagination from "../../../components/ui/Pagination";
 import ActiveUsersChart from "../components/ActiveUsersChart";
 import RevenueExpenseChart from "../components/RevenueExpenseChart";
 import RecentActivity from "../components/RecentActivity";
 import { useActivityLogs, useAdminDashboard } from "../hooks/useAdminDashboard";
+import { useStudents } from "../hooks/useStudents";
+import { useTeacher } from "../hooks/useTeacher";
 import { useTranslation } from "react-i18next";
 
 
@@ -31,11 +34,68 @@ const formatSessionTime = (
   }
 };
 
+const getPersonName = (person: any, id?: string, idMap?: Map<string, string>): string => {
+  if (id && idMap && idMap.has(id)) {
+    return idMap.get(id)!;
+  }
+  if (!person) return "-";
+  if (typeof person === "string") return person;
+  if (typeof person === "object") {
+    if (person.user?.name) return person.user.name;
+    if (person.name) return person.name;
+    if (person.name_ar) return person.name_ar;
+    if (person.name_en) return person.name_en;
+    if (person.email) return person.email;
+  }
+  return "-";
+};
+
+const getStatusBadge = (status?: string, language: string = "ar") => {
+  const s = status?.toLowerCase();
+  const isAr = language.startsWith("ar");
+  switch (s) {
+    case "scheduled":
+      return { label: isAr ? "مجدولة" : "Scheduled", className: "bg-blue-50 text-blue-700 border-blue-200" };
+    case "planned":
+      return { label: isAr ? "مخطط لها" : "Planned", className: "bg-purple-50 text-purple-700 border-purple-200" };
+    case "completed":
+      return { label: isAr ? "مكتملة" : "Completed", className: "bg-green-50 text-green-700 border-green-200" };
+    case "cancelled":
+    case "canceled":
+      return { label: isAr ? "ملغاة" : "Cancelled", className: "bg-red-50 text-red-700 border-red-200" };
+    default:
+      return { label: status || "-", className: "bg-gray-100 text-gray-700 border-gray-200" };
+  }
+};
+
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
 
   const { data: stats, isLoading, isError } = useAdminDashboard();
   const { data: logsData, isLoading: logsLoading } = useActivityLogs();
+  const { data: studentsResponse } = useStudents({ limit: 1000 });
+  const { data: teachersResponse } = useTeacher({ limit: 100 });
+
+  const studentMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const studentsList = studentsResponse?.data?.studentsData || (studentsResponse as any)?.data?.students || [];
+    studentsList.forEach((s: any) => {
+      if (s.id && s.user?.name) map.set(s.id, s.user.name);
+      if (s.user_id && s.user?.name) map.set(s.user_id, s.user.name);
+    });
+    return map;
+  }, [studentsResponse]);
+
+  const teacherMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const teachersList = teachersResponse?.teachers || (teachersResponse as any)?.data?.teachers || [];
+    teachersList.forEach((t: any) => {
+      if (t.id && t.user?.name) map.set(t.id, t.user.name);
+      if (t.user_id && t.user?.name) map.set(t.user_id, t.user.name);
+    });
+    return map;
+  }, [teachersResponse]);
   const [logsCurrentPage, setLogsCurrentPage] = useState(1);
   const logsItemsPerPage = 5;
   const activityLogs = logsData?.data || [];
@@ -123,6 +183,7 @@ export default function Dashboard() {
             bgColor: "bg-[#eefcfc]",
             svg: <Users size={20} className="text-[#00a8a8]" />,
           }}
+          onClick={() => navigate("/dashboard/students")}
         />
 
         <DashboardCard
@@ -136,6 +197,7 @@ export default function Dashboard() {
             bgColor: "bg-[#eefcfc]",
             svg: <Users size={20} className="text-[#00a8a8]" />,
           }}
+          onClick={() => navigate("/dashboard/teachers")}
         />
 
         <DashboardCard
@@ -149,6 +211,7 @@ export default function Dashboard() {
             bgColor: "bg-[#eefcfc]",
             svg: <Notebook size={20} className="text-[#00a8a8]" />,
           }}
+          onClick={() => navigate("/dashboard/sessions")}
         />
 
         <DashboardCard
@@ -162,6 +225,7 @@ export default function Dashboard() {
             bgColor: "bg-[#eefcfc]",
             svg: <ClipboardList size={20} className="text-[#00a8a8]" />,
           }}
+          onClick={() => navigate("/dashboard/requests")}
         />
       </div>
 
@@ -214,39 +278,54 @@ export default function Dashboard() {
                     </th>
 
                     <th className="pb-3 font-bold">
+                      {t("status_label") || (i18n.language.startsWith("ar") ? "الحالة" : "Status")}
+                    </th>
+
+                    <th className="pb-3 font-bold">
                       {t("dashboard.time")}
                     </th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-gray-50 text-sm">
-                  {stats.upcomingSessions.map((session) => (
-                    <tr
-                      key={session.id}
-                      className="hover:bg-gray-50/50 transition-colors duration-150"
-                    >
-                      <td className="py-4 font-bold text-gray-800">
-                        {session.subject || session.title}
-                      </td>
+                  {stats.upcomingSessions.map((session: any) => {
+                    const statusBadge = getStatusBadge(session.status, i18n.language);
+                    return (
+                      <tr
+                        key={session.id}
+                        className="hover:bg-gray-50/50 transition-colors duration-150"
+                      >
+                        <td className="py-4 font-bold text-gray-800">
+                          {typeof session.subject === "object" && session.subject !== null
+                            ? (i18n.language.startsWith("ar") ? session.subject?.name_ar : session.subject?.name_en) || session.subject?.name || session.title
+                            : session.subject || session.title}
+                        </td>
 
-                      <td className="py-4 text-gray-600 font-medium">
-                        {session.teacher}
-                      </td>
+                        <td className="py-4 text-gray-600 font-medium">
+                          {getPersonName(session.teacher, session.teacherId, teacherMap)}
+                        </td>
 
-                      <td className="py-4 text-gray-600 font-medium">
-                        {session.student}
-                      </td>
+                        <td className="py-4 text-gray-600 font-medium">
+                          {getPersonName(session.student, session.studentId, studentMap)}
+                        </td>
 
-                      <td className="py-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-orange-50 text-orange-600 text-xs font-bold">
-                          {formatSessionTime(
-                            session.time,
-                            i18n.language
-                          )}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusBadge.className}`}>
+                            {statusBadge.label}
+                          </span>
+                        </td>
+
+                        <td className="py-4">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-orange-50 text-orange-600 text-xs font-bold">
+                            {formatSessionTime(
+                              session.time || session.start_time,
+                              i18n.language
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -305,29 +384,31 @@ export default function Dashboard() {
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-        <th className="px-4 py-4 text-start font-semibold">
-  {t("dashboard.user")}
-</th>
+          <tr>
+            <th className="px-4 py-4 text-start font-semibold">
+              {t("dashboard.user")}
+            </th>
 
-<th className="px-4 py-4 text-start font-semibold">
-  {t("dashboard.emailColumn")}
-</th>
+            <th className="px-4 py-4 text-start font-semibold">
+              {t("dashboard.emailColumn")}
+            </th>
 
-<th className="px-4 py-4 text-start font-semibold">
-  {t("dashboard.role")}
-</th>
+            <th className="px-4 py-4 text-start font-semibold">
+              {t("dashboard.role")}
+            </th>
 
-<th className="px-4 py-4 text-start font-semibold">
-  {t("dashboard.action")}
-</th>
+            <th className="px-4 py-4 text-start font-semibold">
+              {t("dashboard.action")}
+            </th>
 
-<th className="px-4 py-4 text-start font-semibold">
-  {t("dashboard.statusColumn")}
-</th>
+            <th className="px-4 py-4 text-start font-semibold">
+              {t("dashboard.statusColumn")}
+            </th>
 
-<th className="px-4 py-4 text-start font-semibold">
-  {t("dashboard.timeColumn")}
-</th>
+            <th className="px-4 py-4 text-start font-semibold">
+              {t("dashboard.timeColumn")}
+            </th>
+          </tr>
         </thead>
 
         <tbody className="divide-y divide-gray-50">

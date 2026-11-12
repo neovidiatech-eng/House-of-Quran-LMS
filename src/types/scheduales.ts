@@ -1,12 +1,13 @@
 export type ScheduleType = 'full' | 'half';
 
 export interface CreateSchedulePayload {
-    studentId: string;
+    studentId?: string;
+    studentIds?: string[];
     teacherId: string;
     subject_id: string;
     title: string;
     description?: string;
-    link: string;
+    link?: string;
     notes?: string;
     start_time: string;
     // type: ScheduleType;
@@ -16,7 +17,7 @@ export interface CreateSchedulePayload {
 export interface UpdateSchedulePayload {
     title: string;
     description?: string;
-    link: string;
+    link?: string;
     notes?: string;
     status: string;
     start_time: string;
@@ -33,18 +34,20 @@ export type DayOfWeek =
     | 'Friday';
 
 export interface CreateRecurringSchedulePayload {
-    studentId: string;
+    studentId?: string;
+    studentIds?: string[];
     teacherId: string;
     subject_id: string;
     title: string;
     description?: string;
-    link: string;
+    link?: string;
     notes?: string;
-    startTime: string;
-    days: DayOfWeek[];
-    startDate: string;
-    endDate: string;
+    startTime?: string;
+    days?: DayOfWeek[];
+    startDate?: string;
+    endDate?: string;
     notification_Time: string;
+    sessions?: { date: string; startTime: string }[];
     // type: ScheduleType;
 }
 
@@ -102,26 +105,10 @@ export interface ScheduleSubject {
     updatedAt: string;
 }
 
-export interface ScheduleLogs {
-    id?: string;
-    scheduleId?: string;
-    joinTime_student?: string | null;
-    leaveTime_student?: string | null;
-    joinTime_teacher?: string | null;
-    leaveTime_teacher?: string | null;
-    duration_student?: number | null;
-    duration_teacher?: number | null;
-    isTeacherLate?: boolean;
-    isTeacherCompleted?: boolean;
-    isStudentAttended?: boolean;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
 export interface Schedule {
     id: string;
     teacherId: string;
-    studentId: string;
+    studentId?: string;
     subjectId: string;
     status: string;
     title: string;
@@ -136,10 +123,18 @@ export interface Schedule {
     is_recurring: boolean;
     day_of_week: string | null;
     parent_recurring_id: string | null;
-    student: Student;
+    student?: Student;
+    students?: Student[];
+    groupStudents?: {
+        id?: string;
+        student_id?: string;
+        studentId?: string;
+        schedule_id?: string;
+        student?: Student;
+    }[];
     teacher: Teacher;
     subject?: ScheduleSubject;
-    scheduleLogs?: ScheduleLogs | null;
+    reviews?: any[];
 }
 
 export interface Pagination {

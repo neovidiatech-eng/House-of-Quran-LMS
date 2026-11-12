@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getFeedback } from "../services/FeedbackServices";
+import { getFeedback } from "../services/feedbackService";
 
 
 export const useFeedback=(page:number, limit:number, search?:string)=>{

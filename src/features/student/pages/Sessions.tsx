@@ -12,7 +12,7 @@ import { useSettings } from '../../../contexts/SettingsContext';
 import CreateRequestModal from '../../../components/modals/CreateRequestModal';
 import { leaveSession } from '../../../services/SessionsServices';
 import FeedbackModal from '../../teacher/components/FeedbackModal';
-import JitsiMeetingModal, { JitsiRoomData } from '../../../components/modals/JitsiMeetingModal';
+import { JitsiRoom, JitsiData } from '../../../components/JitsiRoom';
 
 export default function Sessions() {
   const { t, i18n } = useTranslation();
@@ -28,7 +28,7 @@ export default function Sessions() {
   const [sessionForFeedback, setSessionForFeedback] = useState<Schedule | null>(null);
   const [activeMeeting, setActiveMeeting] = useState<{
     session: Schedule;
-    roomData: JitsiRoomData;
+    roomData: JitsiData;
   } | null>(null);
 
   const { settings } = useSettings();
@@ -41,27 +41,33 @@ export default function Sessions() {
     return () => clearInterval(timer);
   }, []);
 
+  const isSessionCompletedOrEnded = (session: Schedule) => {
+    const status = session.status?.toLowerCase();
+    if (status === 'completed' || status === 'cancelled' || status === 'ended') {
+      return true;
+    }
+    if (session.end_time) {
+      const end = new Date(session.end_time);
+      if (!isNaN(end.getTime()) && now > end) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const isJoinable = (startTime: string, endTime: string, _link?: string) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    // Allow join 5 minutes before scheduled start until end time
-    const fiveMinutesBefore = new Date(start.getTime() - 5 * 60000);
+    const fiveMinutesBefore = new Date(start.getTime() - 300000);
     return now >= fiveMinutesBefore && now <= end;
   };
 
-  const handleLeaveActiveMeeting = async () => {
-    if (!activeMeeting) return;
-    const currentSession = activeMeeting.session;
-    try {
-      await leaveSession(currentSession.id);
-    } catch (err) {
-      console.error('Leave session error:', err);
-    } finally {
-      setActiveMeeting(null);
-      setSessionForFeedback(currentSession);
-      setShowFeedbackModal(true);
-    }
+  const isEndable = (startTime: string) => {
+    const start = new Date(startTime);
+    const fifteenMinutesAfter = new Date(start.getTime() + 900000);
+    return now >= fifteenMinutesAfter;
   };
+
 
   useEffect(() => {
     if (searchTerm.length > 2) {
@@ -154,8 +160,8 @@ export default function Sessions() {
 
   const getStatusStyle = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'scheduled': return 'bg-primary-50 text-blue-700 border-blue-200';
-      case 'planned': return 'bg-primary-50 text-blue-700 border-blue-200';
+      case 'scheduled': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'planned': return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'completed': return 'bg-green-50 text-green-700 border-green-200';
       case 'cancelled': return 'bg-red-50 text-red-700 border-red-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
@@ -172,6 +178,8 @@ export default function Sessions() {
     const subject = dynamicsubjects.find((s: Subject) => s.id === session.subjectId);
     return subject ? (language === 'ar' ? subject.name_ar : subject.name_en) : 'subject';
   };
+
+
 
   return (
     <div className="space-y-6">
@@ -250,51 +258,49 @@ export default function Sessions() {
                         <button
                           onClick={async () => {
                             try {
-                              const res = await joinToSession(session.id);
-                              if (res?.data) {
-                                setActiveMeeting({
-                                  session,
-                                  roomData: res.data,
-                                });
-                              } else if (session.link) {
-                                window.open(session.link, '_blank');
-                              }
+                              const roomData = await joinToSession(session.id);
+                              setActiveMeeting({
+                                session,
+                                roomData,
+                              });
                             } catch (error) {
-                              console.error('Join session error:', error);
+                              console.error(error);
                             }
                           }}
-                          disabled={isJoining || !isJoinable(session.start_time, session.end_time, session.link)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${isJoinable(session.start_time, session.end_time, session.link)
-                            ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow-md'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
-                            } ${isJoining ? 'opacity-50 cursor-wait' : ''}`}
+                          disabled={isJoining || isSessionCompletedOrEnded(session) || !isJoinable(session.start_time, session.end_time, session.link)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${
+                            isSessionCompletedOrEnded(session) || !isJoinable(session.start_time, session.end_time, session.link)
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                              : 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow-md'
+                          } ${isJoining ? 'opacity-50 cursor-wait' : ''}`}
                         >
                           <Video className="w-4 h-4" />
                           <span className="text-sm">{isJoining ? t('joining...') || 'Joining...' : t('joinSession')}</span>
                         </button>
                       </td>
 
-                        <td className="px-6 py-4 text-start">
-                          <button
-                            onClick={async () => {
-                              try {
-                                await leaveSession(session.id);
-                                setSessionForFeedback(session);
-                                setShowFeedbackModal(true);
-                              } catch (error) {
-                                console.log(error);
-                              }
-                            }}
-                            disabled={session.status?.toLowerCase() === 'completed'}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${session.status?.toLowerCase() === 'completed'
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'bg-orange-500 text-white hover:bg-orange-600 shadow-sm hover:shadow-md'
-                            }`}
-                          >
-                            <X className="w-4 h-4" />
-                            <span className="text-sm">{t('leaveSession') || 'Leave Session'}</span>
-                          </button>
-                        </td>
+                      <td className="px-6 py-4 text-start">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await leaveSession(session.id);
+                              setSessionForFeedback(session);
+                              setShowFeedbackModal(true);
+                            } catch (error) {
+                              console.log(error);
+                            }
+                          }}
+                          disabled={isSessionCompletedOrEnded(session) || !isEndable(session.start_time)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium ${
+                            isSessionCompletedOrEnded(session) || !isEndable(session.start_time)
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+                              : 'bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md'
+                          }`}
+                        >
+                          <X className="w-4 h-4" />
+                          <span className="text-sm">{t('endSession') || 'End Session'}</span>
+                        </button>
+                      </td>
 
                       <td className="px-3 py-3 text-start">
                         <button
@@ -302,8 +308,17 @@ export default function Sessions() {
                             setSessionForRequest(session);
                             setIsRequestModalOpen(true);
                           }}
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-white font-normal transition-all hover:opacity-90 shadow-sm hover:shadow-md"
-                          style={{ backgroundColor: settings.primaryColor }}
+                          disabled={isSessionCompletedOrEnded(session)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-white font-normal transition-all shadow-sm ${
+                            isSessionCompletedOrEnded(session)
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+                              : 'hover:opacity-90 hover:shadow-md'
+                          }`}
+                          style={
+                            isSessionCompletedOrEnded(session)
+                              ? undefined
+                              : { backgroundColor: settings.primaryColor }
+                          }
                         >
                           <Plus className="w-5 h-5" />
                           {isRtl ? 'تقديم طلب' : 'Add Request'}
@@ -372,15 +387,25 @@ export default function Sessions() {
         sessionId={sessionForFeedback?.id || ""}
         sessionTitle={sessionForFeedback?.title || ""}
       />
-      <JitsiMeetingModal
-        isOpen={!!activeMeeting}
+
+      <JitsiRoom
+        isOpen={Boolean(activeMeeting)}
         onClose={() => setActiveMeeting(null)}
         roomData={activeMeeting?.roomData || null}
         sessionTitle={activeMeeting?.session.title}
         isTeacher={false}
-        onLeave={handleLeaveActiveMeeting}
-        userName={activeMeeting?.session.student?.user?.name || localStorage.getItem('email')?.split('@')[0] || 'Student'}
-        userEmail={activeMeeting?.session.student?.user?.email || localStorage.getItem('email') || ''}
+        onLeave={async () => {
+          if (!activeMeeting?.session.id) return;
+          try {
+            await leaveSession(activeMeeting.session.id);
+            setSessionForFeedback(activeMeeting.session);
+            setShowFeedbackModal(true);
+          } catch (error) {
+            console.error('Leave session error:', error);
+          } finally {
+            setActiveMeeting(null);
+          }
+        }}
       />
     </div>
   );

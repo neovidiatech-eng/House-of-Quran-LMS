@@ -48,14 +48,16 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
   return (
     <Modal
       title={
-        <div className="flex items-center gap-3 pb-3 border-b border-gray-50" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="flex items-center gap-3 pb-3 border-b border-gray-50">
           <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center text-blue-600">
             <Star size={20} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">{t('sessionFeedback') || (isRtl ? 'تقييم الحصة' : 'Session Feedback')}</h3>
+            <h3 className="text-lg font-bold text-slate-900">
+              {isRtl ? 'تقييم الجلسة' : 'Session Feedback'}
+            </h3>
             <p className="text-xs font-medium text-slate-400">
-              {t('shareFeedbackFor') || (isRtl ? 'شارك تقييمك وملاحظاتك عن:' : 'Share your feedback for:')} {sessionTitle}
+              {isRtl ? `شارك تقييمك لجلسة: ${sessionTitle}` : `Share your feedback for: ${sessionTitle}`}
             </p>
           </div>
         </div>
@@ -69,8 +71,8 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
     >
       <form onSubmit={handleSubmit(onSubmit)} className="mt-6 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 mb-8 flex flex-col items-center gap-4">
-          <span className="text-sm font-bold text-slate-600 tracking-wider">
-            {t('rateSession') || (isRtl ? 'تقييم الجلسة' : 'Rate the Session')}
+          <span className="text-sm font-bold text-slate-600 uppercase tracking-widest">
+            {isRtl ? 'تقييم الحصة' : 'Rate the Session'}
           </span>
           <Controller
             name="rating"
@@ -93,7 +95,7 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
                 <ShieldCheck size={18} />
               </div>
               <span className="text-sm font-bold text-slate-700">
-                {t('teacherAttendance') || (isRtl ? 'حضور المعلم' : 'Teacher Attended')}
+                {isRtl ? 'حضور المعلم' : 'Teacher Attended'}
               </span>
             </div>
             <Controller
@@ -111,7 +113,7 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
                 <UserCheck size={18} />
               </div>
               <span className="text-sm font-bold text-slate-700">
-                {t('studentAttendance') || (isRtl ? 'حضور الطالب' : 'Student Attended')}
+                {isRtl ? 'حضور الطالب' : 'Student Attended'}
               </span>
             </div>
             <Controller
@@ -128,22 +130,25 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
           <label className="flex items-center gap-2 mb-2">
             <MessageSquare size={14} className="text-slate-400" />
             <span className="text-sm font-bold text-slate-700">
-              {t('additionalComments') || (isRtl ? 'ملاحظات إضافية' : 'Additional Comments')}
+              {isRtl ? 'ملاحظات إضافية' : 'Additional Comments'}
             </span>
           </label>
           <textarea
             {...register('comment')}
-            placeholder={t('feedbackCommentPlaceholder') || (isRtl ? 'كيف كانت الحصة؟ هل توجد أي ملاحظات أو نقاط للتحسين؟' : 'How was the session? Any specific notes or points for improvement?')}
+            placeholder={
+              isRtl
+                ? 'كيف كانت الجلسة؟ هل لديك أي ملاحظات أو نقاط للتحسين؟'
+                : 'How was the session? Any specific notes or points for improvement?'
+            }
             rows={4}
-            className="w-full p-4 rounded-xl border border-slate-200 focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none text-start"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            className="w-full p-4 rounded-xl border border-slate-200 focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
           />
           {errors.comment && <p className="text-red-500 text-[10px] font-black mt-1 uppercase">{errors.comment.message}</p>}
         </div>
 
         <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-50">
           <Button onClick={onClose} className="h-11 px-6 rounded-xl font-bold text-slate-600 hover:text-slate-800 transition-colors">
-            {t('cancel') || (isRtl ? 'إلغاء' : 'Cancel')}
+            {isRtl ? 'إلغاء' : 'Cancel'}
           </Button>
           <Button
             type="primary"
@@ -151,7 +156,7 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
             loading={isPending}
             className="h-11 px-10 rounded-xl font-bold bg-primary border-none shadow-lg shadow-blue-200 hover:bg-primary-700 hover:shadow-xl transition-all"
           >
-            {t('sendFeedback') || (isRtl ? 'إرسال التقييم' : 'Send Feedback')}
+            {isRtl ? 'إرسال التقييم' : 'Send Feedback'}
           </Button>
         </div>
       </form>

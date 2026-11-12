@@ -11,7 +11,7 @@ import { deleteExam } from "../services/ExamServices";
 export const useStudents = () => {
   return useQuery({
     queryKey: ["students"],
-    queryFn: () => getStudents(),
+    queryFn: () => getStudents({ limit: 100 }),
   });
 };
 

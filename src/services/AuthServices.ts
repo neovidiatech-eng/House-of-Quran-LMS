@@ -16,8 +16,13 @@ export const googleRegister = async (data: { idToken: string }) => {
     return response.data;
 }
 
-export const register = async (data: RegisterInput) => {
+export const register = async (data: Omit<RegisterInput, 'age'> & { age?: number }) => {
     const response = await api.post("/auth/sign-up", data);
+    return response.data;
+}
+
+export const registerTeacher = async (data: any) => {
+    const response = await api.post("/auth/sign-up-teacher", data);
     return response.data;
 }
 
@@ -37,6 +42,11 @@ export const resetPassword = async (data: { email: string, password: string, otp
 }
 export const resendCode = async (data: { email: string }) => {
     const response = await api.post("/auth/resend-otp", data);
+    return response.data;
+}
+
+export const saveFcmToken = async (fcmToken: string) => {
+    const response = await api.patch("/auth/save-fcm", { fcmToken });
     return response.data;
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useForm, Controller } from "react-hook-form";
@@ -8,6 +8,7 @@ import { verifyAccount, resendCode } from "../services/AuthServices";
 import { useNavigate } from "react-router-dom";
 import OtpInput from "../components/ui/OtpInput";
 import { message } from "antd";
+import { getDashboardPathForRole, storeAuthPermissions } from "../utils/auth";
 
 interface VerifyAccountProps {
   onVerifySuccess?: () => void;
@@ -31,6 +32,16 @@ export default function VerifyAccount({ onVerifySuccess }: VerifyAccountProps) {
     },
   });
 
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
   const onSubmit = async (data: VerifyAccountInput) => {
     try {
       const result = await verifyAccount({
@@ -39,29 +50,56 @@ export default function VerifyAccount({ onVerifySuccess }: VerifyAccountProps) {
       });
       message.success(result.message || t("verifySuccess") || "Account verified successfully");
       sessionStorage.removeItem("verify_email");
-      
-      const token = result.data?.accessToken || result.accessToken;
+
+      const token = result.data?.accessToken || result.accessToken || result.data?.token || result.token;
+      const registerRole = sessionStorage.getItem("register_role");
+      const apiRole =
+        result.data?.role ||
+        result.role ||
+        (typeof result.data?.user?.role === 'string' ? result.data?.user?.role : result.data?.user?.role?.name) ||
+        (typeof result.user?.role === 'string' ? result.user?.role : result.user?.role?.name) ||
+        result.data?.user?.role_name ||
+        result.data?.user?.user_type ||
+        result.data?.user?.type ||
+        (Array.isArray(result.data?.user?.roles) ? (typeof result.data.user.roles[0] === 'string' ? result.data.user.roles[0] : result.data.user.roles[0]?.name) : undefined);
+      const role = (apiRole && apiRole !== "No role assigned") ? apiRole : (registerRole || "student");
+      const permissions = result.data?.permissions || result.permissions || [];
+
       if (token) {
         sessionStorage.setItem("token", token);
-        const role = result.data?.role || result.role;
         if (role) localStorage.setItem("role", role);
+        storeAuthPermissions(permissions, false);
+        sessionStorage.removeItem("register_role");
         onVerifySuccess?.();
+        navigate(getDashboardPathForRole(role));
       } else {
+        sessionStorage.removeItem("register_role");
         navigate("/login");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Account verification failed:", error);
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        (language === "ar" ? "فشلت عملية التحقق. يرجى إعادة المحاولة." : "Verification failed. Please try again.");
+      message.error(errorMsg);
     }
   };
 
   const handleResend = async () => {
-    if (!email) return;
+    if (!email || resendCooldown > 0) return;
     setIsResending(true);
     try {
       const result = await resendCode({ email });
       message.success(result.message || t("codeSentSuccess") || "New verification code sent");
-    } catch (error) {
+      setResendCooldown(60);
+    } catch (error: any) {
       console.error("Resend failed:", error);
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        (language === "ar" ? "فشل إعادة إرسال الكود." : "Failed to resend code.");
+      message.error(errorMsg);
     } finally {
       setIsResending(false);
     }
@@ -111,10 +149,16 @@ export default function VerifyAccount({ onVerifySuccess }: VerifyAccountProps) {
           <button
             type="button"
             onClick={handleResend}
-            disabled={isResending}
+            disabled={isResending || resendCooldown > 0}
             className="text-primary text-sm font-medium hover:underline disabled:opacity-50"
           >
-            {isResending ? "..." : t("resendCode")}
+            {isResending
+              ? "..."
+              : resendCooldown > 0
+              ? language === "ar"
+                ? `إعادة الإرسال بعد ${resendCooldown} ثانية`
+                : `Resend in ${resendCooldown}s`
+              : t("resendCode")}
           </button>
         </div>
 

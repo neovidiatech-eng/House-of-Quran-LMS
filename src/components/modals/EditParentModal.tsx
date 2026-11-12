@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
-import { X, User, Mail, Phone, Lock, Users, Eye, EyeOff } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { X, User, Mail, Phone, Lock, Users, Eye, EyeOff ,CalendarDays } from 'lucide-react';
+import { useGetCities } from '../../features/teacher/hooks/useCity';
+import { DEFAULT_COUNTRIES } from '../../consts';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ParentFormData, getParentSchema } from '../../lib/schemas/ParentSchema';
 import { Resolver, useForm, Controller } from 'react-hook-form';
@@ -22,7 +24,7 @@ export default function EditParentModal({
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
 
-  const { data: studentsData } = useStudents();
+  const { data: studentsData } = useStudents({ limit: 1000 });
 
   const studentOptions =
     (studentsData?.data?.studentsData || []).map((s: any) => ({
@@ -35,6 +37,7 @@ export default function EditParentModal({
     handleSubmit,
     control,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ParentFormData>({
     resolver: zodResolver(getParentSchema(t)) as Resolver<ParentFormData>,
@@ -46,6 +49,8 @@ export default function EditParentModal({
       codeCountry: '+20',
       country: 'Egypt',
       students: [],
+      age: '',
+      city: '',
     },
   });
 
@@ -59,9 +64,30 @@ export default function EditParentModal({
         codeCountry: parent.code_country || '+20',
         country: 'Egypt',
         students: parent.students?.map((s) => s.id) || [],
+        age: parent.age || '',
+        city: parent.city || '',
       });
     }
   }, [parent, reset]);
+
+  const selectedCountry = watch("country");
+  const selectedCountryObj = DEFAULT_COUNTRIES.find((c) => c.name === selectedCountry);
+  const countryCode = selectedCountryObj?.iso2?.toLowerCase() || "eg";
+  const { data: citiesData } = useGetCities(countryCode);
+  const cityOptions = citiesData ? citiesData.map((city: any) => ({
+    value: city.name,
+    label: city.name
+  })) : [];
+
+  const displayNames = useMemo(() => new Intl.DisplayNames(
+    [language === "ar" ? "ar" : "en"],
+    { type: "region" }
+  ), [language]);
+
+  const countries = useMemo(() => DEFAULT_COUNTRIES.map((c) => ({
+    value: c.name,
+    label: `${c.emoji} ${displayNames.of(c.iso2) || c.name}`,
+  })), [displayNames]);
 
   const handleOnSubmit = async (data: ParentFormData) => {
     await onSubmit({
@@ -76,12 +102,15 @@ export default function EditParentModal({
     title: { ar: 'تعديل ولي أمر', en: 'Edit Parent' },
     name: { ar: 'الاسم الكامل', en: 'Full Name' },
     email: { ar: 'البريد الإلكتروني', en: 'Email Address' },
+    country: { ar: 'الدولة', en: 'Country' },
     phone: { ar: 'رقم الهاتف', en: 'Phone Number' },
     password: { ar: 'كلمة المرور', en: 'Password' },
     linkedStudents: { ar: 'الطلاب المرتبطين', en: 'Linked Students' },
     selectStudents: { ar: 'اختر الطلاب', en: 'Select Students' },
     cancel: { ar: 'إلغاء', en: 'Cancel' },
     save: { ar: 'حفظ التعديلات', en: 'Save Changes' },
+    age: { ar: 'السن', en: 'Age' },
+    city: { ar: 'المدينة', en: 'City' },
   };
 
   return (
@@ -89,7 +118,7 @@ export default function EditParentModal({
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
         
         {/* Header */}
-        <div className="sticky top-0 bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl z-50">
           <h2 className="text-2xl font-bold text-white">
             {text.title[language]}
           </h2>
@@ -107,7 +136,7 @@ export default function EditParentModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {/* Name */}
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">
                 {text.name[language]}
               </label>
@@ -129,8 +158,18 @@ export default function EditParentModal({
               )}
             </div>
 
-            {/* Email */}
+            {/* السن */}
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.age[language]}</label>
+              <div className="relative">
+                <CalendarDays className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input type="text" {...register('age')} className="w-full pr-12 py-3 border border-gray-200 rounded-xl text-start focus:ring-2 focus:ring-blue-500" />
+                {errors.age && <p className="text-red-500 text-xs mt-1 text-start">{errors.age.message}</p>}
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">
                 {text.email[language]}
               </label>
@@ -150,6 +189,53 @@ export default function EditParentModal({
                   {errors.email.message}
                 </p>
               )}
+            </div>
+
+            {/* Hidden Fields */}
+            <input
+              type="hidden"
+              {...register('codeCountry')}
+              value="+20"
+            />
+
+            {/* الدولة */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.country[language]}</label>
+              <div className="relative">
+                <Controller
+                  name="country"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      options={countries}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={text.country[language]}
+                    />
+                  )}
+                />
+                {errors.country && <p className="text-red-500 text-xs mt-1 text-start">{errors.country.message}</p>}
+              </div>
+            </div>
+
+            {/* المدينة */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">{text.city[language]}</label>
+              <div className="relative">
+                <Controller
+                  name="city"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      options={cityOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={text.city[language]}
+                    />
+                  )}
+                />
+                {errors.city && <p className="text-red-500 text-xs mt-1 text-start">{errors.city.message}</p>}
+              </div>
             </div>
 
             {/* Phone */}
@@ -175,18 +261,6 @@ export default function EditParentModal({
               )}
             </div>
 
-            {/* Hidden Fields */}
-            <input
-              type="hidden"
-              {...register('codeCountry')}
-              value="+20"
-            />
-
-            <input
-              type="hidden"
-              {...register('country')}
-              value="Egypt"
-            />
 
             {/* Password */}
             <div className="md:col-span-2">

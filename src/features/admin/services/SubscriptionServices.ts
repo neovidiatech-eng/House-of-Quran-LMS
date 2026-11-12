@@ -7,6 +7,7 @@ export const getSubscription = async (): Promise<SubscriptionData[]> => {
 };
 
 
+
 export const renewSubscription = async ( studentId: string, plan_id: string) => {
   const response = await api.post( `/subscription/renew/${studentId}`,{plan_id});
   return response.data;

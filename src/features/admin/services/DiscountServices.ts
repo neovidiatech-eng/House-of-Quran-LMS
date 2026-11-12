@@ -4,22 +4,26 @@ export interface LateDiscountRulesResponse {
   message: string;
   status: number;
   lang: string;
-  data: {
-    lateDiscountRules: LateDiscountRule[];
-  };
+  data:StudentAttendance
 }
 
-export interface LateDiscountRule {
-  lateMinutes: number;
-  discountPercentage: number;
+// export interface LateDiscountRule {
+//   lateMinutes: number;
+//   discountPercentage: number;
+// }
+
+export interface StudentAttendance{
+    paidSessionCount:number;
+    studentCanJoin:boolean;
 }
 
-export const getLateDiscountRules = async (): Promise<LateDiscountRule[]> => {
-    const response = await api.get<LateDiscountRulesResponse>('/settings/late-discount');
-    return response.data.data.lateDiscountRules;
+export const getStudenAttendance = async (): Promise<StudentAttendance> => {
+    const response = await api.get<StudentAttendance>('/settings/');
+    return response.data;
 }
 
-export const addLateDiscountRule = async (rule: LateDiscountRule): Promise<void> => {
-  const response = await api.patch('/settings/late-discount', rule);
+export const addStudentAttendance = async (studentAttendance: StudentAttendance): Promise<void> => {
+  const response = await api.patch('/settings/', studentAttendance);
   return response.data;
 }
+

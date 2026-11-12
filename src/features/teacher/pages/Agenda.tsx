@@ -11,7 +11,6 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { AgendaSession } from "../../../types/Agenda";
 import SessionsDayModal from "../../../components/modals/SessionsDayModal";
 import { formatDateLocal, getLocalDateKey } from "../../../utils/dateUtils";
-import { useJoinToSession } from "../../../hooks/useSessions";
 import { useTeacherAgenda } from "../hooks/useTeacherAgende";
 
 export default function Agenda() {
@@ -19,7 +18,6 @@ export default function Agenda() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const { mutateAsync: joinToSession } = useJoinToSession();
   const locale = language === "ar" ? "ar-EG" : "en-US";
   // 📌 Month range
   const startDate = useMemo(() => {
@@ -265,37 +263,67 @@ export default function Agenda() {
               {todaySessions.map((s) => (
                 <div
                   key={s.id}
-                  className="bg-primary-50 border rounded-xl p-4 text-right"
+                  className="bg-white border rounded-xl p-4 text-right shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
                 >
-                  <p className="font-bold text-lg">{s.title}</p>
+                  <div
+                    className="absolute top-0 right-0 w-1.5 h-full transition-all group-hover:w-2"
+                    style={{ backgroundColor: s.subject?.color || '#3b82f6' }}
+                  />
+                  <div className="pr-3">
+                    <div className="mb-3 space-y-1">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="font-bold text-gray-900 text-lg">
+                          {language === 'ar' ? s.subject?.name_ar : s.subject?.name_en}
+                        </span>
+                        <span className="text-sm text-gray-500 font-medium">{t("subject")}:</span>
+                      </div>
 
-                  <p className="text-sm text-gray-600  ">
-                    {language === "ar" ? new Date(s.start_time).toLocaleTimeString("ar-EG") : new Date(s.start_time).toLocaleTimeString("en-US")} -  {"   "}
-                    {language === "ar" ? new Date(s.end_time).toLocaleTimeString("ar-EG") : new Date(s.end_time).toLocaleTimeString("en-US")}
-                  </p>
+                      {s.title && (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-sm text-gray-800 font-medium">{s.title}</span>
+                          <span className="text-sm text-gray-500 font-medium">{t("session")}:</span>
+                        </div>
+                      )}
+                    </div>
 
-                  <p className="text-lg mt-1">{s.status}</p>
+                    <div className="flex flex-col gap-2 mb-2">
+                      <div className="flex items-center justify-end gap-2 text-sm text-gray-600">
+                        <span dir="ltr">
+                          {new Date(s.start_time).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })} - {" "}
+                          {new Date(s.end_time).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <Clock className="w-4 h-4 text-gray-400" />
+                      </div>
 
-                  {s.status !== 'completed' && s.status !== 'cancelled' && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          const res = await joinToSession(s.id);
-                          if (res?.data?.url) {
-                            window.open(res.data.url, "_blank");
-                          } else if (s.link) {
-                            window.open(s.link, "_blank");
-                          }
-                        } catch (err) {
-                          console.error("Join error:", err);
-                          if (s.link) window.open(s.link, "_blank");
-                        }
-                      }}
-                      className="w-full mt-3 bg-green-600 text-white py-2 rounded-lg text-sm hover:bg-green-700 transition-colors"
-                    >
-                      {language === 'ar' ? 'انضمام للجلسة' : 'Join Session'}
-                    </button>
-                  )}
+                      {s.student?.user?.name && (
+                        <div className="flex items-center justify-end gap-2 text-sm text-gray-600">
+                          <span className="font-medium text-gray-800">{s.student.user.name}</span>
+                          <span className="text-sm text-gray-500 font-medium">{t("student")}:</span>
+                          <div className="w-5 h-5 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">
+                            {s.student.user.name.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4">
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${s.status === 'completed' ? 'bg-gray-100 text-gray-600' :
+                          s.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                            'bg-amber-100 text-amber-700'
+                        }`}>
+                        {s.status}
+                      </span>
+
+                      {s.status !== "completed" && s.link && (
+                        <button
+                          onClick={() => window.open(s.link, "_blank")}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Join Session
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

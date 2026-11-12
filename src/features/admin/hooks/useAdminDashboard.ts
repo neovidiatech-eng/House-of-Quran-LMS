@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getDashboardStats, getLogs } from "../services/AdminDashboard";
-import { addLateDiscountRule, getLateDiscountRules } from "../services/DiscountServices";
+import { addStudentAttendance, getStudenAttendance } from "../services/DiscountServices";
 
 export const useAdminDashboard = () => {
     return useQuery({
@@ -16,21 +16,24 @@ export const useActivityLogs = () => {
     });
 }
 
-export const useLateDiscountRules = () => {
+export const useStudentAttendance = () => {
     return useQuery({
-        queryKey: ['late-discount-rules'],
-        queryFn: getLateDiscountRules,
+        queryKey: ['student-attendance'],
+        queryFn: getStudenAttendance,
     });
 }
 
-export const useAddLateDiscountRule = (rule: { lateMinutes: number; discountPercentage: number }) => {
+export const useAddStudentAttendance = () => {
     const queryClient = useQueryClient();
   return useMutation({
-    mutationKey: ['add-late-discount-rule'],
-    mutationFn: () => addLateDiscountRule(rule),
+    mutationFn: (studentAttendance: { paidSessionCount: number; studentCanJoin: boolean }) =>
+      addStudentAttendance(studentAttendance),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['late-discount-rules'] });
+      queryClient.invalidateQueries({ queryKey: ['student-attendance'] });
     }
   });
 
 }
+
+
+

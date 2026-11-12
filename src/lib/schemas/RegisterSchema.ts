@@ -15,15 +15,46 @@ export const getRegisterSchema = (t: (key: string, options?: any) => string) =>
       .refine((val) => val !== "", { message: t("validation.required") }),
     gender: z.string().min(1, t("validation.required")),
     country: z.string().min(1, t("validation.required")),
+    nationality: z.string().min(1, t("validation.required")),
+    city: z.string().optional(),
+    age: z.string().optional(),
     password: z
-  .string()
-  .min(8, t("validation.passwordMin", { count: 8 }))
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
-    t("validation.passwordComplex")
-  ),
+      .string()
+      .min(8, t("validation.passwordMin", { count: 8 }))
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+        t("validation.passwordComplex")
+      ),
     plan_id: z.string().min(1, t("validation.required")),
     timezone: z.string().optional(),
   });
 
 export type RegisterInput = z.infer<ReturnType<typeof getRegisterSchema>>;
+
+
+
+export const TeacherRegisterSchema = (t: (key: string, options?: any) => string) => z.object({
+
+  name: z.string().min(3, t("validation.min", { count: 3 })),
+  email: z.string().email(t("validation.email")),
+  age: z.string().optional(),
+  codeCountry: z.string().min(1, t("validation.required")),
+  city: z.string().optional(),
+  phone: z
+    .string()
+    .min(7, t("validation.min", { count: 7 }))
+    .max(15, t("validation.max", { count: 15 }))
+    .regex(/^[0-9]+$/, t("validation.invalidPhone")),
+  gender: z.string().min(1, t("validation.required")),
+  country: z.string().min(1, t("validation.required")),
+  nationality: z.string().min(1, t("validation.required")),
+  password: z
+    .string()
+    .min(8, t("validation.passwordMin", { count: 8 }))
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+      t("validation.passwordComplex")
+    ),
+  notes: z.string().optional(),
+})
+export type TeacherRegisterInput = z.infer<ReturnType<typeof TeacherRegisterSchema>>;

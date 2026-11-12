@@ -1,4 +1,3 @@
-import { lazy } from 'react';
 import {
   BarChart3,
   BookOpen,
@@ -9,23 +8,27 @@ import {
   Users,
   Play,
   Calendar,
-  ClipboardList
+  ClipboardList,
+  AlertTriangle
 } from 'lucide-react';
 import { RouteConfig } from '../../components/constants/dashboardRoutes';
 
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
+
 // Reuse dashboard components for content viewing
 // Lazy Loading Page Components for Teacher from Features
-const DashboardOverview = lazy(() => import('../../features/teacher/pages/Home'));
-const ProfilePage = lazy(() => import('../../features/teacher/pages/Profile'));
-const LMSCoursesPage = lazy(() => import('../../features/teacher/pages/LMSCourses/LMSCourses'));
-const SessionsPage = lazy(() => import('../../features/teacher/pages/Sessions'));
-const AgendaPage = lazy(() => import('../../features/teacher/pages/Agenda'));
-const ExamsPage = lazy(() => import('../../features/teacher/pages/Exams'));
-const AssignmentsPage = lazy(() => import('../../features/teacher/pages/Assignments'));
-const StudentsPage = lazy(() => import('../../features/teacher/pages/Students'));
-const ChatPage = lazy(() => import('../../features/teacher/pages/Chat'));
-const RequestsPage = lazy(() => import('../../features/teacher/pages/Requests'));
-
+const DashboardOverview = lazyWithRetry(() => import('../../features/teacher/pages/Home'));
+const ProfilePage = lazyWithRetry(() => import('../../features/teacher/pages/Profile'));
+const LMSCoursesPage = lazyWithRetry(() => import('../../features/teacher/pages/LMSCourses/LMSCourses'));
+const SessionsPage = lazyWithRetry(() => import('../../features/teacher/pages/Sessions'));
+const AgendaPage = lazyWithRetry(() => import('../../features/teacher/pages/Agenda'));
+const ExamsPage = lazyWithRetry(() => import('../../features/teacher/pages/Exams'));
+const AssignmentsPage = lazyWithRetry(() => import('../../features/teacher/pages/Assignments'));
+const StudentsPage = lazyWithRetry(() => import('../../features/teacher/pages/Students'));
+const ChatPage = lazyWithRetry(() => import('../../features/teacher/pages/Chat'));
+const RequestsPage = lazyWithRetry(() => import('../../features/teacher/pages/Requests'));
+const ViolationsPage = lazyWithRetry(() => import('../../features/teacher/pages/Violations'));
+const DailyQuranPage = lazyWithRetry(() => import('../../features/teacher/pages/DailyQuran'))
 export const teacherDashboardRoutes: RouteConfig[] = [
   {
     id: 'dashboard',
@@ -71,6 +74,15 @@ export const teacherDashboardRoutes: RouteConfig[] = [
         icon: FileText,
 
       },
+
+      {
+        id:"daily-quran",
+        label:"sidebar_daily_quran",
+        path:"daily-quran",
+        element:<DailyQuranPage />,
+        icon: BookOpen,
+
+      },
       {
         id: 'assignments',
         label: 'sidebar_assignments',
@@ -101,6 +113,14 @@ export const teacherDashboardRoutes: RouteConfig[] = [
     icon: Send,
     path: 'requests',
     element: <RequestsPage />,
+  },
+
+  {
+    id: 'teacher-violations',
+    label: 'sidebar_violations',
+    icon: AlertTriangle,
+    path: 'violations',
+    element: <ViolationsPage />
   },
 
   {

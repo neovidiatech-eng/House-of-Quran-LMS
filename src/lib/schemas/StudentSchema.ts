@@ -15,14 +15,18 @@ export const getStudentSchema = (t: TFunc) => z.object({
   birthDate: z.string().optional().or(z.literal('')),
   plan: z.string().optional().or(z.literal('')),
   country: z.string().min(1, t("validation.required")),
+  nationality: z.string().min(1, t("validation.required")),
   status: z.enum(['approved', 'pending', 'rejected']),
-password: z
-  .string()
-  .min(8, t("validation.passwordMin", { count: 8 }))
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
-    t("validation.passwordComplex")
-  ),
+  password: z
+    .string()
+    .min(8, t("validation.passwordMin", { count: 8 }))
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+      t("validation.passwordComplex")
+    ),
+  paid: z.enum(['paid', 'unpaid', 'pending']),
+  age: z.string().optional(),
+  city: z.string().optional(),
 });
 
 export type StudentFormData = z.infer<ReturnType<typeof getStudentSchema>>;

@@ -469,10 +469,10 @@ function TeacherDetailModal({
                     <div
                       key={formatDate(date)}
                       className={`relative rounded-xl p-1.5 min-h-[60px] border transition-all ${isToday
-                        ? "bg-primary-light border-primary"
-                        : hasSessions
-                          ? "bg-red-50 border-red-200"
-                          : "bg-white border-gray-100 hover:border-gray-200"
+                          ? "bg-primary-light border-primary"
+                          : hasSessions
+                            ? "bg-red-50 border-red-200"
+                            : "bg-white border-gray-100 hover:border-gray-200"
                         }`}
                     >
                       <span
@@ -556,7 +556,7 @@ export default function TeacherAvailability() {
 
   const weekDates = getWeekDates(weekOffset);
   const DAYS = language === "ar" ? DAYS_AR : DAYS_EN;
-
+  
   const dateRange = useMemo(() => {
     const start = new Date();
     start.setMonth(start.getMonth() - 1);
@@ -823,8 +823,8 @@ export default function TeacherAvailability() {
                       <div
                         key={day}
                         className={`flex-1 min-w-0 py-1.5 rounded-lg text-center text-xs font-medium ${hasSessions
-                          ? `${teacher.color} text-white`
-                          : "bg-gray-100 text-gray-400"
+                            ? `${teacher.color} text-white`
+                            : "bg-gray-100 text-gray-400"
                           }`}
                         title={hasSessions ? (language === "ar" ? "مشغول" : "Busy") : day}
                       >
@@ -925,14 +925,14 @@ export default function TeacherAvailability() {
             <div className="space-y-4">
               {Array(4).fill(null).map((_, idx) => (
                 <div key={`week-skel-${idx}`} className="bg-white rounded-2xl border border-gray-200 p-6 mb-4 animate-pulse">
-                  <div className="flex gap-3 items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                      <div className="w-8 h-8 rounded-full bg-gray-200"></div>
-                    </div>
-                    <div className="w-20 h-8 bg-gray-200 rounded-lg"></div>
-                  </div>
-                  <div className="h-32 bg-gray-100 rounded-xl"></div>
+                   <div className="flex gap-3 items-center justify-between mb-4">
+                     <div className="flex items-center gap-3">
+                       <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                       <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+                     </div>
+                     <div className="w-20 h-8 bg-gray-200 rounded-lg"></div>
+                   </div>
+                   <div className="h-32 bg-gray-100 rounded-xl"></div>
                 </div>
               ))}
             </div>

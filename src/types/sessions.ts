@@ -26,7 +26,7 @@ export interface SessionDisplay {
 
 export interface AddSessionInput {
   title: string;
-  student: string;
+  student: string | string[];
   teacher: string;
   subject: string;
   sessionDate: string;
@@ -37,7 +37,7 @@ export interface AddSessionInput {
 
 export interface AddMultipleSessionsInput {
   title: string;
-  student: string;
+  student: string | string[];
   teacher: string;
   subject: string;
   sessions: Array<{

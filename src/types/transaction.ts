@@ -1,13 +1,13 @@
 
-export type TransactionType = 'credit' | 'subscription' | 'debit' | 'expense' | 'payout';
-export type TransactionStatus = 'completed' | 'pending' | 'failed';
+export type TransactionType = 'credit' | 'subscription' | 'debit' | 'expense' | 'payout' | 'penalty' | (string & {});
+export type TransactionStatus = 'completed' | 'pending' | 'failed' | (string & {});
 
 export interface Transaction {
   id: string;
   walletId: string;
   type: TransactionType;
   status: TransactionStatus;
-  reason: string;
+  reason: string | { ar?: string; en?: string } | null;
   createdAt: string;
   originalAmount: number;
   convertedAmount: number;

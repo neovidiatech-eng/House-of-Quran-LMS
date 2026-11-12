@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { JitsiMeeting } from '@jitsi/react-sdk';
 import { ExternalLink, LogOut, PhoneOff, Maximize2, Minimize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +35,7 @@ export default function JitsiMeetingModal({
   userName,
   userEmail,
 }: JitsiMeetingModalProps) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isRtl = i18n.language.startsWith('ar');
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
@@ -148,7 +148,7 @@ export default function JitsiMeetingModal({
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors"
               >
                 <LogOut className="w-4 h-4" />
-                <span>{isRtl ? 'مغادرة مؤقتة' : 'Leave'}</span>
+                <span>{isRtl ? 'مغادرة الجلسة' : 'Leave Session'}</span>
               </button>
 
               {/* Teacher Only: End Session for Everyone */}
@@ -180,11 +180,99 @@ export default function JitsiMeetingModal({
                 prejoinPageEnabled: false,
                 defaultLanguage: isRtl ? 'ar' : 'en',
                 enableWelcomePage: false,
+                toolbarButtons: isTeacher
+                  ? [
+                      'camera',
+                      'chat',
+                      'closedcaptions',
+                      'desktop',
+                      'download',
+                      'embedmeeting',
+                      'etherpad',
+                      'feedback',
+                      'filmstrip',
+                      'fullscreen',
+                      'help',
+                      'highlight',
+                      'linktosalesforce',
+                      'livestreaming',
+                      'microphone',
+                      'noisesuppression',
+                      'participants-pane',
+                      'profile',
+                      'raisehand',
+                      'recording',
+                      'security',
+                      'select-background',
+                      'settings',
+                      'shareaudio',
+                      'sharedvideo',
+                      'shortcuts',
+                      'stats',
+                      'tileview',
+                      'toggle-camera',
+                      'videoquality',
+                      'whiteboard',
+                      'hangup',
+                    ]
+                  : [
+                      'microphone',
+                      'camera',
+                      'desktop',
+                      'chat',
+                      'raisehand',
+                      'tileview',
+                      'settings',
+                      'fullscreen',
+                      'select-background',
+                      'videoquality',
+                    ],
               }}
               interfaceConfigOverwrite={{
                 DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
                 SHOW_JITSI_WATERMARK: false,
                 SHOW_WATERMARK_FOR_GUESTS: false,
+                TOOLBAR_BUTTONS: isTeacher
+                  ? [
+                      'microphone',
+                      'camera',
+                      'closedcaptions',
+                      'desktop',
+                      'fullscreen',
+                      'fodeviceselection',
+                      'hangup',
+                      'profile',
+                      'chat',
+                      'recording',
+                      'livestreaming',
+                      'etherpad',
+                      'sharedvideo',
+                      'settings',
+                      'raisehand',
+                      'videoquality',
+                      'filmstrip',
+                      'feedback',
+                      'stats',
+                      'shortcuts',
+                      'tileview',
+                      'select-background',
+                      'download',
+                      'help',
+                      'mute-everyone',
+                      'security',
+                    ]
+                  : [
+                      'microphone',
+                      'camera',
+                      'desktop',
+                      'chat',
+                      'raisehand',
+                      'tileview',
+                      'settings',
+                      'fullscreen',
+                      'select-background',
+                      'videoquality',
+                    ],
               }}
               userInfo={{
                 displayName: userName || (isTeacher ? 'المعلم' : 'الطالب'),

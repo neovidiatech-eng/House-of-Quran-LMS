@@ -20,7 +20,7 @@ export default function Subjects() {
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const { data, isLoading, isError, error, isFetching } = useSubjects(debouncedSearch);
+  const { data, isLoading, isError, error, isFetching } = useSubjects();
   const { mutate: addSubject } = useAddSubject();
   const { mutate: updateSubject } = useUpdateSubject();
   const { mutate: deleteSubject } = useDeleteSubject();

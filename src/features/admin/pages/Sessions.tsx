@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Eye, Trash2, Edit, Calendar } from "lucide-react";
+import { Search, Plus, Eye, Trash2, Edit } from "lucide-react";
 import Pagination from "../../../components/ui/Pagination";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,7 +9,6 @@ import {
   useUpdateSchedule,
   useDeleteSchedule,
   useDeleteGroupedSchedule,
-  useSyncStatuses,
 } from "../hooks/useSchedules";
 import AddSessionModal from "../../../components/modals/AddSessionModal";
 import ViewSessionModal from "../../../components/modals/ViewSessionModal";
@@ -20,6 +19,9 @@ import {
   MultipleSessionsPayload,
 } from "../../../lib/schemas/SessionSchema";
 
+import { useSubjects } from "../hooks/useSubjects";
+import { Subject } from "../../../types/subject";
+import { Tooltip } from "antd";
 
 export default function Sessions() {
   const { t, i18n } = useTranslation();
@@ -40,8 +42,7 @@ export default function Sessions() {
   const createRecurringSchedule = useCreateRecurringSchedule();
   const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
-  const deleteGroupedSchedule = useDeleteGroupedSchedule();
-  const syncStatuses = useSyncStatuses();
+  // const deleteGroupedSchedule = useDeleteGroupedSchedule();
 
   const handleUpdateSession = async (
     id: string,
@@ -49,8 +50,6 @@ export default function Sessions() {
   ) => {
     try {
       await updateSchedule.mutateAsync({ id, data });
-      setShowEditModal(false);
-      setSelectedSession(null);
     } catch (error) {
       console.error("Update session failed:", error);
       throw error;
@@ -64,13 +63,7 @@ export default function Sessions() {
   const confirmDelete = async () => {
     if (!sessionToDelete) return;
     try {
-      if (!hasDateFilter && sessionToDelete.is_recurring) {
-        await deleteGroupedSchedule.mutateAsync(
-          sessionToDelete.parent_recurring_id || sessionToDelete.id,
-        );
-      } else {
-        await deleteSchedule.mutateAsync(sessionToDelete.id);
-      }
+      await deleteSchedule.mutateAsync(sessionToDelete.id);
       setSessionToDelete(null);
     } catch (error) {
       console.error("Delete session failed:", error);
@@ -81,61 +74,62 @@ export default function Sessions() {
     try {
       if (data.formData) {
         // Batch / Recurring Scheduling
-        const { formData, sessions, selectedDays } = data as MultipleSessionsPayload;
+        const { formData, sessions } = data as MultipleSessionsPayload & {
+          isCustomized?: boolean;
+          originalGeneratedCount?: number;
+        };
 
-        const tomorrowStr = (() => {
-          const tom = new Date();
-          tom.setDate(tom.getDate() + 1);
-          return tom.toISOString().split("T")[0];
-        })();
+        const mappedSessions = sessions.map((session) => ({
+          date: session.date,
+          startTime: session.time || formData.startTime || '14:00',
+        }));
 
-        const rawStartDate = formData.batchStartDate || (formData.monthYear ? `${formData.monthYear}-01` : tomorrowStr);
-        const rawEndDate = formData.batchEndDate || (formData.monthYear ? `${formData.monthYear}-28` : tomorrowStr);
+        const studentIdsList = Array.isArray(formData.student)
+          ? formData.student.map(String).filter(Boolean)
+          : (formData.student ? [String(formData.student)] : []);
 
-        const startDate = rawStartDate < tomorrowStr ? tomorrowStr : rawStartDate;
-        const endDate = rawEndDate;
-
-        const generateJitsiLink = () =>
-          `https://meet.bayt-alquran.net/bayt-session-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-
-        await createRecurringSchedule.mutateAsync({
-          studentId: formData.student,
+        const payload: any = {
+          ...(studentIdsList.length > 1
+            ? { studentIds: studentIdsList }
+            : { studentId: studentIdsList[0] || '' }),
           teacherId: formData.teacher,
           subject_id: formData.subject,
-          title: formData.title,
-          ...(formData.description?.trim() ? { description: formData.description.trim() } : {}),
-          link: formData.meetingLink?.trim() || generateJitsiLink(),
-          ...(formData.notes?.trim() ? { notes: formData.notes.trim() } : {}),
-          startTime: sessions[0]?.time || "00:00",
-          days: selectedDays,
-          startDate,
-          endDate,
-          notification_Time: formData.notification_Time || "10",
-          // type: formData.type,
-        });
+          ...(!formData.title?.trim() ? {} : { title: formData.title.trim() }),
+          ...(!formData.description ? {} : { description: formData.description }),
+          ...(!formData.notes ? {} : { notes: formData.notes }),
+          notification_Time: formData.notification_Time || '10',
+          sessions: mappedSessions,
+        };
+
+        const res = await createRecurringSchedule.mutateAsync(payload);
+        return res?.data;
       } else {
         // Single Session Scheduling
-        const [year, month, day] = data.sessionDate.split("-").map(Number);
-        const [hour, minute] = data.startTime.split(":").map(Number);
-        const localDate = new Date(year, month - 1, day, hour, minute);
+        const studentIdsList = Array.isArray(data.student)
+          ? data.student.map(String).filter(Boolean)
+          : (data.student ? [String(data.student)] : []);
 
-        const generateJitsiLink = () =>
-          `https://meet.bayt-alquran.net/bayt-session-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        const formattedStartTime = data.sessionDate && data.startTime
+          ? `${data.sessionDate} ${data.startTime.length === 5 ? `${data.startTime}:00` : data.startTime}`
+          : new Date().toISOString();
 
-        await createSchedule.mutateAsync({
-          studentId: data.student,
+        const payload: any = {
+          ...(studentIdsList.length > 1
+            ? { studentIds: studentIdsList }
+            : { studentId: studentIdsList[0] || '' }),
           teacherId: data.teacher,
           subject_id: data.subject,
-          title: data.title,
-          ...(data.description?.trim() ? { description: data.description.trim() } : {}),
-          link: data.meetingLink?.trim() || generateJitsiLink(),
-          ...(data.notes?.trim() ? { notes: data.notes.trim() } : {}),
-          start_time: localDate.toISOString(),
+          ...(!data.title?.trim() ? {} : { title: data.title.trim() }),
+          ...(!data.description ? {} : { description: data.description }),
+          ...(!data.notes ? {} : { notes: data.notes }),
+          start_time: formattedStartTime,
           // type: data.type,
-          notification_Time: data.notification_Time,
-        });
+          notification_Time: data.notification_Time || '10',
+        };
+
+        const res = await createSchedule.mutateAsync(payload);
+        return res?.data;
       }
-      setShowAddModal(false);
     } catch (error) {
       console.error("Add session failed:", error);
       throw error;
@@ -160,7 +154,6 @@ export default function Sessions() {
   const { data: searchResults } = useSearchSchedules(debouncedSearch, currentPage, itemsPerPage, dateFilters);
 
   const scheduleData: Schedule[] = searchResults?.data?.schedule ?? [];
-  const hasDateFilter = Boolean(fromDate || toDate);
 
   const groupedSchedules: Schedule[] = [];
   const seenParents = new Set<string>();
@@ -216,9 +209,7 @@ export default function Sessions() {
   const totalItems = searchResults?.data?.pagination?.totalItems || 0;
   const totalPages = searchResults?.data?.pagination?.totalPages || 1;
 
-  const targetList = hasDateFilter ? scheduleData : groupedSchedules;
-
-  const displaySchedules = targetList.filter((session) => {
+  const displaySchedules = groupedSchedules.filter((session) => {
     const sessionDate = new Date(session.start_time);
     const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
     const to = toDate ? new Date(`${toDate}T23:59:59.999`) : null;
@@ -306,6 +297,8 @@ export default function Sessions() {
     }
   };
 
+  const { data: subjects } = useSubjects();
+  const dynamicsubjects = subjects?.subjects || [];
 
   const getSubjectName = (session: Schedule) => {
     if (session.subject) {
@@ -313,7 +306,14 @@ export default function Sessions() {
         ? session.subject.name_ar
         : session.subject.name_en;
     }
-
+    const subject = dynamicsubjects.find(
+      (s: Subject) => s.id === session.subjectId,
+    );
+    return subject
+      ? language === "ar"
+        ? subject.name_ar
+        : subject.name_en
+      : "subject";
   };
 
   return (
@@ -354,57 +354,30 @@ export default function Sessions() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-100">
-           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 mb-2.5 text-gray-700 font-medium text-sm">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span>
-                {language === "ar" ? "ابحث بتاريخ الحصة" : "Search by session date"}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <label className="block text-start">
+              <span className="block text-xs font-medium text-gray-500 mb-1">
+                {language === "ar" ? "من تاريخ" : "From Date"}
               </span>
-            </div>
-            <div className="col-span-2 flex items-center justify-end">
-              <button
-                className="btn-primary px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-colors font-medium whitespace-nowrap"
-                onClick={() => syncStatuses.mutate()}
-                disabled={syncStatuses.isPending}
-              >
-                {syncStatuses.isPending
-                  ? language === "ar"
-                    ? "جاري المزامنة..."
-                    : "Syncing..."
-                  : language === "ar"
-                    ? "مزامنة الحالات"
-                    : "Sync Statuses"}
-              </button>
-            </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label className="block text-start">
-                <span className="block text-xs font-medium text-gray-500 mb-1">
-                  {language === "ar" ? "من تاريخ" : "From Date"}
-                </span>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
-                />
-              </label>
-              <label className="block text-start">
-                <span className="block text-xs font-medium text-gray-500 mb-1">
-                  {language === "ar" ? "إلى تاريخ" : "To Date"}
-                </span>
-                <input
-                  type="date"
-                  value={toDate}
-                  min={fromDate || undefined}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
-                />
-              </label>
-
-            </div>
-
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
+              />
+            </label>
+            <label className="block text-start">
+              <span className="block text-xs font-medium text-gray-500 mb-1">
+                {language === "ar" ? "إلى تاريخ" : "To Date"}
+              </span>
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
+              />
+            </label>
           </div>
 
           {(fromDate || toDate) && (
@@ -472,10 +445,86 @@ export default function Sessions() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-700 text-right">
-                    {session.student.user.name}
+                    {(() => {
+                      let names: string[] = [];
+                      if (session.groupStudents && Array.isArray(session.groupStudents) && session.groupStudents.length > 0) {
+                        names = session.groupStudents.map((gs: any) => gs?.student?.user?.name || gs?.student?.name).filter(Boolean);
+                      } else if (session.students && Array.isArray(session.students) && session.students.length > 0) {
+                        names = session.students.map((st: any) => st?.user?.name || st?.name).filter(Boolean);
+                      } else if (session.student) {
+                        const singleName = session.student?.user?.name || (session.student as any)?.name;
+                        if (singleName) names = [singleName];
+                      }
+
+                      if (!names || names.length === 0) {
+                        return <span className="text-gray-400 font-medium">{language === 'ar' ? 'غير محدد' : 'N/A'}</span>;
+                      }
+
+                      const AVATAR_BG = [
+                        "from-indigo-500 to-purple-600",
+                        "from-blue-500 to-cyan-600",
+                        "from-emerald-500 to-teal-600",
+                        "from-amber-500 to-orange-600",
+                        "from-rose-500 to-pink-600",
+                      ];
+
+                      if (names.length === 1) {
+                        return (
+                          <div className="flex items-center justify-end gap-2">
+                            <Tooltip title={names[0]} placement="top">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-[11px] shadow-sm ring-2 ring-white shrink-0 cursor-pointer hover:scale-110 transition-all">
+                                {names[0].charAt(0).toUpperCase()}
+                              </div>
+                            </Tooltip>
+                            <span className="font-semibold text-gray-800 text-xs">{names[0]}</span>
+                          </div>
+                        );
+                      }
+
+                      const maxVisible = 3;
+                      const overflowCount = names.length - maxVisible;
+
+                      return (
+                        <div className="flex items-center justify-end">
+                          <div className="flex -space-x-2 space-x-reverse items-center p-0.5">
+                            {names.slice(0, maxVisible).map((name, idx) => (
+                              <Tooltip key={idx} title={name} placement="top">
+                                <div
+                                  className={`w-7 h-7 rounded-full text-white flex items-center justify-center font-bold text-[11px] ring-2 ring-white shadow-sm bg-gradient-to-br ${AVATAR_BG[idx % AVATAR_BG.length]} cursor-pointer hover:z-10 hover:scale-110 transition-all`}
+                                >
+                                  {name.charAt(0).toUpperCase()}
+                                </div>
+                              </Tooltip>
+                            ))}
+                            {overflowCount > 0 && (
+                              <Tooltip
+                                placement="top"
+                                title={
+                                  <div className="p-1 space-y-1 text-xs max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div className="font-bold border-b border-gray-700 pb-1 mb-1 text-gray-200">
+                                      {language === 'ar' ? `جميع الطلاب (${names.length})` : `All Students (${names.length})`}
+                                    </div>
+                                    {names.map((n, i) => (
+                                      <div key={i} className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" />
+                                        {n}
+                                      </div>
+                                    ))}
+                                  </div>
+                                }
+                              >
+                                <div className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-center font-bold text-[10px] ring-2 ring-white shadow-sm cursor-pointer hover:z-10 hover:scale-110 transition-all">
+                                  +{overflowCount}
+                                </div>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 text-gray-700 text-right">
-                    {session.teacher.user.name}
+                    {session.teacher?.user?.name || (language === 'ar' ? 'غير محدد' : 'N/A')}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <span className="text-primary font-medium">
@@ -516,13 +565,12 @@ export default function Sessions() {
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         onClick={() => {
-                          const grouped = (!hasDateFilter && session.parent_recurring_id)
-                            ? scheduleData.filter(
-                              (s: Schedule) =>
-                                s.parent_recurring_id ===
-                                session.parent_recurring_id,
-                            )
-                            : [session];
+                          const grouped = scheduleData.filter((s: Schedule) => {
+                            if (session.parent_recurring_id && s.parent_recurring_id) {
+                              return s.parent_recurring_id === session.parent_recurring_id;
+                            }
+                            return s.title === session.title && s.start_time === session.start_time;
+                          });
                           setGroupedSessions(grouped);
                           setSelectedSession(session);
                           setShowViewModal(true);
@@ -534,13 +582,12 @@ export default function Sessions() {
                       </button>
                       <button
                         onClick={() => {
-                          const grouped = (!hasDateFilter && session.parent_recurring_id)
-                            ? scheduleData.filter(
-                              (s: Schedule) =>
-                                s.parent_recurring_id ===
-                                session.parent_recurring_id,
-                            )
-                            : [session];
+                          const grouped = scheduleData.filter((s: Schedule) => {
+                            if (session.parent_recurring_id && s.parent_recurring_id) {
+                              return s.parent_recurring_id === session.parent_recurring_id;
+                            }
+                            return s.title === session.title && s.start_time === session.start_time;
+                          });
                           setGroupedSessions(grouped);
                           setSelectedSession(session);
                           setShowEditModal(true);
@@ -589,6 +636,11 @@ export default function Sessions() {
         }}
         session={selectedSession}
         groupedSessions={groupedSessions}
+        onEditSession={(s) => {
+          setShowViewModal(false);
+          setSelectedSession(s);
+          setShowEditModal(true);
+        }}
       />
 
       <EditSessionModal
@@ -596,7 +648,6 @@ export default function Sessions() {
         onClose={() => {
           setShowEditModal(false);
           setSelectedSession(null);
-          setGroupedSessions([]);
         }}
         session={selectedSession}
         groupedSessions={groupedSessions}

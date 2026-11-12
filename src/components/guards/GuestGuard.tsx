@@ -6,7 +6,7 @@ const GuestGuard = () => {
   const role = localStorage.getItem('role');
 
   if (token) {
-    if (role) return <Navigate to={getDashboardPathForRole(role)} replace />;
+    if (role && role !== "No role assigned") return <Navigate to={getDashboardPathForRole(role)} replace />;
     
     // If token exists but no role is found, clear and stay at login
     localStorage.removeItem('token');

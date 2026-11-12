@@ -1,4 +1,4 @@
-import { X , TrendingUp, TrendingDown, Calendar, User } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Transaction } from '../../types/transaction';
 
@@ -32,6 +32,17 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
     debit: { ar: 'سحب', en: 'Debit' },
     subscription: { ar: 'اشتراك', en: 'Subscription' },
     expense: { ar: 'مصروف', en: 'Expense' },
+    payout: { ar: 'دفعة لمعلم', en: 'Payout' },
+    penalty: { ar: 'خصم / غرامة', en: 'Penalty' },
+  };
+
+  const getReasonText = (reason: any, lang: string) => {
+    if (!reason) return '';
+    if (typeof reason === 'string') return reason;
+    if (typeof reason === 'object') {
+      return reason[lang] || reason.ar || reason.en || Object.values(reason).filter(Boolean).join(' ');
+    }
+    return String(reason);
   };
 
   const currentSymbol = currencies.find(c => c.code === selectedCurrency)?.symbol || selectedCurrency;
@@ -40,6 +51,7 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
   if (!isOpen) return null;
 
   const isIncome = transaction.type === 'credit' || transaction.type === 'subscription';
+  const reasonDisplay = getReasonText(transaction.reason, language);
 
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -77,7 +89,7 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
                   ? 'bg-yellow-100 text-yellow-700'
                   : 'bg-red-100 text-red-700'
               }`}>
-              {text[transaction.status] ? text[transaction.status][language] : transaction.status}
+              {(text as any)[transaction.status] ? (text as any)[transaction.status][language] : transaction.status}
             </span>
           </div>
 
@@ -96,14 +108,14 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
                 <TrendingUp className="w-4 h-4 text-gray-500" />
                 <p className="text-sm text-gray-600">{text.type[language]}</p>
               </div>
-              <p className="font-semibold text-gray-900">{text[transaction.type] ? text[transaction.type][language] : transaction.type}</p>
+              <p className="font-semibold text-gray-900">{(text as any)[transaction.type] ? (text as any)[transaction.type][language] : transaction.type}</p>
             </div>
           </div>
 
-          {transaction.reason && (
+          {reasonDisplay && (
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 text-start">
               <p className="text-sm text-gray-600 mb-2">{text.reason[language]}</p>
-              <p className="text-gray-900">{transaction.reason}</p>
+              <p className="text-gray-900">{reasonDisplay}</p>
             </div>
           )}
 

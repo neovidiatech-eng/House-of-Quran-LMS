@@ -1,4 +1,4 @@
-import { lazy, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import {
   Home,
   BookOpen,
@@ -22,15 +22,18 @@ export interface StudentRouteConfig {
   subItems?: StudentRouteConfig[];
 }
 
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
+
 // --- Lazy Loading Page Components for Student from Features ---
-const SessionsPage = lazy(() => import('../../features/student/pages/Sessions'));
-const AgendaPage = lazy(() => import('../../features/student/pages/Agenda'));
-const ExamsPage = lazy(() => import('../../features/student/pages/Exams'));
-const AssignmentsPage = lazy(() => import('../../features/student/pages/Assignments'));
-const ProfilePage = lazy(() => import('../../features/student/pages/Profile'));
-const LMSCoursesPage = lazy(() => import('../../features/student/pages/LMSCourses/LMSCourses'));
-const ChatPage = lazy(() => import('../../features/student/pages/Chat'));
-const RequestsPage = lazy(() => import('../../features/student/pages/Requests'));
+const SessionsPage = lazyWithRetry(() => import('../../features/student/pages/Sessions'));
+const AgendaPage = lazyWithRetry(() => import('../../features/student/pages/Agenda'));
+const ExamsPage = lazyWithRetry(() => import('../../features/student/pages/Exams'));
+const DailyQuranPage = lazyWithRetry(() => import('../../features/student/pages/DailyQuran'));
+const AssignmentsPage = lazyWithRetry(() => import('../../features/student/pages/Assignments'));
+const ProfilePage = lazyWithRetry(() => import('../../features/student/pages/Profile'));
+const LMSCoursesPage = lazyWithRetry(() => import('../../features/student/pages/LMSCourses/LMSCourses'));
+const ChatPage = lazyWithRetry(() => import('../../features/student/pages/Chat'));
+const RequestsPage = lazyWithRetry(() => import('../../features/student/pages/Requests'));
 
 export const studentDashboardRoutes: StudentRouteConfig[] = [
   {
@@ -80,6 +83,13 @@ export const studentDashboardRoutes: StudentRouteConfig[] = [
         icon: FileText,
         path: 'exams',
         element: <ExamsPage />,
+      },
+      {
+        id: 'student-daily-quran',
+        label: 'sidebar_daily_quran',
+        icon: BookOpen,
+        path: 'daily-quran',
+        element: <DailyQuranPage />,
       },
       {
         id: 'student-assignments',

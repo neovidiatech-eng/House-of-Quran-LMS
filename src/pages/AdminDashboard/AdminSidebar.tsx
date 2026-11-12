@@ -17,7 +17,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
   const { settings } = useSettings();
-  const academyName = language === 'ar' ? 'أكاديمية بيت القران' : 'House Of Quran Academy';
+  const academyName = language === 'ar' ? t('academyName') : settings.name;
   const [expandedItems, setExpandedItems] = useState<string[]>(['users']);
   const visibleRoutes = filterAdminRoutesByPermissions(adminDashboardRoutes);
 
@@ -71,7 +71,13 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
 
         <div className={`p-6 border-b border-gray-200 transition-all ${isCollapsed ? 'px-4' : ''}`}>
           <div className="flex items-center gap-3">
-            <img src={settings.logoUrl || "/logo.jpeg"} alt="House Of Quran Academy Logo" className="w-12 h-12 rounded-xl object-cover shrink-0" />
+            {settings.logoUrl ? (
+              <img src={settings.logoUrl} alt={academyName} className="w-12 h-12 rounded-xl object-contain shrink-0" />
+            ) : (
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg text-white font-bold text-xl shrink-0" style={{ background: `linear-gradient(135deg, ${settings.primaryColor}, ${settings.accentColor})` }}>
+                {academyName.charAt(0)}
+              </div>
+            )}
             <div className={`text-right transition-all duration-300 ${isCollapsed ? 'opacity-0 invisible w-0' : 'opacity-100'}`}>
               <h2 className="text-lg font-bold text-gray-900 line-clamp-1">{academyName}</h2>
               <p className="text-xs text-gray-500">{t('sidebar_dashboard')}</p>

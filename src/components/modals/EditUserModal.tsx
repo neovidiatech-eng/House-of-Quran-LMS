@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
-import { UserFormData, getUserSchema } from '../../lib/schemas/UserSchema';
+import { EditUserFormData, getEditUserSchema } from '../../lib/schemas/UserSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useRoles } from '../../features/admin/hooks/useRoles';
 import { DEFAULT_COUNTRIES } from '../../consts/countries';
+import { useGetCities } from '../../features/teacher/hooks/useCity';
 // import { CustomCheckbox } from '../ui/CustomCheckbox';
 //import { usePermissions } from '../../hooks/usePermissions';
 
@@ -14,8 +15,8 @@ import { DEFAULT_COUNTRIES } from '../../consts/countries';
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (userData: UserFormData & { id: string }) => Promise<void>;
-  userData: UserFormData & { id: string };
+  onSubmit: (userData: EditUserFormData & { id: string }) => Promise<void>;
+  userData: EditUserFormData & { id: string };
 }
 // Static permission list removed in favor of dynamic fetching
 
@@ -42,8 +43,8 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
   //   return acc;
   // }, {});
 
-  const { control, handleSubmit, register, reset, formState: { errors } } = useForm<UserFormData>({
-    resolver: zodResolver(getUserSchema(t)),
+  const { control, handleSubmit, register, reset, watch, formState: { errors } } = useForm<EditUserFormData>({
+    resolver: zodResolver(getEditUserSchema(t)),
     defaultValues: userData,
   });
 
@@ -56,11 +57,11 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
     if (userData && isOpen) {
       reset({ ...userData, password: '' })
     }
-  }, [userData, isOpen, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData?.id, isOpen]);
 
-  if (!isOpen) return null;
 
-  const onFormSubmit = async (data: UserFormData) => {
+  const onFormSubmit = async (data: EditUserFormData) => {
     try {
       await onSubmit({
         ...data,
@@ -76,6 +77,20 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
     new Map(countryCodes.map((c) => [`+${c.phone_code}`, c])).values()
   );
   const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
+
+  const selectedCountry = watch("country");
+  const selectedCountryObj = DEFAULT_COUNTRIES.find((c) => c.name === selectedCountry);
+  const iso2 = selectedCountryObj?.iso2?.toLowerCase() || "eg";
+  const { data: citiesData } = useGetCities(iso2);
+  const cityOptions = citiesData ? citiesData.map((city: any) => ({
+    value: city.name,
+    label: city.name
+  })) : [];
+
+  const countries = DEFAULT_COUNTRIES.map((c) => ({
+    value: c.name,
+    label: `${c.emoji} ${displayNames.of(c.iso2) || c.name}`,
+  }));
 
   const countryOptions = uniqueCountryCodes.map((c) => ({
     value: `+${c.phone_code}`,
@@ -97,6 +112,8 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
       </div>
     ),
   }));
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -133,16 +150,48 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-                  {t('email')}
+                  {language === 'ar' ? 'السن' : 'Age'}
                 </label>
                 <input
-                  type="email"
-                  {...register('email')}
+                  type="text"
+                  {...register('age')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
-                  dir="ltr"
-
                 />
-                {errors.email && <p className="text-red-500 text-xs mt-1 text-start">{errors.email.message}</p>}
+                {errors.age && <p className="text-red-500 text-xs mt-1 text-start">{errors.age.message}</p>}
+              </div>
+            </div>
+
+            {/* Country and City */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Controller
+                  name="country"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      label={language === 'ar' ? 'الدولة' : 'Country'}
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={countries}
+                      className="h-[48px]"
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <Controller
+                  name="city"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      label={language === 'ar' ? 'المدينة' : 'City'}
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={cityOptions}
+                      className="h-[48px]"
+                    />
+                  )}
+                />
               </div>
             </div>
 
@@ -178,8 +227,21 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
               </div>
             </div>
 
-            {/* Role and Password */}
+            {/* Age and Role */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
+                  {t('email')}
+                </label>
+                <input
+                  type="email"
+                  {...register('email')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
+                  dir="ltr"
+                />
+                {errors.email && <p className="text-red-500 text-xs mt-1 text-start">{errors.email.message}</p>}
+              </div>
+
               <Controller
                 name="role"
                 control={control}
@@ -193,7 +255,11 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
                   />
                 )}
               />
-              <div>
+            </div>
+
+            {/* Password */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                   {t('newPasswordOptional')}
                 </label>

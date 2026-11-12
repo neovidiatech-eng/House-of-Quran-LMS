@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getUserSessions, joinToSession, leaveSession, endSession } from "../services/SessionsServices";
+import { getUserSessions, joinToSession, leaveSession, endSessionForAll } from "../services/SessionsServices";
 import { message } from "antd";
 
 export const useUserSessions = (search: string) => {
@@ -9,17 +9,24 @@ export const useUserSessions = (search: string) => {
   });
 };
 
+const JITSI_ERROR_MESSAGES: Record<string, string> = {
+  NOT_A_PARTICIPANT: "أنت لست مشاركاً في هذه الجلسة",
+  TOO_EARLY_TO_JOIN: "لا يمكن الانضمام قبل 5 دقائق من موعد الجلسة",
+  SESSION_ALREADY_FINISHED: "انتهت هذه الجلسة بالفعل",
+  SESSION_CANCELLED: "تم إلغاء هذه الجلسة",
+  SESSION_NOT_FOUND: "الجلسة غير موجودة",
+};
+
 export const useJoinToSession = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => joinToSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
-      message.success("تم الانضمام للجلسة بنجاح");
     },
     onError: (error: any) => {
-      console.error("Failed to join session:", error);
-      message.error(error?.response?.data?.message || "فشل الانضمام للجلسة");
+      const code = error?.response?.data?.errors?.[0] ?? error?.response?.data?.message;
+      message.error(JITSI_ERROR_MESSAGES[code] ?? "حدث خطأ أثناء الانضمام للجلسة");
     },
   });
 };
@@ -30,11 +37,9 @@ export const useLeaveSession = () => {
     mutationFn: (id: string) => leaveSession(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
-      message.success("تمت مغادرة الجلسة");
     },
     onError: (error: any) => {
       console.error("Failed to leave session:", error);
-      message.error(error?.response?.data?.message || "فشل مغادرة الجلسة");
     },
   });
 };
@@ -42,15 +47,16 @@ export const useLeaveSession = () => {
 export const useEndSession = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => endSession(id),
+    mutationFn: (id: string) => endSessionForAll(id),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
-      message.success(data?.message || "تم إنهاء الجلسة بنجاح");
+      message.success(data?.message ?? "تم إنهاء الجلسة للجميع");
     },
     onError: (error: any) => {
-      const msg = error?.response?.data?.message || error?.message || "فشل إنهاء الجلسة";
-      message.error(msg);
+      message.error("حدث خطأ أثناء إنهاء الجلسة");
+      console.error(error);
     },
   });
 };
+
+export const useEndSessionForAll = useEndSession;

@@ -132,7 +132,9 @@ export default function AllSubscriptions() {
 
   const formattedSubscriptions = useMemo(() => {
     if (!data || !Array.isArray(data)) return [];
-    return data.map(mapApiToSubscription);
+    return data
+      .map(mapApiToSubscription)
+      .sort((a, b) => new Date(b.rawStartDate).getTime() - new Date(a.rawStartDate).getTime());
   }, [data, language]);
 
   const filteredSubscriptions = formattedSubscriptions.filter((subscription) => {

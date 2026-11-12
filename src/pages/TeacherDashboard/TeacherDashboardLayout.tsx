@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Header from '../../components/layout/Header';
 import TeacherSidebar from './TeacherSidebar';
+import { useTeacherProfile } from '../../features/teacher/hooks/useTeacherProfile';
 
 interface TeacherDashboardLayoutProps {
   children: React.ReactNode;
@@ -12,13 +13,23 @@ export default function TeacherDashboardLayout({ children }: TeacherDashboardLay
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { i18n } = useTranslation();
   const isRtl = i18n.language.split('-')[0] === 'ar';
+  const { data: profileResponse } = useTeacherProfile();
+
+  const teacherName =
+    profileResponse?.data?.teacher?.name ||
+    (isRtl ? 'أ. معلم' : 'Teacher');
+
+  const teacherEmail =
+    profileResponse?.data?.teacher?.email ||
+    localStorage.getItem('email') ||
+    '';
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans" dir={isRtl ? 'rtl' : 'ltr'}>
       <Header
         userRole="teacher"
-        userName="Teacher"
-        userEmail="teacher@teacher.com"
+        userName={teacherName}
+        userEmail={teacherEmail}
         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
         isCollapsed={isCollapsed}
       />

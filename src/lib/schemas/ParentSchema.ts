@@ -6,17 +6,13 @@ export const getParentSchema = (t: TFunc) => z.object({
   name: z.string().min(3, t("validation.min", { count: 3 })),
   email: z.string().email(t("validation.email")),
   phone: z.string().min(8, t("validation.min", { count: 8 })),
- password: z
-  .string()
-  .min(8, t("validation.passwordMin", { count: 8 }))
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
-    t("validation.passwordComplex")
-  ),
+  password: z.string().min(6, t("validation.min", { count: 6 })),
   codeCountry: z.string().default("+20"),
   country: z.string().default("Egypt"),
   timezone: z.string().optional(),
   students: z.array(z.string()).min(1, t("validation.required")),
+  age: z.string().optional(),
+  city: z.string().optional(),
 });
 
 export type ParentFormData = z.infer<ReturnType<typeof getParentSchema>>;

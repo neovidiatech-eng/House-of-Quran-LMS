@@ -15,13 +15,12 @@ import {
   getAllSchedules,
   searchSchedules,
   getSchedulesForTeacher,
-  syncStatuses,
 } from "../services/SessionsServices";
 import { message } from "antd";
 
 export const useGetSchedules = (
   page: number = 1,
-  limit: number = 10,
+  limit: number = 7,
   filters: {
     fromDate?: string;
     toDate?: string;
@@ -32,6 +31,7 @@ export const useGetSchedules = (
     queryFn: () => getAllSchedules(page, limit, filters),
   });
 };
+
 
 export const useSearchSchedules = (
   searchTerm: string,
@@ -59,12 +59,21 @@ export const useGetSchedulesByTeacher = (teacherId: string) => {
   });
 };
 
+export const useGetBatchSchedules = (parent_recurring_id?: string | null, isOpen?: boolean) => {
+  return useQuery({
+    queryKey: ["schedules", "batch", parent_recurring_id],
+    queryFn: () => getAllSchedules(1, 1000),
+    enabled: !!parent_recurring_id && !!isOpen,
+  });
+};
+
 export const useCreateSchedule = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateSchedulePayload) => createSchedule(data),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       message.success(data.message || 'Schedule Created Successfully');
     },
   });
@@ -77,6 +86,7 @@ export const useCreateRecurringSchedule = () => {
       createRecurringSchedule(data),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       message.success(data.message || 'Recurring Schedules Created Successfully');
     },
   });
@@ -88,6 +98,7 @@ export const useDeleteSchedule = () => {
     mutationFn: (id: string) => deleteSchedule(id),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       message.success(data.message || 'Schedule Deleted Successfully');
     },
   });
@@ -99,6 +110,7 @@ export const useDeleteGroupedSchedule = () => {
     mutationFn: (id: string) => deleteRecurringScheduale(id),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       message.success(data.message || 'Grouped Schedule Deleted Successfully');
     },
   });
@@ -118,17 +130,3 @@ export const useUpdateSchedule = () => {
   });
 };
 
-export const useSyncStatuses = ()=>{
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ()=> syncStatuses(),
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] })
-      message.success(data.message || 'Statuses Synced Successfully');
-    },
-    onError: (error: any) => {
-      message.error(error.message || 'Failed to Sync Statuses');
-    }
-  }
-  )
-}

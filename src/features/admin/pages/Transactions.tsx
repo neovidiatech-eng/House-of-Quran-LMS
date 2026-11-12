@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Search, Eye, RefreshCw } from 'lucide-react';
+import dayjs from 'dayjs';
+import { TrendingUp, TrendingDown, DollarSign, Search, Eye, RefreshCw, RotateCcw } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import ViewTransactionModal from '../../../components/modals/ViewTransactionModal';
-import { useTransactionStats, useTransactions } from '../hooks/useTransaction';
+import { useTransactionStats, useTransactions, useZeroing } from '../hooks/useTransaction';
 import { Transaction, TransactionType } from '../../../types/transaction';
 import { useCurrency } from '../hooks/useCurrency';
 import Pagination from '../../../components/ui/Pagination';
@@ -12,8 +13,8 @@ export default function Transactions() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [month_start, setMonthStart] = useState(dayjs().startOf('month').format('YYYY-MM-DD'));
+  const [month_end, setMonthEnd] = useState(dayjs().endOf('month').format('YYYY-MM-DD'));
   const [selectedCurrency, setSelectedCurrency] = useState('EGP');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -31,21 +32,40 @@ export default function Transactions() {
     search: searchQuery,
     status: filterStatus,
     type: filterType,
-    fromDate,
-    toDate,
-  }), [searchQuery, filterStatus, filterType, fromDate, toDate]);
+    month_start,
+    month_end,
+  }), [searchQuery, filterStatus, filterType, month_start, month_end]);
 
   const { data: response, isLoading: transactionsLoading, error } = useTransactions(
     selectedCurrencyId,
     currentPage,
     itemsPerPage,
     transactionFilters,
+    !!(month_start && month_end),
   );
   const transactions = response?.data?.transactions || [];
   const serverPagination = response?.data?.pagination;
 
-  const { data: statsData, isLoading: statsLoading } = useTransactionStats(selectedCurrencyId);
+  const { data: statsData, isLoading: statsLoading } = useTransactionStats(
+    selectedCurrencyId,
+    month_start,
+    month_end ,
+  );
 
+
+const { mutateAsync: doZeroing, isPending: isZeroing } = useZeroing();
+  const [zeroingStatus, setZeroingStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleZeroing = async () => {
+    try {
+      await doZeroing();
+      setZeroingStatus('success');
+    } catch {
+      setZeroingStatus('error');
+    } finally {
+      setTimeout(() => setZeroingStatus('idle'), 3000);
+    }
+  };
 
     const CURRENCIES = useMemo(() => {
     if (!currenciesData?.currencies) return [];
@@ -83,6 +103,7 @@ export default function Transactions() {
     debit: { ar: 'سحب', en: 'Debit' },
     subscription: { ar: 'اشتراك', en: 'Subscription' },
     payout: { ar: 'دفعة لمعلم', en: 'Payout' },
+    penalty: { ar: 'خصم / غرامة', en: 'Penalty' },
     allStatuses: { ar: 'كل الحالات', en: 'All Statuses' },
     allTypes: { ar: 'كل الأنواع', en: 'All Types' },
     fromDate: { ar: 'من تاريخ', en: 'From Date' },
@@ -94,6 +115,15 @@ export default function Transactions() {
     error: { ar: 'حدث خطأ أثناء تحميل البيانات', en: 'Error loading data' }
   };
 
+  const getReasonText = (reason: any, lang: string) => {
+    if (!reason) return '';
+    if (typeof reason === 'string') return reason;
+    if (typeof reason === 'object') {
+      return reason[lang] || reason.ar || reason.en || Object.values(reason).filter(Boolean).join(' ');
+    }
+    return String(reason);
+  };
+
   const getTransactionLabel = (type: TransactionType) => {
     switch (type) {
       case 'credit': return text.credit[language];
@@ -101,32 +131,35 @@ export default function Transactions() {
       case 'expense': return text.expense[language];
       case 'subscription': return text.subscription[language];
       case 'payout': return text.payout[language];
+      case 'penalty': return text.penalty[language];
       default: return type;
     }
   };
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
-      const matchesSearch = t.reason?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           t.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const reasonStr = getReasonText(t.reason, language).toLowerCase();
+      const matchesSearch = reasonStr.includes(searchQuery.toLowerCase()) || 
+                           String(t.id ?? '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = filterStatus === 'all' || t.status === filterStatus;
       const matchesType = filterType === 'all' || t.type === filterType;
       const transactionDate = new Date(t.createdAt);
-      const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
-      const to = toDate ? new Date(`${toDate}T23:59:59.999`) : null;
+      const from = month_start ? new Date(`${month_start}T00:00:00`) : null;
+      const to = month_end ? new Date(`${month_end}T23:59:59.999`) : null;
       const matchesFromDate = !from || transactionDate >= from;
       const matchesToDate = !to || transactionDate <= to;
 
       return matchesSearch && matchesStatus && matchesType && matchesFromDate && matchesToDate;
     });
-  }, [transactions, searchQuery, filterStatus, filterType, fromDate, toDate]);
+  }, [transactions, searchQuery, filterStatus, filterType, month_start, month_end, language]);
 
   const totalItems = serverPagination?.totalItems ?? filteredTransactions.length;
   const totalPages = Math.max(1, serverPagination?.totalPages ?? Math.ceil(totalItems / itemsPerPage));
 
+  
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterStatus, filterType, fromDate, toDate, selectedCurrencyId]);
+  }, [searchQuery, filterStatus, filterType, month_start, month_end, selectedCurrencyId]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -179,6 +212,30 @@ export default function Transactions() {
               ))}
             </select>
           </div>
+
+          <button
+            onClick={handleZeroing}
+            disabled={isZeroing}
+            title={language === 'ar' ? 'تصفير' : 'Zeroing'}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-medium text-sm transition-all ${
+              zeroingStatus === 'success'
+                ? 'bg-green-50 border-green-400 text-green-700'
+                : zeroingStatus === 'error'
+                ? 'bg-red-50 border-red-400 text-red-700'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            } disabled:opacity-60 disabled:cursor-not-allowed`}
+          >
+            <RotateCcw className={`w-4 h-4 ${isZeroing ? 'animate-spin' : ''}`} />
+            <span>
+              {isZeroing
+                ? (language === 'ar' ? 'جاري التصفير...' : 'Zeroing...')
+                : zeroingStatus === 'success'
+                ? (language === 'ar' ? 'تم التصفير ✓' : 'Zeroed ✓')
+                : zeroingStatus === 'error'
+                ? (language === 'ar' ? 'فشل التصفير' : 'Failed')
+                : (language === 'ar' ? 'تصفير' : 'Zero')}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -283,8 +340,8 @@ export default function Transactions() {
           <span className="block text-xs font-medium text-gray-500 mb-1">{text.fromDate[language]}</span>
           <input
             type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
+            value={month_start}
+            onChange={(e) => setMonthStart(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
           />
         </label>
@@ -292,21 +349,21 @@ export default function Transactions() {
           <span className="block text-xs font-medium text-gray-500 mb-1">{text.toDate[language]}</span>
           <input
             type="date"
-            value={toDate}
-            min={fromDate || undefined}
-            onChange={(e) => setToDate(e.target.value)}
+            value={month_end}
+            min={month_start || undefined}
+            onChange={(e) => setMonthEnd(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary text-start bg-white"
           />
         </label>
       </div>
 
-      {(fromDate || toDate) && (
+      {(month_start || month_end) && (
         <div className="flex justify-end">
           <button
             type="button"
             onClick={() => {
-              setFromDate('');
-              setToDate('');
+              setMonthStart('');
+              setMonthEnd('');
             }}
             className="text-sm font-medium text-primary hover:underline"
           >
@@ -345,7 +402,7 @@ export default function Transactions() {
                       </div>
                     </td>
                     <td className="px-5 py-4 text-start">
-                      <span className="text-sm text-gray-900">{transaction.reason || '-'}</span>
+                      <span className="text-sm text-gray-900">{getReasonText(transaction.reason, language) || '-'}</span>
                     </td>
                     <td className="px-5 py-4 text-start">
                       <div className="flex items-center gap-1 justify-start">
@@ -366,7 +423,7 @@ export default function Transactions() {
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-red-100 text-red-700'
                       }`}>
-                        {text[transaction.status] ? text[transaction.status][language] : transaction.status}
+                        {(text as any)[transaction.status] ? (text as any)[transaction.status][language] : transaction.status}
                       </span>
                     </td>
                     <td className="px-5 py-4">
