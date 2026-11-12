@@ -4,13 +4,12 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginInput, getLoginSchema } from "../lib/schemas/LoginSchema";
-import { login, saveFcmToken } from "../services/AuthServices";
+import { login } from "../services/AuthServices";
 import { Link, useNavigate } from "react-router-dom";
 import { CustomCheckbox } from "../components/ui/CustomCheckbox";
 import { message } from "antd";
 import { connectSocket } from "../utils/socket";
 import { getDashboardPathForRole, storeAuthPermissions } from "../utils/auth";
-import { requestForToken } from "../lib/firebase";
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -73,15 +72,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
         const userEmail = data.email;
         localStorage.setItem("email", userEmail);
-
-        try {
-          const fcmToken = await requestForToken();
-          if (fcmToken) {
-            await saveFcmToken(fcmToken);
-          }
-        } catch (fcmError) {
-          console.error("Failed to save FCM token", fcmError);
-        }
 
         navigate(getDashboardPathForRole(role));
       }

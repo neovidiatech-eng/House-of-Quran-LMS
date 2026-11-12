@@ -35,7 +35,6 @@ import GuestGuard from './components/guards/GuestGuard';
 import { Provider } from "react-redux";
 import { store } from './store/store';
 import { useChatSocket } from './hooks/useChat';
-import { useFCM } from './hooks/useFCM';
 const ParentDashboard = lazyWithRetry(() => import('./features/parent/pages/ParentDashboard'));
 const SupervisorDashboard = lazyWithRetry(() => import('./pages/SupervisorDashboard/SupervisorDashboard'));
 
@@ -81,11 +80,6 @@ function SocketProvider() {
   useChatSocket();
   return null;
 }
-
-function FCMProvider() {
-  useFCM();
-  return null;
-}
   return (
     <Provider store={store}>
       <ErrorBoundary>
@@ -97,7 +91,6 @@ function FCMProvider() {
                   <Router >
                   {!isAuthenticated && <LanguageSwitcher />}
                   {isAuthenticated && <SocketProvider />}
-                  {isAuthenticated && <FCMProvider />}
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       {/* Auth Routes */}

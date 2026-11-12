@@ -45,8 +45,3 @@ export const resendCode = async (data: { email: string }) => {
     return response.data;
 }
 
-export const saveFcmToken = async (fcmToken: string) => {
-    const response = await api.patch("/auth/save-fcm", { fcmToken });
-    return response.data;
-}
-

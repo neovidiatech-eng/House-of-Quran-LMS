@@ -21,7 +21,6 @@
     "axios": "^0.30.3",
     "darkreader": "^4.9.128",
     "dayjs": "^1.11.23",
-    "firebase": "^12.15.0",
     "framer-motion": "^12.38.0",
     "i18next": "^26.0.4",
     "i18next-browser-languagedetector": "^8.2.1",
