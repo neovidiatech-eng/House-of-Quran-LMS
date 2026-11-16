@@ -11,6 +11,7 @@ interface SchedulingSettingsProps {
   setValue: UseFormSetValue<any>;
   DAYS: DayOfWeek[];
   control: Control<any>;
+  errors?: any;
 }
 
 export default function SchedulingSettings({
@@ -21,6 +22,7 @@ export default function SchedulingSettings({
   setValue,
   DAYS,
   control,
+  errors = {},
 }: SchedulingSettingsProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
@@ -68,17 +70,24 @@ export default function SchedulingSettings({
       {schedulingMode === 'single' ? (
         <div className="card-box">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Controller
-              name="sessionDate"
-              control={control}
-              render={({ field }) => (
-                <DatePickerField
-                  label={t('sessionDate')}
-                  value={field.value}
-                  onChange={field.onChange}
-                />
+            <div>
+              <Controller
+                name="sessionDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerField
+                    label={t('sessionDate')}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {errors?.sessionDate && (
+                <p className="error-text text-red-500 text-xs mt-1">
+                  {errors.sessionDate.message as string}
+                </p>
               )}
-            />
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -88,6 +97,11 @@ export default function SchedulingSettings({
                   {...register('startTime')}
                   className="input"
                 />
+                {errors?.startTime && (
+                  <p className="error-text text-red-500 text-xs mt-1">
+                    {errors.startTime.message as string}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -98,6 +112,11 @@ export default function SchedulingSettings({
                   readOnly
                   className="input bg-gray-100"
                 />
+                {errors?.endTime && (
+                  <p className="error-text text-red-500 text-xs mt-1">
+                    {errors.endTime.message as string}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -105,28 +124,42 @@ export default function SchedulingSettings({
       ) : (
         <div className="card-box">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-            <Controller
-              name="batchStartDate"
-              control={control}
-              render={({ field }) => (
-                <DatePickerField
-                  label={t('fromDate')}
-                  value={field.value}
-                  onChange={field.onChange}
-                />
+            <div>
+              <Controller
+                name="batchStartDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerField
+                    label={t('fromDate')}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {errors?.batchStartDate && (
+                <p className="error-text text-red-500 text-xs mt-1">
+                  {errors.batchStartDate.message as string}
+                </p>
               )}
-            />
-            <Controller
-              name="batchEndDate"
-              control={control}
-              render={({ field }) => (
-                <DatePickerField
-                  label={t('toDate')}
-                  value={field.value}
-                  onChange={field.onChange}
-                />
+            </div>
+            <div>
+              <Controller
+                name="batchEndDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerField
+                    label={t('toDate')}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {errors?.batchEndDate && (
+                <p className="error-text text-red-500 text-xs mt-1">
+                  {errors.batchEndDate.message as string}
+                </p>
               )}
-            />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-5">
@@ -137,6 +170,11 @@ export default function SchedulingSettings({
                 {...register('startTime')}
                 className="input"
               />
+              {errors?.startTime && (
+                <p className="error-text text-red-500 text-xs mt-1">
+                  {errors.startTime.message as string}
+                </p>
+              )}
             </div>
 
             <div>
@@ -147,6 +185,11 @@ export default function SchedulingSettings({
                 readOnly
                 className="input bg-gray-100"
               />
+              {errors?.endTime && (
+                <p className="error-text text-red-500 text-xs mt-1">
+                  {errors.endTime.message as string}
+                </p>
+              )}
             </div>
           </div>
 

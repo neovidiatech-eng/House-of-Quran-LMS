@@ -1,7 +1,7 @@
 {
   "createNewStudentAccount": "إنشاء حساب طالب جديد",
   "orLogin": "أو سجل الدخول",
-  "email": "البريد الإلكتروني",
+  "emailOrPhone": "البريد الإلكتروني او رقم الهاتف",
   "password": "كلمة المرور",
   "rememberMe": "تذكرني",
   "forgotPassword": "هل نسيت كلمة المرور؟",

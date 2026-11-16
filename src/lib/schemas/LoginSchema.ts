@@ -3,14 +3,17 @@ import { z } from "zod";
 export const getLoginSchema = (t: (key: string, options?: any) => string) => z.object({
   email: z.string()
     .min(1, t("validation.required"))
-    .email(t("validation.email")),
- password: z
-  .string()
-  .min(8, t("validation.passwordMin", { count: 8 }))
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
-    t("validation.passwordComplex")
-  ),
+    .refine((val) => {
+      const clean = val.trim();
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean);
+      const isPhone = /^\+?[0-9]{7,15}$/.test(clean.replace(/[\s\-()]/g, ''));
+      return isEmail || isPhone;
+    }, {
+      message: t("validation.emailOrPhoneInvalid") || t("validation.email"),
+    }),
+  password: z
+    .string()
+    .min(1, t("validation.required")),
   rememberMe: z.boolean().optional(),
 });
 

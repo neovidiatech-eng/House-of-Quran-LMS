@@ -36,8 +36,18 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
   const onSubmit = async (data: LoginInput) => {
     const { email, password } = data;
+    const identifier = email.trim();
+    const isEmail = identifier.includes("@");
+    const loginPayload: any = {
+      email: identifier,
+      password,
+    };
+    if (!isEmail) {
+      loginPayload.phone = identifier;
+    }
+
     try {
-      const result = await login({ email, password });
+      const result = await login(loginPayload);
 
       const token = result.data?.accessToken || result.accessToken;
       console.log(data);
@@ -92,17 +102,17 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
       {/* Form */}
       <form onSubmit={handleFormSubmit(onSubmit)} className="space-y-6">
-        {/* Email */}
+        {/* Email or Phone */}
         <div className="text-start">
           <label className="block text-sm font-semibold text-slate-700 mb-2">
-            {t("email")} *
+            {t("emailOrPhone") || (language === 'ar' ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email or Phone Number')} *
           </label>
           <div className="relative">
             <input
-              type="email"
+              type="text"
               {...register("email")}
               className={`w-full h-14 px-5 py-3 ${language === 'ar' ? 'pr-12 pl-4' : 'pl-12 pr-4'} bg-slate-50 border ${errors.email ? 'border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-primary focus:ring-primary/10'} rounded-2xl outline-none transition-all focus:ring-4 hover:border-slate-300 font-medium`}
-              placeholder="admin@example.com"
+              placeholder={t("emailOrPhonePlaceholder") || (language === 'ar' ? 'البريد الإلكتروني أو رقم الهاتف' : 'admin@example.com or phone')}
               dir="ltr"
             />
             <div className={`absolute ${language === 'ar' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400`}>

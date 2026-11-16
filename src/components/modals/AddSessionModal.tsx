@@ -34,6 +34,7 @@ import { Teacher } from '../../types/teachers';
 import { DayOfWeek } from '../../types/scheduales';
 
 import { useTranslation } from 'react-i18next';
+import { message } from 'antd';
 
 // Sub-components
 import StudentPlanCard from './add-session/StudentPlanCard';
@@ -72,6 +73,7 @@ export default function AddSessionModal({
   );
   const [sessionsLimitError, setSessionsLimitError] = useState('');
   const [apiConflicts, setApiConflicts] = useState<{date: string, conflict: string}[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const role = localStorage.getItem('role');
   const isModerator = role === 'moderator' || role === 'supervisor';
@@ -103,9 +105,10 @@ export default function AddSessionModal({
     setValue,
     formState: { errors },
   } = useForm<any>({
-    resolver: zodResolver(
-      schedulingMode === 'single' ? singleSchema : batchSchema
-    ),
+    resolver: async (values, context, options) => {
+      const activeSchema = schedulingMode === 'single' ? singleSchema : batchSchema;
+      return zodResolver(activeSchema)(values, context, options);
+    },
     defaultValues: {
       type: 'full',
       notification_Time: '10',
@@ -444,8 +447,9 @@ export default function AddSessionModal({
 
   const remainingSessions = Number(studentPlanInfo?.sessionsRemaining) || 0;
   const requestedSessionsCount = previewSessions.length;
+  const hasPlan = Boolean(selectedStudentData?.plan);
   const sessionsExceedRemaining =
-    !!selectedStudentData && requestedSessionsCount > remainingSessions;
+    hasPlan && requestedSessionsCount > remainingSessions;
 
   const sessionsLimitMessage = sessionsExceedRemaining
     ? t('addSession_sessionsLimitMessage', {
@@ -483,49 +487,91 @@ export default function AddSessionModal({
     };
   };
 
+  const onInvalid = (formErrors: any) => {
+    console.warn("Session form validation errors:", formErrors);
+    const errorKeys = Object.keys(formErrors);
+    if (errorKeys.length > 0) {
+      const firstKey = errorKeys[0];
+      const errorMsg = formErrors[firstKey]?.message;
+      if (errorMsg) {
+        message.warning(String(errorMsg));
+      } else {
+        message.warning(language === 'ar' ? 'يرجى استكمال الحقول المطلوبة' : 'Please fill all required fields');
+      }
+    }
+  };
+
   const onSubmit = async (data: any) => {
     if (sessionsExceedRemaining) {
       setSessionsLimitError(sessionsLimitMessage);
+      message.error(sessionsLimitMessage);
       return;
     }
 
-    let result;
-    if (schedulingMode === 'single') {
-      result = await onAdd(data as SessionFormData);
-    } else {
-      const batchData: MultipleSessionsPayload & {
-        isCustomized?: boolean;
-        originalGeneratedCount?: number;
-      } = {
-        formData: data as MultipleSessionsFormData,
-        selectedDays: watchSelectedDays,
-        originalGeneratedCount: defaultSessions.length,
-        isCustomized: hasCustomizations,
-        sessions: previewSessions.map((session) => ({
-          date: session.date,
-          day: new Date(session.date + 'T00:00:00').toLocaleDateString(
-            'en-US',
-            {
-              weekday: 'long',
-            }
-          ) as DayOfWeek,
-          time: session.time || data.startTime,
-        })),
-      };
+    setIsSubmitting(true);
+    try {
+      let result;
+      if (schedulingMode === 'single') {
+        result = await onAdd(data as SessionFormData);
+      } else {
+        if (!previewSessions.length) {
+          message.warning(
+            language === 'ar'
+              ? 'يرجى اختيار الأيام المطلوبة لإنشاء الحصص'
+              : 'Please select days to generate sessions'
+          );
+          setIsSubmitting(false);
+          return;
+        }
 
-      result = await onAdd(batchData);
+        const batchData: MultipleSessionsPayload & {
+          isCustomized?: boolean;
+          originalGeneratedCount?: number;
+        } = {
+          formData: data as MultipleSessionsFormData,
+          selectedDays: watchSelectedDays,
+          originalGeneratedCount: defaultSessions.length,
+          isCustomized: hasCustomizations,
+          sessions: previewSessions.map((session) => ({
+            date: session.date,
+            day: new Date(session.date + 'T00:00:00').toLocaleDateString(
+              'en-US',
+              {
+                weekday: 'long',
+              }
+            ) as DayOfWeek,
+            time: session.time || data.startTime,
+          })),
+        };
+
+        result = await onAdd(batchData);
+      }
+
+      const conflicts = result?.conflicts || result?.skipedSchedules;
+      if (conflicts && conflicts.length > 0) {
+        setApiConflicts(conflicts);
+        message.warning(
+          language === 'ar'
+            ? 'توجد تعارضات في المواعيد، يرجى تعديلها'
+            : 'Schedule conflicts detected. Please resolve them.'
+        );
+        return; // Do not close modal, so user can fix conflicts
+      }
+
+      reset();
+      setCustomSessionMap({});
+      setApiConflicts([]);
+      onClose();
+    } catch (error: any) {
+      console.error("Failed to add session:", error);
+      const apiMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        (language === 'ar' ? 'فشل إنشاء الحصة، يرجى التحقق من صحة البيانات' : 'Failed to create session');
+      message.error(apiMsg);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const conflicts = result?.conflicts || result?.skipedSchedules;
-    if (conflicts && conflicts.length > 0) {
-      setApiConflicts(conflicts);
-      return; // Do not close modal, so user can fix conflicts
-    }
-
-    reset();
-    setCustomSessionMap({});
-    setApiConflicts([]);
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -564,7 +610,7 @@ export default function AddSessionModal({
         </div>
 
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, onInvalid)}
           className="flex flex-col lg:flex-row overflow-hidden"
         >
           <input type="hidden" {...register('type')} />
@@ -782,6 +828,7 @@ export default function AddSessionModal({
               setValue={setValue}
               DAYS={DAYS}
               control={control}
+              errors={errors}
             />
 
             {/* Meeting Link & Notification */}
@@ -862,23 +909,30 @@ export default function AddSessionModal({
 
               <button
                 type="submit"
-                disabled={sessionsExceedRemaining || (schedulingMode === 'batch' && apiConflicts.length > 0)}
-                className={`primary-btn ${
-                  sessionsExceedRemaining || (schedulingMode === 'batch' && apiConflicts.length > 0)
+                disabled={isSubmitting || sessionsExceedRemaining || (schedulingMode === 'batch' && apiConflicts.length > 0)}
+                className={`primary-btn flex items-center justify-center gap-2 ${
+                  isSubmitting || sessionsExceedRemaining || (schedulingMode === 'batch' && apiConflicts.length > 0)
                     ? 'opacity-50 cursor-not-allowed'
                     : ''
                 }`}
                 title={
-                  schedulingMode === 'batch' && apiConflicts.length > 0
+                  sessionsExceedRemaining
+                    ? sessionsLimitMessage
+                    : schedulingMode === 'batch' && apiConflicts.length > 0
                     ? (language === 'ar'
                         ? 'يرجى حل تعارضات المواعيد قبل المتابعة'
                         : 'Please resolve schedule conflicts before proceeding')
                     : undefined
                 }
               >
-                {schedulingMode === 'single'
-                  ? t('addSession_create')
-                  : t('addSession_scheduleBatch')}
+                {isSubmitting ? (
+                  <span className="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                ) : null}
+                <span>
+                  {schedulingMode === 'single'
+                    ? t('addSession_create')
+                    : t('addSession_scheduleBatch')}
+                </span>
               </button>
             </div>
           </div>

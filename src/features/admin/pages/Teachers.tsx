@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, useCallback } from 'react';
+import { useState, useMemo, useEffect, lazy, useCallback, Suspense } from 'react';
 import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, Copy, Check } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 // import AddTeacherModal from '../../../components/modals/AddTeacherModal';
@@ -382,7 +382,12 @@ export default function Teachers() {
                       </td>
                       <td className="px-6 py-4 text-start">
                         <span className="text-sm font-medium text-gray-900">
-                          {currencyLookup[teacher.currencyId] || teacher.currencyId || '-'} {teacher.hour_price?.toFixed(2) ?? '0.00'}
+                          {currencyLookup[typeof teacher.currencyId === 'string' ? teacher.currencyId : (teacher.currencyId as any)?.id] ||
+                            (typeof teacher.currencyId === 'string' ? teacher.currencyId : (teacher.currencyId as any)?.symbol || (teacher.currencyId as any)?.code) ||
+                            '-'}{' '}
+                          {teacher.hour_price != null && !isNaN(Number(teacher.hour_price))
+                            ? Number(teacher.hour_price).toFixed(2)
+                            : '0.00'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-start">
@@ -440,33 +445,39 @@ export default function Teachers() {
         )}
       </div>
 
-      {/* Add Teacher Modal */}
-      <AddTeacherModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddTeacher}
-      />
+      {/* Modals wrapped in Suspense */}
+      <Suspense fallback={null}>
+        {isAddModalOpen && (
+          <AddTeacherModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onSubmit={handleAddTeacher}
+          />
+        )}
 
-      {/* View Teacher Modal */}
-      <ViewTeacherModal
-        isOpen={isViewModalOpen}
-        onClose={() => {
-          setIsViewModalOpen(false);
-          setSelectedTeacher(null);
-        }}
-        teacher={selectedTeacher}
-      />
+        {isViewModalOpen && selectedTeacher && (
+          <ViewTeacherModal
+            isOpen={isViewModalOpen}
+            onClose={() => {
+              setIsViewModalOpen(false);
+              setSelectedTeacher(null);
+            }}
+            teacher={selectedTeacher}
+          />
+        )}
 
-      {/* Edit Teacher Modal */}
-      <EditTeacherModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedTeacher(null);
-        }}
-        onSubmit={handleUpdateTeacher}
-        teacher={selectedTeacher}
-      />
+        {isEditModalOpen && selectedTeacher && (
+          <EditTeacherModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setSelectedTeacher(null);
+            }}
+            onSubmit={handleUpdateTeacher}
+            teacher={selectedTeacher}
+          />
+        )}
+      </Suspense>
       {ConfirmDialog}
     </div>
   );

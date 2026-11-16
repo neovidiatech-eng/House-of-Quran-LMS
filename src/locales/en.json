@@ -5,6 +5,8 @@
   "createNewStudentAccount": "Create New Student Account",
   "orLogin": "Or Login",
   "email": "Email",
+  "emailOrPhone": "Email or Phone Number",
+  "emailOrPhonePlaceholder": "example@domain.com or +2010xxxxxxxx",
   "password": "Password",
   "rememberMe": "Remember Me",
   "forgotPassword": "Forgot Password?",
@@ -24,6 +26,7 @@
   "validation": {
     "required": "Field is required",
     "email": "Please enter a valid email address",
+    "emailOrPhoneInvalid": "Please enter a valid email address or phone number",
     "min": "Must be at least {{count}} characters",
     "max": "Must be at most {{count}} characters",
     "passwordMatch": "Passwords do not match",

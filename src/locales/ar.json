@@ -5,6 +5,8 @@
   "createNewStudentAccount": "إنشاء حساب طالب جديد",
   "orLogin": "أو سجل الدخول",
   "email": "البريد الإلكتروني",
+  "emailOrPhone": "البريد الإلكتروني أو رقم الهاتف",
+  "emailOrPhonePlaceholder": "example@domain.com أو 010xxxxxxxx",
   "password": "كلمة المرور",
   "rememberMe": "تذكرني",
   "forgotPassword": "هل نسيت كلمة المرور؟",
@@ -24,6 +26,7 @@
   "validation": {
     "required": "هذا الحقل مطلوب",
     "email": "يرجى إدخال بريد إلكتروني صحيح",
+    "emailOrPhoneInvalid": "يرجى إدخال بريد إلكتروني أو رقم هاتف صحيح",
     "min": "يجب أن يكون {{count}} أحرف على الأقل",
     "max": "يجب أن يكون {{count}} أحرف على الأكثر",
     "passwordMatch": "كلمات المرور لا تتطابق",

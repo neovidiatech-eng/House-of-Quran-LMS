@@ -14,7 +14,7 @@ const getBaseSession = (t: TFunc) => z.object({
   description: z.string().optional(),
   // type: z.enum(['full', 'half']),
   notification_Time: z.string().optional(),
-  meetingLink: z.string().min(1, t("validation.required")).url(t("validation.email")),
+  meetingLink: z.string().optional().or(z.literal('')),
   notes: z.string().optional(),
 });
 
@@ -23,9 +23,6 @@ export const getSessionSchema = (t: TFunc) => getBaseSession(t).extend({
   duration: z.string().min(1, t("validation.required")),
   startTime: z.string().min(1, t("validation.required")),
   endTime: z.string().min(1, t("validation.required")),
-}).refine((data) => data.endTime > data.startTime, {
-  message: t("validation.required"), // Ideally 'end time must be after start time'
-  path: ["endTime"],
 });
 
 export const getMultipleSessionsSchema = (t: TFunc) => getBaseSession(t).extend({

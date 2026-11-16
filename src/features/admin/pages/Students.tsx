@@ -1,4 +1,4 @@
-import { useState, lazy, useMemo, useEffect, ElementType } from 'react';
+import { useState, lazy, useMemo, useEffect, ElementType, Suspense } from 'react';
 import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardList, Check, Copy } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import Pagination from '../../../components/ui/Pagination';
@@ -634,7 +634,8 @@ export default function Students() {
       </div>
 
       {/* Modals */}
-      <AddStudentModal
+      <Suspense fallback={null}>
+        <AddStudentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={async (studentData) => {
@@ -751,6 +752,7 @@ export default function Students() {
           }
         }}
       />
+      </Suspense>
       {ConfirmDialog}
     </div>
   );

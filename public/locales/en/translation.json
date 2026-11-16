@@ -1,7 +1,7 @@
 {
   "createNewStudentAccount": "Create New Student Account",
   "orLogin": "Or Login",
-  "email": "Email",
+  "email": "Email or Phone",
   "password": "Password",
   "rememberMe": "Remember Me",
   "forgotPassword": "Forgot Password?",

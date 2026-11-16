@@ -88,8 +88,10 @@ export default function Sessions() {
           ? formData.student.map(String).filter(Boolean)
           : (formData.student ? [String(formData.student)] : []);
 
+        const isGroup = studentIdsList.length > 1;
         const payload: any = {
-          ...(studentIdsList.length > 1
+          isGroup,
+          ...(isGroup
             ? { studentIds: studentIdsList }
             : { studentId: studentIdsList[0] || '' }),
           teacherId: formData.teacher,
@@ -114,9 +116,11 @@ export default function Sessions() {
           ? `${data.sessionDate} ${data.startTime.length === 5 ? `${data.startTime}:00` : data.startTime}`
           : new Date().toISOString();
 
+        const isGroup = studentIdsList.length > 1;
         const payload: any = {
-          ...(studentIdsList.length > 1
-            ? { studentIds: studentIdsList }
+          isGroup,
+          ...(isGroup
+            ? { studentIds: studentIdsList, maxStudents: studentIdsList.length }
             : { studentId: studentIdsList[0] || '' }),
           teacherId: data.teacher,
           subject_id: data.subject,
