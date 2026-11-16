@@ -23,7 +23,7 @@ export const createSchedule = async (scheduleData: CreateSchedulePayload) => {
 export const createRecurringSchedule = async (
   scheduleData: CreateRecurringSchedulePayload,
 ) => {
-  const response = await api.post("/schedules/create-recurring/", scheduleData);
+  const response = await api.post("/schedules/create-recurring", scheduleData);
   return response.data;
 };
 

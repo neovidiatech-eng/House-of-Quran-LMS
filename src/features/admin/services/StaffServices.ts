@@ -12,8 +12,8 @@ export const searchStaff = async (search: string): Promise<StuffData> => {
 };
 
 export const getStaffbyId = async (id: string): Promise<StuffItem> => {
-    const response = await api.get(`/system/stuffs/${id}`);
-    return response.data;
+    const response = await api.get(`/system/stuff/${id}`);
+    return response.data.data;
 }
 
 export const addStaff = async (staff: CreateStaffPayload): Promise<StuffData> => {

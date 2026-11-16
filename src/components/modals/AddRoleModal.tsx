@@ -13,7 +13,7 @@ import { Permission } from '../../types/permission';
 interface AddRoleModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: RoleFormData) => void;
+    onSubmit: (data: RoleFormData) => Promise<void>;
     initialData?: Role | null;
     isLoading?: boolean;
 }
@@ -256,8 +256,8 @@ export default function AddRoleModal({
         onClose();
     };
 
-    const onFormSubmit = (data: RoleFormData) => {
-        onSubmit(data);
+    const onFormSubmit = async (data: RoleFormData) => {
+        await onSubmit(data);
         reset();
     };
 
@@ -321,7 +321,7 @@ export default function AddRoleModal({
                             <label className="font-medium text-gray-700">
                                 {t('permissions')}
                             </label>
-
+                            
                             {/* <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <input

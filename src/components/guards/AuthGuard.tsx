@@ -21,7 +21,7 @@ const AuthGuard = ({ allowedRoles, allowCustomAdminRoles = false }: AuthGuardPro
   if (allowedRoles && !allowedRoles.includes(role || '') && !isAllowedCustomAdmin) {
     console.warn(`Access denied for role: ${role}. Allowed roles: ${allowedRoles}`);
 
-    if (role) return <Navigate to={getDashboardPathForRole(role)} replace />;
+    if (role && role !== "No role assigned") return <Navigate to={getDashboardPathForRole(role)} replace />;
 
     // If no valid role is found, clear and redirect to login
     localStorage.removeItem('token');

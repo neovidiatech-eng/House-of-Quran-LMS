@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import ThemeToggle from './ThemeToggle';
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
@@ -10,7 +11,8 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="fixed top-6 right-6 z-50">
+    <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
+      <ThemeToggle />
       <button
         onClick={toggleLanguage}
         className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur border border-gray-200 

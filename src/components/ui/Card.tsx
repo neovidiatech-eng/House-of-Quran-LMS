@@ -7,20 +7,27 @@ interface DashboardCardProps {
   title: string;
   value: string | number;
   unit: string;
-  percentage: string | number;
-  isIncrease: boolean;
+  percentage?: string | number;
+  isIncrease?: boolean;
   icon: IconConfig;
-  subText: string;
+  subText?: string;
+  onClick?: () => void;
 }
 
 const DashboardCard: React.FC<DashboardCardProps> = ({ 
   title, 
   value, 
   unit, 
-  icon
+  icon,
+  onClick
 }) => {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 w-180 shadow-sm flex flex-col justify-between  hover:shadow-md transition-shadow duration-300">
+    <div 
+      onClick={onClick}
+      className={`bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300 ${
+        onClick ? "cursor-pointer hover:border-[#00a8a8]/30 hover:-translate-y-0.5" : ""
+      }`}
+    >
       <div className="flex justify-between items-start mb-6">
         <div className="text-right">
           <h3 className="text-gray-500 text-sm font-medium mb-2">{title}</h3>

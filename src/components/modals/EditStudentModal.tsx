@@ -1,4 +1,4 @@
-import { X, GraduationCap } from 'lucide-react';
+import { X, GraduationCap, Eye, EyeOff, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -8,8 +8,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePlans } from '../../features/admin/hooks/usePlans';
 import { DEFAULT_COUNTRIES } from '../../consts/countries';
+import { useGetCities } from '../../features/teacher/hooks/useCity';
 
-type EditStudentFormData = Omit<StudentFormData, 'password'> & { password?: string };
+type EditStudentFormData = StudentFormData;
 
 interface EditStudentModalProps {
   isOpen: boolean;
@@ -28,22 +29,29 @@ export default function EditStudentModal({
   const { data: plansData } = usePlans();
   const [countryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(DEFAULT_COUNTRIES);
 
-  const { control, handleSubmit, register, reset, formState: { errors } } = useForm<EditStudentFormData>({
-    resolver: zodResolver(getStudentSchema(t).omit({ password: true })),
+  const { control, handleSubmit, register, reset, watch, formState: { errors, dirtyFields } } = useForm<EditStudentFormData>({
+    resolver: zodResolver(getStudentSchema(t)),
     defaultValues: studentData || undefined,
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isOpen && studentData) {
       reset(studentData);
     }
-  }, [isOpen, studentData, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, studentData?.id]);
 
-  if (!isOpen || !studentData) return null;
 
 
   const handleEditSubmit = async (data: EditStudentFormData) => {
-    await onSubmit({ ...data, id: studentData.id });
+    if (!studentData) return;
+    const payload: any = { ...data, id: studentData.id };
+    if (!dirtyFields.email) {
+      delete payload.email;
+    }
+    await onSubmit(payload);
     onClose();
   };
   const uniqueCountryCodes = Array.from(
@@ -52,10 +60,16 @@ export default function EditStudentModal({
 
 
 
-  const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
- 
+  const selectedCountry = watch("country");
+  const { data: citiesData } = useGetCities(selectedCountry === 'مصر' ? 'eg' : selectedCountry?.toLowerCase() || 'eg');
+  const cityOptions = citiesData ? citiesData.map((city: any) => ({
+    value: city.name,
+    label: city.name
+  })) : [];
 
-const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
+  const displayNames = new Intl.DisplayNames([language === 'ar' ? 'ar' : 'en'], { type: 'region' });
+
+  const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
   value: country.iso2,
   label: (
     <div className="flex items-center gap-2">
@@ -63,6 +77,11 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
       <span>{displayNames.of(country.iso2) || country.name}</span>
     </div>
   ),
+}));
+
+const nationalityOptions = DEFAULT_COUNTRIES.map((country) => ({
+  value: country.nationality,
+  label: country.nationality,
 }));
 
   const countryCodeOptions = uniqueCountryCodes.map((c) => ({
@@ -82,12 +101,12 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
 
 
 
-/*   const planOptions = [
+  const planOptions = [
     ...(plansData || []).map((p: any) => ({
       value: p.id,
       label: language === 'ar' ? p.name_ar : p.name_en,
     }))
-  ]; */
+  ];
 
   const statusOptions = [
     { value: 'approved', label: language === 'ar' ? 'نشط' : 'Active' },
@@ -95,10 +114,18 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
     { value: 'rejected', label: language === 'ar' ? 'مرفوض' : 'Rejected' },
   ];
 
+  const paidOptions = [
+    { value: 'paid', label: language === 'ar' ? 'مدفوع' : 'Paid' },
+    { value: 'unpaid', label: language === 'ar' ? 'غير مدفوع' : 'Unpaid' },
+    { value: 'pending', label: language === 'ar' ? 'قيد الانتظار' : 'Pending' },
+  ];
+
+  if (!isOpen || !studentData) return null;
+
   return (
     <div className="fixed inset-0 !mt-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh]  overflow-y-auto no-scrollbar">
-        <div className="sticky top-0 bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl z-50">
 
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <GraduationCap className="w-6 h-6" />
@@ -118,11 +145,11 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
             </div>
 
-            {/* Email */}
+            {/* Age */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t('email')} *</label>
-              <input {...register('email')} className="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-start" dir="ltr" />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+              <label className="block text-sm font-medium text-gray-700 mb-2">{language === 'ar' ? 'السن' : 'Age'}</label>
+              <input {...register('age')} className="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-start" />
+              {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age.message}</p>}
             </div>
 
             {/* Phone */}
@@ -130,6 +157,13 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('phone')} *</label>
               <input {...register('phone')} className="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-start" dir="ltr" />
               {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('email')} *</label>
+              <input {...register('email')} className="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-start" dir="ltr" />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
 
             {/* Country Code */}
@@ -189,8 +223,38 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
               )}
             />
 
+            {/* City */}
+            <Controller
+              name="city"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <CustomSelect
+                  label={language === 'ar' ? 'المدينة' : 'City'}
+                  value={value}
+                  options={cityOptions}
+                  onChange={onChange}
+                  placeholder={language === 'ar' ? 'اختر المدينة' : 'Select City'}
+                />
+              )}
+            />
+
+                <Controller
+                  name="nationality"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      label={t('nationality')}
+                      value={field.value}
+                      options={nationalityOptions}
+                      placeholder={t('selectNationality')}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+
             {/* Plan */}
-            {/* <Controller
+          <div className="grid md:col-span-1">
+              <Controller
               name="plan"
               control={control}
               render={({ field: { value, onChange } }) => (
@@ -201,22 +265,62 @@ const countryOptions = DEFAULT_COUNTRIES.map((country) => ({
                   onChange={onChange}
                 />
               )}
-            /> */}
-             <Controller
-            name="status"
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <CustomSelect
-                label={t('status')}
-                value={value}
-                options={statusOptions}
-                onChange={onChange}
-              />
-            )}
-          />
+            />
           </div>
 
-       
+            {/* Password */}
+            <div className="text-start relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('password')}
+              </label>
+              <div className="relative">
+                <Lock className="absolute start-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...register('password')}
+                  className="w-full px-12 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-start bg-gray-50 transition-all"
+                  dir="ltr"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute end-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+              <p className="text-xs text-gray-500 mt-1 text-start">
+                {t('leaveBlankPassword')}
+              </p>
+            </div>
+          </div>
+
+          {/* Status & Paid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Controller
+              name="status"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <CustomSelect
+                  label={t('status')}
+                  value={value}
+                  options={statusOptions}
+                  onChange={onChange}
+                />
+              )}
+            />
+
+            <Controller
+              name="paid"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <CustomSelect
+                  label={language === 'ar' ? 'حالة الدفع' : 'Payment Status'}
+                  value={value}
+                  options={paidOptions}
+                  onChange={onChange}
+                />
+              )}
+            />
+          </div>
 
           <div className="flex gap-3 mt-8 pt-6 border-t">
             <button type="button" onClick={onClose} className="flex-1 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">{t('cancel')}</button>

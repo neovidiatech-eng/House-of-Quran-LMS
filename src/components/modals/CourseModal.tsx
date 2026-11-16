@@ -74,6 +74,7 @@ export default function CourseModal({
       description: '',
       category: subjectCategories.filter(c => c.id !== 'الكل' && c.id !== 'All')[0]?.id || '',
       videoUrl: '',
+      pdfUrl: '',
       thumbnailFile: null,
       thumbnailPreview: '',
       attachments: [],
@@ -117,7 +118,7 @@ export default function CourseModal({
         className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto no-scrollbar flex flex-col" dir={language === 'ar' ? 'rtl' : 'ltr'}
         onClick={e => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-[var(--color-primary)] px-8 py-6 flex items-center justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-[var(--color-primary)] px-8 py-6 flex items-center justify-between rounded-t-2xl z-50">
           <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-xl transition-colors">
             <X className="w-5 h-5 text-white/80" />
           </button>

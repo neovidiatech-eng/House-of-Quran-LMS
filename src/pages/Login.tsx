@@ -52,9 +52,20 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           sessionStorage.setItem("token", token);
         }
 
-        const role = result.data?.role || result.role;
+        const apiRole =
+          result.data?.role ||
+          result.role ||
+          (typeof result.data?.user?.role === 'string' ? result.data?.user?.role : result.data?.user?.role?.name) ||
+          (typeof result.user?.role === 'string' ? result.user?.role : result.user?.role?.name) ||
+          result.data?.user?.role_name ||
+          result.data?.user?.user_type ||
+          result.data?.user?.type ||
+          (Array.isArray(result.data?.user?.roles) ? (typeof result.data.user.roles[0] === 'string' ? result.data.user.roles[0] : result.data.user.roles[0]?.name) : undefined);
+        const role = (apiRole && apiRole !== "No role assigned") ? apiRole : "teacher";
         const permissions = result.data?.permissions || result.permissions || [];
-        localStorage.setItem("role", role);
+        if (role) {
+          localStorage.setItem("role", role);
+        }
         storeAuthPermissions(permissions, data.rememberMe || false);
         onLoginSuccess();
         message.success(result.message || t('loginSuccess'));
@@ -84,14 +95,14 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         {/* Email */}
         <div className="text-start">
           <label className="block text-sm font-semibold text-slate-700 mb-2">
-            {t("emailorphone")} *
+            {t("email")} *
           </label>
           <div className="relative">
             <input
-              type="text"
+              type="email"
               {...register("email")}
               className={`w-full h-14 px-5 py-3 ${language === 'ar' ? 'pr-12 pl-4' : 'pl-12 pr-4'} bg-slate-50 border ${errors.email ? 'border-red-400 focus:ring-red-100' : 'border-slate-200 focus:border-primary focus:ring-primary/10'} rounded-2xl outline-none transition-all focus:ring-4 hover:border-slate-300 font-medium`}
-              placeholder="admin@example.com or 1234567890"
+              placeholder="admin@example.com"
               dir="ltr"
             />
             <div className={`absolute ${language === 'ar' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400`}>
@@ -166,7 +177,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         {/* Login Button */}
         <button
           type="submit"
-          className="w-full h-14 bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.99] border-none outline-none cursor-pointer text-base"
+          className="w-full h-14 bg-primary hover:bg-primary-dark dark:bg-primary-dark dark:hover:bg-[#1a4f47] text-white rounded-2xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-2 active:scale-[0.99] border-none outline-none cursor-pointer text-base"
         >
           <span>{t("login")}</span>
           <ArrowIcon className="w-5 h-5 animate-pulse" />

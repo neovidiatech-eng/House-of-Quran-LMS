@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import Header from '../../components/layout/Header';
 import { useLanguage } from '../../contexts/LanguageContext';
 interface StudentDashboardLayoutProps {
@@ -14,7 +13,6 @@ export default function StudentDashboardLayout({
   userName = 'ولي الأمر',
   userEmail = 'parent@parent.com',
 }: StudentDashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { language } = useLanguage();
 
   const isRtl = language === 'ar';
@@ -22,7 +20,7 @@ export default function StudentDashboardLayout({
   return (
     <div className="min-h-screen bg-gray-50" dir={isRtl ? 'rtl' : 'ltr'}>
       <Header
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+        onMenuClick={() => {}}
         userRole={userRole}
         userName={userName}
         userEmail={userEmail}

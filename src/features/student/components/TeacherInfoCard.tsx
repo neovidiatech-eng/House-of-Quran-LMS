@@ -1,4 +1,4 @@
-import { BookOpen, Calendar, GraduationCap, MessageCircle, ShieldCheck, Star, User } from "lucide-react";
+import { BookOpen, GraduationCap, MessageCircle, ShieldCheck, User } from "lucide-react";
 import { useTeacherById } from "../../admin/hooks/useTeacher";
 import { TeacherInfoCardProps } from "../pages/Profile";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,7 @@ export const TeacherInfoCard = ({ teacher, isRtl, settings }: TeacherInfoCardPro
   const navigate = useNavigate();
   const name = teacherData?.user?.name || teacher.name || (isRtl ? 'لا يوجد معلم' : 'No Teacher');
   const { data: profileResponse } = useProfile();
-  const studentId = profileResponse?.data?.id|| profileResponse?.data?.user_id;
+  const studentId = profileResponse?.data?.id || profileResponse?.data?.user_id;
   const { mutateAsync: createChat } = useCreateChat();
   const { data: conversations } = useConversations();
   return (
@@ -20,62 +20,62 @@ export const TeacherInfoCard = ({ teacher, isRtl, settings }: TeacherInfoCardPro
           <GraduationCap className="w-6 h-6" style={{ color: settings.primaryColor }} />
           {isRtl ? 'المعلم الخاص بك' : 'Your Teacher'}
         </h2>
-       <div className="flex items-center gap-2">
-    
-   <button
-  className="w-10 h-10 rounded-xl text-white shadow-sm
+        <div className="flex items-center gap-2">
+
+          <button
+            className="w-10 h-10 rounded-xl text-white shadow-sm
              flex items-center justify-center transition
              hover:scale-105 active:scale-95"
-  style={{ backgroundColor: settings.primaryColor }}
-  title={isRtl ? "مراسلة المعلم" : "Message teacher"}
-  onClick={async () => {
-    // Check if conversation already exists
-    let existingConv = conversations?.find(c => c.otherParty?.id === teacher.id);
-    
-    // Only create if it doesn't exist
-    if (!existingConv && studentId) {
-      try {
-        existingConv = await createChat({ teacherId: teacher.id, studentId });
-      } catch (error) {
-        console.error("Failed to create chat:", error);
-        navigate('/student-dashboard/chat');
-        return;
-      }
-    }
+            style={{ backgroundColor: settings.primaryColor }}
+            title={isRtl ? "مراسلة المعلم" : "Message teacher"}
+            onClick={async () => {
+              // Check if conversation already exists
+              let existingConv = conversations?.find(c => c.otherParty?.id === teacher.id);
 
-    if (existingConv) {
-      if (!existingConv.otherParty || !existingConv.otherParty.name) {
-        existingConv = {
-          ...existingConv,
-          otherParty: {
-            id: teacher.id,
-            name: name,
-            email: ''
-          }
-        };
-      }
-    }
+              // Only create if it doesn't exist
+              if (!existingConv && studentId) {
+                try {
+                  existingConv = await createChat({ teacherId: teacher.id, studentId });
+                } catch (error) {
+                  console.error("Failed to create chat:", error);
+                  navigate('/student-dashboard/chat');
+                  return;
+                }
+              }
 
-    navigate('/student-dashboard/chat', { 
-      state: { 
-        conversation: existingConv
-      } 
-    });
-  }}
->
-  <MessageCircle className="w-5 h-5 text-white" />
-</button>
+              if (existingConv) {
+                if (!existingConv.otherParty || !existingConv.otherParty.name) {
+                  existingConv = {
+                    ...existingConv,
+                    otherParty: {
+                      id: teacher.id,
+                      name: name,
+                      email: ''
+                    }
+                  };
+                }
+              }
 
-    {/* Status */}
-    <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-100">
+              navigate('/student-dashboard/chat', {
+                state: {
+                  conversation: existingConv
+                }
+              });
+            }}
+          >
+            <MessageCircle className="w-5 h-5 text-white" />
+          </button>
+
+          {/* Status */}
+          {/* <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-100">
       <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
       <span className="text-sm font-bold text-yellow-700">
         {teacher.status}
       </span>
-    </div>
+    </div> */}
 
-    </div>
-  </div>
+        </div>
+      </div>
 
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
         <div className="relative">
@@ -88,7 +88,7 @@ export const TeacherInfoCard = ({ teacher, isRtl, settings }: TeacherInfoCardPro
           </div>
         </div>
 
-        <div className="flex-1 text-center md:text-right">
+        <div className="grid grid-cols-1 md:grid-cols-2 text-center md:text-right">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
             <div className="text-right">
               <h3 className="text-xl font-bold text-gray-900 mb-1">
@@ -102,34 +102,13 @@ export const TeacherInfoCard = ({ teacher, isRtl, settings }: TeacherInfoCardPro
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-3 text-right">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                <ShieldCheck className="w-5 h-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{isRtl ? 'معلم معتمد' : 'Verified Teacher'}</p>
-                <p className="text-xs font-semibold text-gray-700">{isRtl ? 'هوية محققة' : 'Identity Verified'}</p>
-              </div>
+          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-3 text-right">
+            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
+              <ShieldCheck className="w-5 h-5 text-green-500" />
             </div>
-            <div className="p-3 bg-primary-50/50 rounded-xl border border-blue-100 flex items-center gap-3 text-right">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                <Calendar className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider">{isRtl ? 'الجلسة القادمة' : 'Next Session'}</p>
-                <p className="text-xs font-semibold text-gray-700 leading-tight">
-                  {teacher.nextSession ? (
-                    new Date(teacher.nextSession).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US', {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric'
-                    })
-                  ) : (
-                    isRtl ? 'لا توجد جلسات قادمة' : 'No upcoming sessions'
-                  )}
-                </p>
-              </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{isRtl ? 'معلم معتمد' : 'Verified Teacher'}</p>
+              <p className="text-xs font-semibold text-gray-700">{isRtl ? 'هوية محققة' : 'Identity Verified'}</p>
             </div>
           </div>
         </div>

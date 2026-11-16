@@ -1,8 +1,17 @@
 import api from "../../../lib/axios"
 import { CreateTeacherInput, Teacher, TeachersData, TeachersFetchResponse, UpdateTeacherInput } from "../../../types/teachers"
 
-export const getTeacher = async (): Promise<TeachersData> => {
-    const response = await api.get("/teachers");
+export interface GetTeachersParams {
+    page?: number;
+    search?: string;
+}
+
+export const getTeacher = async (params: GetTeachersParams = {}): Promise<TeachersData> => {
+    const { search, page } = params;
+    const queryParams: Record<string, string | number> = {};
+    if (search) queryParams.search = search;
+    if (page) queryParams.page = page;
+    const response = await api.get("/teachers", Object.keys(queryParams).length > 0 ? { params: queryParams } : undefined);
     return response.data.data
 }
 
@@ -29,4 +38,17 @@ export const updateTeacher = async (id: string, data: UpdateTeacherInput): Promi
 export const deleteTeacher = async (id: string): Promise<TeachersFetchResponse> => {
     const response = await api.delete(`/teachers/delete/${id}`);
     return response.data
+}
+
+export const getTeacherStudentsForAdmin = async (teacherId: string) => {
+    const response = await api.get(`/teachers/my-students/${teacherId}`);
+    return response.data;
+}
+
+export const assignStudentHourPrice = async (teacherId: string, studentId: string, hour_price: number | string) => {
+    const response = await api.patch(`/teachers/my-students/${teacherId}/hour-price`, {
+        studentId,
+        hour_price
+    });
+    return response.data;
 }

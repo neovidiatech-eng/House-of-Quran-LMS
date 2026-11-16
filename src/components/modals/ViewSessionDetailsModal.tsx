@@ -10,6 +10,7 @@ interface SessionGroup {
   monthYear: string;
   duration: number;
   meetingLink: string;
+  reviews:string[]
   sessions: Array<{
     day: string;
     date: string;
@@ -63,7 +64,8 @@ export default function ViewSessionDetailsModal({ isOpen, onClose, sessionGroup,
     close: { ar: 'إغلاق', en: 'Close' },
     edit: { ar: 'تعديل', en: 'Edit' },
     joinSession: { ar: 'دخول الحصة', en: 'Join Session' },
-    actions: { ar: 'الإجراءات', en: 'Actions' }
+    actions: { ar: 'الإجراءات', en: 'Actions' },
+    review: { ar: 'المراجعة', en: 'Review' },
   };
 
   const getStatusStyle = (status: string) => {
@@ -220,6 +222,7 @@ export default function ViewSessionDetailsModal({ isOpen, onClose, sessionGroup,
                               {session.time} - {session.endTime}
                             </p>
                           </div>
+                         
 
                           <div className="border-r border-gray-300 pr-4">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(session.status)}`}>
@@ -227,6 +230,12 @@ export default function ViewSessionDetailsModal({ isOpen, onClose, sessionGroup,
                             </span>
                           </div>
                         </div>
+                               <div className="border-r border-gray-300 pr-4">
+                            <p className="text-xs text-gray-500 text-start">{text.review[language]}</p>
+                            <p className="font-medium text-gray-900 text-start" dir="ltr">
+                              {sessionGroup.reviews?.[index] || '-'}
+                            </p>
+                          </div>
 
                         <div className="flex items-center gap-2">
                           {session.status === 'scheduled' && onJoinSession && (

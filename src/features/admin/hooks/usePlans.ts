@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import {useQuery } from "@tanstack/react-query";
 import { getPlans } from "../services/PlansServices";
 import { Plan } from "../../../types/plan";
 
@@ -7,4 +7,6 @@ export const usePlans = () => {
         queryKey: ['plans'],
         queryFn: getPlans,
     })
-}
+}
+
+

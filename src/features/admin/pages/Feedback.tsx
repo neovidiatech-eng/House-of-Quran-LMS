@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFeedback } from "../hooks/useFeedback";
-import Pagination from "../../../components/ui/Pagination";
-import { Star, Calendar, User, GraduationCap, Clock, Search } from "lucide-react";
 import { FeedBackItem } from "../../../types/feedback";
 import ViewFeedbackModal from "../../../components/modals/ViewFeedbackModal";
-import { useDebounce } from "../hooks/useDebounce";
+import Pagination from "../../../components/ui/Pagination";
+import { Star, Calendar, User, GraduationCap, Clock, Search } from "lucide-react";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const FeedbackPage = () => {
     const { i18n } = useTranslation();
@@ -15,9 +15,12 @@ const FeedbackPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
     
+    // Reset page to 1 when search term changes
     useEffect(() => {
         setPage(1);
     }, [debouncedSearchTerm]);
+
+    // Fetch from backend using the debounced search term (with key saerch as requested)
     const { data, isLoading, isError } = useFeedback(page, limit, debouncedSearchTerm);
     
     const [selectedFeedback, setSelectedFeedback] = useState<FeedBackItem | null>(null);
@@ -26,9 +29,8 @@ const FeedbackPage = () => {
     if (isLoading) return <div className="flex justify-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
     if (isError) return <div className="text-red-500 text-center p-10 font-bold">{language === 'ar' ? 'حدث خطأ أثناء تحميل التقارير' : 'Error loading reports'}</div>;
 
-    const responseData = data?.data as any;
-    const allFeedbacks: FeedBackItem[] = responseData?.items || responseData?.feedbacks?.items || [];
-    const pagination = responseData?.pagination || responseData?.feedbacks?.pagination;
+    const allFeedbacks = data?.data.feedbacks.items || [];
+    const pagination = data?.data.feedbacks.pagination;
 
     const handleCardClick = (feedback: FeedBackItem) => {
         setSelectedFeedback(feedback);
@@ -68,7 +70,7 @@ const FeedbackPage = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {allFeedbacks.map((item: FeedBackItem) => (
+                    {allFeedbacks.map((item) => (
                         <div 
                             key={item.id} 
                             onClick={() => handleCardClick(item)}
@@ -76,7 +78,7 @@ const FeedbackPage = () => {
                         >
                             <div className="flex justify-between items-start mb-4">
                                 <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
-                                    {item.schedule?.title || (language === 'ar' ? 'جلسة' : 'Session')}
+                                    {item.schedule.title}
                                 </h3> 
                                 <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
                                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 gap-1" />
@@ -102,11 +104,11 @@ const FeedbackPage = () => {
                                 <div className="flex items-center text-sm text-gray-500 gap-2 flex-wrap">
                                     <div className="flex items-center gap-1">
                                         <Calendar className="w-4 h-4 text-gray-400" />
-                                        <span>{formatDate(item.schedule?.start_time || item.createdAt)}</span>
+                                        <span>{formatDate(item.schedule.start_time)}</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <Clock className="w-4 h-4 text-gray-400" />
-                                        <span dir="ltr">{new Date(item.schedule?.start_time || item.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {hour: '2-digit', minute: '2-digit'})}</span>
+                                        <span dir="ltr">{new Date(item.schedule.start_time).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {hour: '2-digit', minute: '2-digit'})}</span>
                                     </div>
                                 </div>
                             </div>

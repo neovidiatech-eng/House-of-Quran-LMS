@@ -8,10 +8,11 @@ export const useSubscription = () => {
     });
 }
 
-export const useRenewSubscription = () =>{
+
+export const useRenewSubscription = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ studentId, plan_id }: { studentId: string; plan_id: string })=> renewSubscription(studentId, plan_id),
+        mutationFn: ({ studentId, plan_id }: { studentId: string; plan_id: string }) => renewSubscription(studentId, plan_id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["subscription"] });
         }

@@ -5,18 +5,17 @@ type TFunc = (key: string, options?: any) => string;
 export const getTeacherSchema = (t: TFunc) => z.object({
   name: z.string().min(3, t("validation.min", { count: 3 })),
   email: z.string().email(t("validation.email")),
-  phone: z.string().min(8, t("validation.min", { count: 8 })),
   phone_code: z.string().min(1, t("validation.required")),
- password: z
-  .string()
-  .min(8, t("validation.passwordMin", { count: 8 }))
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
-    t("validation.passwordComplex")
-  ),
+  phone: z.string().min(8, t("validation.min", { count: 8 })),
 
-  hourlyRate: z.coerce.number().min(0, t("validation.required")),
-
+  password: z
+    .string()
+    .min(8, t("validation.passwordMin", { count: 8 }))
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]+$/,
+      t("validation.passwordComplex")
+    ),
+  nationality: z.string().min(1, t("validation.required")),
   currency: z.string().min(1, t("validation.required")),
   gender: z.enum(['male', 'female']),
   status: z.enum(['active', 'inactive']),
@@ -28,6 +27,9 @@ export const getTeacherSchema = (t: TFunc) => z.object({
     z.string().url(t("validation.url")).optional()
   ),
   timezone: z.string().optional(),
+  country: z.string().optional(),
+  age: z.string().optional(),
+  city: z.string().optional(),
 });
 
 export type TeacherFormData = z.infer<ReturnType<typeof getTeacherSchema>>;

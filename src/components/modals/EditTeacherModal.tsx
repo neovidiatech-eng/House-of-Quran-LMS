@@ -1,5 +1,6 @@
 import { X, Users, Eye, EyeOff, Lock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTeacherById } from '../../features/admin/hooks/useTeacher';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
 import { TeacherFormData, getTeacherSchema } from '../../lib/schemas/TeacherSchema';
@@ -10,6 +11,7 @@ import { useCurrency } from '../../features/admin/hooks/useCurrency';
 import { useSubjects } from '../../features/admin/hooks/useSubjects';
 import { CustomCheckbox } from '../ui/CustomCheckbox';
 import { DEFAULT_COUNTRIES } from '../../consts/countries';
+import { useGetCities } from '../../features/teacher/hooks/useCity';
 
 interface EditTeacherModalProps {
   isOpen: boolean;
@@ -18,12 +20,57 @@ interface EditTeacherModalProps {
   teacher: Teacher | null;
 }
 
+const COUNTRY_CURRENCY_MAP: Record<string, string> = {
+  'Egypt': 'EGP',
+  'Saudi Arabia': 'SAR',
+  'United Arab Emirates': 'AED',
+  'Kuwait': 'KWD',
+  'Qatar': 'QAR',
+  'Bahrain': 'BHD',
+  'Oman': 'OMR',
+  'Jordan': 'JOD',
+  'United States': 'USD',
+  'United Kingdom': 'GBP',
+  'Germany': 'EUR',
+  'France': 'EUR',
+  'Italy': 'EUR',
+  'Spain': 'EUR',
+  'Turkey': 'TRY',
+  'Sudan': 'SDG',
+  'Morocco': 'MAD',
+  'Algeria': 'DZD',
+  'Tunisia': 'TND',
+  'Iraq': 'IQD',
+  'Lebanon': 'LBP',
+};
+
+const getMatchingCurrencyId = (countryName: string, currencies: any[]) => {
+  if (!countryName || !currencies || currencies.length === 0) return '';
+  const expectedCode = COUNTRY_CURRENCY_MAP[countryName];
+  if (expectedCode) {
+    const matched = currencies.find(
+      (c: any) => c.code?.toUpperCase() === expectedCode.toUpperCase()
+    );
+    if (matched) return matched.id;
+  }
+  const matchedByName = currencies.find(
+    (c: any) =>
+      c.name_en?.toLowerCase().includes(countryName.toLowerCase()) ||
+      c.code?.toUpperCase().includes(countryName.substring(0, 3).toUpperCase())
+  );
+  if (matchedByName) return matchedByName.id;
+  return '';
+};
+
 export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }: EditTeacherModalProps) {
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [countryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(DEFAULT_COUNTRIES);
   const { data: currenciesData } = useCurrency();
   const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjects();
+
+  const { data: fullTeacher, isLoading: isLoadingFullTeacher } = useTeacherById(isOpen && teacher ? teacher.id : undefined);
+  const teacherData = fullTeacher || teacher;
 
   const { register, handleSubmit, setValue, watch, control, reset, formState: { errors }, } = useForm<TeacherFormData>({
     resolver: zodResolver(getTeacherSchema(t)) as Resolver<TeacherFormData>,
@@ -38,39 +85,61 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
   }, [currenciesData, language]);
 
   useEffect(() => {
-    if (teacher) {
-      console.log("==> EditTeacherModal Mount:", teacher);
+    if (teacherData) {
+      console.log("==> EditTeacherModal Mount:", teacherData);
 
       // Extract subject IDs directly from the API response
-      const subjectsArray = teacher.teacherSubjects || [];
+      const subjectsArray = teacherData.teacherSubjects || [];
       const subjectIds = subjectsArray.map((s: any) => String(s.subjectId || s.subject?.id)).filter(Boolean);
+      let currencyId = teacherData.currencyId || teacherData.currency?.id || '';
+      const teacherCountry = teacherData.user.country || teacherData.user?.country || 'Egypt';
 
-      const currencyId = teacher.currencyId || '';
 
-      console.log("==> Extracted Data:", { subjectIds, currencyId });
+      if (!currencyId && currenciesData?.currencies) {
+        currencyId =
+          getMatchingCurrencyId(teacherCountry, currenciesData.currencies) ||
+          currenciesData.default?.id ||
+          currenciesData.currencies[0]?.id ||
+          '';
+      }
+
+      console.log("==> Extracted Data:", { subjectIds, currencyId, teacherCountry });
 
       reset({
-        name: teacher.user?.name || '',
-        email: teacher.user?.email || '',
-        phone: teacher.user?.phone || '',
-        phone_code: teacher.user?.code_country || '+20',
-        password: '',
-        hourlyRate: teacher.hour_price || 0,
+        name: teacherData.user?.name || '',
+        email: teacherData.user?.email || '',
+        phone: teacherData.user?.phone || '',
+        phone_code: teacherData.user?.code_country || '+20',
+        password: teacherData.user?.password || '',
         currency: currencyId,
-        gender: (teacher.gender?.toLowerCase() as 'male' | 'female') || 'male',
-        status: teacher.active ? 'active' : 'inactive',
+        nationality: (teacherData.user as any)?.nationality || teacherData.nationality || '',
+        gender: (teacherData.gender?.toLowerCase() as 'male' | 'female') || 'male',
+        status: teacherData.active ? 'active' : 'inactive',
         subjects: subjectIds,
-        meeting_link: teacher.meeting_link || '',
+        meeting_link: teacherData.meeting_link || '',
+        country: teacherCountry,
+        city: teacherData.user.city || '',
+        age: teacherData.user.age ? String(teacherData.user.age) : '',
       });
     }
-  }, [teacher, reset]);
+  }, [teacherData, reset, currenciesData]);
+
+  const selectedCountry = watch("country");
+
+  useEffect(() => {
+    if (selectedCountry && currenciesData?.currencies?.length) {
+      const matchedCurrencyId = getMatchingCurrencyId(selectedCountry, currenciesData.currencies);
+      if (matchedCurrencyId) {
+        setValue('currency', matchedCurrencyId, { shouldValidate: true });
+      }
+    }
+  }, [selectedCountry, currenciesData, setValue]);
 
   const handleOnSubmit = async (data: TeacherFormData) => {
     await onSubmit(data);
     onClose();
   };
 
-  if (!isOpen || !teacher) return null;
   const subjectsValue = watch('subjects') || [];
 
   const handleSubjectToggle = (id: string, checked: boolean) => {
@@ -106,6 +175,38 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
     ),
   }));
 
+  const nationalityOptions = useMemo(() => {
+    return DEFAULT_COUNTRIES.map((country) => ({
+      value: country.nationality,
+      label: country.nationality,
+    }));
+  }, []);
+
+  const selectedCountryObj = DEFAULT_COUNTRIES.find((c) => c.name === selectedCountry);
+  const iso2 = selectedCountryObj?.iso2?.toLowerCase() || "eg";
+  const { data: citiesData } = useGetCities(iso2);
+  const cityOptions = citiesData ? citiesData.map((city: any) => ({
+    value: city.name,
+    label: city.name
+  })) : [];
+
+  const countries = DEFAULT_COUNTRIES.map((c) => ({
+    value: c.name,
+    label: `${c.emoji} ${displayNames.of(c.iso2) || c.name}`,
+  }));
+
+  if (isLoadingFullTeacher) {
+    return (
+      <div className="fixed inset-0 !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOpen || !teacher) return null;
+
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -126,19 +227,18 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
           <div className="p-6 space-y-6 flex-1">
             {/* Row 1: Name and Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Email */}
+              {/* Age */}
               <div className="text-start">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('email')} *
+                  {language === 'ar' ? 'السن' : 'Age'}
                 </label>
                 <input
-                  type="email"
-                  placeholder="example@email.com"
-                  {...register('email')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
-                  dir="ltr"
+                  type="text"
+                  placeholder="ex: 30"
+                  {...register('age')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
                 />
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age.message}</p>}
               </div>
 
               {/* Name */}
@@ -185,19 +285,19 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
 
             {/* Row 3: Country Code and Phone */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Controller
-                  name="phone_code"
-                  control={control}
-                  render={({ field }) => (
-                    <CustomSelect
-                      label={t('countryCode')}
-                      value={field.value}
-                      options={countryCodeOptions}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-                <div className="text-start">
+              <Controller
+                name="phone_code"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    label={t('countryCode')}
+                    value={field.value}
+                    options={countryCodeOptions}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              <div className="text-start">
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('phone')} </label>
                 <input
                   type="tel"
@@ -210,9 +310,8 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
               </div>
             </div>
 
-            {/* Row 4: Hourly Rate and Currency */}
+            {/* Row 4: Currency and Age */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Currency */}
               <Controller
                 name="currency"
                 control={control}
@@ -226,22 +325,51 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
                 )}
               />
 
-              {/* Hourly Rate */}
+              {/* Email */}
               <div className="text-start">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('hourlyRate')}
+                  {t('email')} *
                 </label>
                 <input
-                  type="number"
-                  placeholder="150"
-                  {...register('hourlyRate')}
+                  type="email"
+                  placeholder="example@email.com"
+                  {...register('email')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                   dir="ltr"
                 />
-                {errors.hourlyRate && <p className="text-red-500 text-xs mt-1">{errors.hourlyRate.message}</p>}
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
               </div>
             </div>
 
+            {/* Row 4.5: Country and City */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Controller
+                name="country"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    label={t('country')}
+                    value={field.value}
+                    options={countries}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+
+              <Controller
+                name="city"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    label={language === 'ar' ? 'المدينة' : 'City'}
+                    value={field.value}
+                    options={cityOptions}
+                    onChange={field.onChange}
+                    placeholder={language === 'ar' ? 'اختر المدينة' : 'Select City'}
+                  />
+                )}
+              />
+            </div>
             {/* Row 4: Gender and Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Status */}
@@ -272,18 +400,35 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
               />
             </div>
 
-            {/* Row 5: Zoom Link */}
-            <div className="grid grid-cols-1 md:grid-cols-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('zoomLink')}
-              </label>
-              <input
-                type="text"
-                placeholder="https://zoom.us/j/123456789"
-                {...register('meeting_link')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
+            {/* Row 5: Zoom Link and Nationality */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="text-start">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('zoomLink')}
+                </label>
+                <input
+                  type="text"
+                  disabled={teacherData?.meeting_link !== null ? true : false}
+                  placeholder="https://zoom.us/j/123456789"
+                  {...register('meeting_link')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
+                />
+                {errors.meeting_link && <p className="text-red-500 text-xs mt-1">{errors.meeting_link.message}</p>}
+              </div>
+
+              <Controller
+                name="nationality"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    label={t('nationality')}
+                    value={field.value}
+                    options={nationalityOptions}
+                    placeholder={t('selectNationality')}
+                    onChange={field.onChange}
+                  />
+                )}
               />
-              {errors.meeting_link && <p className="text-red-500 text-xs mt-1">{errors.meeting_link.message}</p>}
             </div>
 
             {/* Subjects */}

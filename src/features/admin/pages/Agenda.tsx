@@ -8,9 +8,45 @@ import {
 
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAgenda } from "../../admin/hooks/useAgenda";
+import { useStudents } from "../../admin/hooks/useStudents";
+import { useTeacher } from "../../admin/hooks/useTeacher";
 import { AgendaSession } from "../../../types/Agenda";
 import SessionsDayModal from "../../../components/modals/SessionsDayModal";
 import { formatDateLocal, getLocalDateKey } from "../../../utils/dateUtils";
+
+const getPersonName = (person: any, id?: string, idMap?: Map<string, string>): string => {
+  if (id && idMap && idMap.has(id)) {
+    return idMap.get(id)!;
+  }
+  if (!person) return "-";
+  if (typeof person === "string") return person;
+  if (typeof person === "object") {
+    if (person.user?.name) return person.user.name;
+    if (person.name) return person.name;
+    if (person.name_ar) return person.name_ar;
+    if (person.name_en) return person.name_en;
+    if (person.email) return person.email;
+  }
+  return "-";
+};
+
+const getStatusBadge = (status?: string, language: string = "ar") => {
+  const s = status?.toLowerCase();
+  const isAr = language.startsWith("ar");
+  switch (s) {
+    case "scheduled":
+      return { label: isAr ? "مجدولة" : "Scheduled", className: "bg-blue-50 text-blue-700 border-blue-200" };
+    case "planned":
+      return { label: isAr ? "مخطط لها" : "Planned", className: "bg-purple-50 text-purple-700 border-purple-200" };
+    case "completed":
+      return { label: isAr ? "مكتملة" : "Completed", className: "bg-green-50 text-green-700 border-green-200" };
+    case "cancelled":
+    case "canceled":
+      return { label: isAr ? "ملغاة" : "Cancelled", className: "bg-red-50 text-red-700 border-red-200" };
+    default:
+      return { label: status || "-", className: "bg-gray-100 text-gray-700 border-gray-200" };
+  }
+};
 
 export default function Agenda() {
   const { t, language } = useLanguage();
@@ -18,6 +54,29 @@ export default function Agenda() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const locale = language === "ar" ? "ar-EG" : "en-US";
+
+  const { data: studentsResponse } = useStudents({ limit: 1000 });
+  const { data: teachersResponse } = useTeacher({ limit: 100 });
+
+  const studentMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const studentsList = studentsResponse?.data?.studentsData || (studentsResponse as any)?.data?.students || [];
+    studentsList.forEach((s: any) => {
+      if (s.id && s.user?.name) map.set(s.id, s.user.name);
+      if (s.user_id && s.user?.name) map.set(s.user_id, s.user.name);
+    });
+    return map;
+  }, [studentsResponse]);
+
+  const teacherMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const teachersList = teachersResponse?.teachers || (teachersResponse as any)?.data?.teachers || [];
+    teachersList.forEach((t: any) => {
+      if (t.id && t.user?.name) map.set(t.id, t.user.name);
+      if (t.user_id && t.user?.name) map.set(t.user_id, t.user.name);
+    });
+    return map;
+  }, [teachersResponse]);
   // 📌 Month range
   const startDate = useMemo(() => {
     const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -240,9 +299,14 @@ export default function Agenda() {
 
         {/* TODAY PANEL */}
         <div className="bg-white rounded-2xl shadow-sm border p-6">
-          <h3 className="text-xl font-bold flex items-center justify-end gap-2 mb-6">
-            <span>{t("todaySessions")}</span>
-            <Clock className="w-5 h-5 text-primary" />
+          <h3 className="text-xl font-bold flex items-center justify-between mb-6">
+            <span className="text-xs bg-[#eefcfc] text-[#00a8a8] px-3 py-1 rounded-full font-bold">
+              {todaySessions.length} حصص
+            </span>
+            <span className="flex items-center gap-2">
+              <span>{t("todaySessions")}</span>
+              <Clock className="w-5 h-5 text-primary" />
+            </span>
           </h3>
 
           {loading ? (
@@ -257,30 +321,45 @@ export default function Agenda() {
             </p>
           ) : (
             <div className="space-y-4">
-              {todaySessions.map((s) => (
-                <div
-                  key={s.id}
-                  className="bg-primary-50 border rounded-xl p-4 text-right"
-                >
-                  <p className="font-bold">{s.title}</p>
+              {todaySessions.map((s) => {
+                const teacherName = getPersonName(s.teacher, s.teacherId, teacherMap);
+                const studentName = getPersonName(s.student, s.studentId, studentMap);
+                const badge = getStatusBadge(s.status, language);
 
-                  <p className="text-sm text-gray-600">
-                    {new Date(s.start_time).toLocaleTimeString()} -{" "}
-                    {new Date(s.end_time).toLocaleTimeString()}
-                  </p>
+                return (
+                  <div
+                    key={s.id}
+                    className="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-right space-y-2 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                      {/* {s.title && <p className="font-bold text-gray-900 text-base">{s.title}</p>} */}
+                    </div>
 
-                  <p className="text-xs mt-1">{s.status}</p>
+                    <div className="text-xs text-gray-600 space-y-1 pt-1 border-t border-gray-100">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400 font-semibold">{t("teacher_label") || (language === 'ar' ? ' المعلم:  ' : 'Teacher :')}</span>
+                        <span className="font-medium text-gray-800">{teacherName}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400 font-semibold">{t("student_label") || (language === 'ar' ? '  الطالب: ' : 'Student:')}</span>
+                        <span className="font-medium text-gray-800">{studentName}</span>
+                      </div>
+                    </div>
 
-                  {/* {s.link && (
-                    <button
-                      onClick={() => window.open(s.link, "_blank")}
-                      className="w-full mt-3 bg-green-600 text-white py-2 rounded-lg text-sm"
-                    >
-                      Join Session
-                    </button>
-                  )} */}
-                </div>
-              ))}
+                    <div className="flex items-center justify-end gap-1.5 text-xs text-teal-700 font-semibold pt-1">
+                      <span dir="ltr">
+                        {s.display_start_time && s.display_end_time
+                          ? `${s.display_start_time} - ${s.display_end_time}`
+                          : `${new Date(s.start_time).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })} - ${new Date(s.end_time).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`}
+                      </span>
+                      <Clock className="w-3.5 h-3.5 text-[#00a8a8]" />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -292,6 +371,8 @@ export default function Agenda() {
         onClose={() => setModalOpen(false)}
         date={selectedDate}
         sessions={selectedDate ? sessionsByDate[selectedDate] || [] : []}
+        studentMap={studentMap}
+        teacherMap={teacherMap}
       />
     </div>
   );

@@ -14,6 +14,8 @@ import { message } from 'antd';
 
 export default function Parents() {
   const { language } = useLanguage();
+  const role = localStorage.getItem('role');
+  const isSuperAdmin = role === 'super_admin';
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -177,7 +179,9 @@ const parents = parentsData?.data?.parents || [];
               <tr>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.parentName[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.email[language]}</th>
-                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.password[language]}</th>
+                {isSuperAdmin && (
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.password[language]}</th>
+                )}
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.phone[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.children[language]}</th>
                 <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{text.actions[language]}</th>
@@ -195,7 +199,8 @@ const parents = parentsData?.data?.parents || [];
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-700 text-start">{parent.email}</td>
-<td className="px-6 py-4">
+                  {isSuperAdmin && (
+                    <td className="px-6 py-4">
                         <div className="flex items-center gap-2 group">
                           <span className="text-sm text-gray-600">{parent.password || '-'}</span>
                           {parent.password && (
@@ -212,7 +217,9 @@ const parents = parentsData?.data?.parents || [];
                             </button>
                           )}
                         </div>
-                      </td>                  <td className="px-6 py-4 text-gray-700 text-start">{parent.phone}</td>
+                      </td>
+                  )}
+                  <td className="px-6 py-4 text-gray-700 text-start">{parent.phone}</td>
                   <td className="px-6 py-4 text-start">
                     <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary-light text-white rounded-full text-sm font-medium">
                       {parent.students?.length} {text.students[language]}

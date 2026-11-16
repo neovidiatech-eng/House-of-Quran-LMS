@@ -45,8 +45,8 @@ export default function TeacherRequests() {
   const requests = data?.data || [];
 
   const filtered = requests.filter(r => {
-    const matchSearch = r.requester.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.reason.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSearch = String(r.requester?.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(r.reason ?? '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus = filterStatus === 'all' || r.status === filterStatus;
     const matchType = filterType === 'all' || r.type === filterType;
     return matchSearch && matchStatus && matchType;

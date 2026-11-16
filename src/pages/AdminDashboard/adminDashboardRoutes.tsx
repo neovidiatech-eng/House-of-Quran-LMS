@@ -1,4 +1,4 @@
-import { lazy, ReactNode } from "react";
+import { ReactNode } from "react";
 import {
   Home,
   Users,
@@ -22,10 +22,10 @@ import {
   Coins,
   ShieldCheck,
   Repeat,
+  Trophy,
   MessageSquare
 } from 'lucide-react';
 import TransactionRequests from "../../features/admin/pages/TransactionRequests";
-import FeedbackPage from "../../features/admin/pages/Feedback";
 
 export interface RouteConfig {
   id: string;
@@ -37,31 +37,44 @@ export interface RouteConfig {
   subItems?: RouteConfig[];
 }
 
+import { lazyWithRetry } from "../../utils/lazyWithRetry";
+
 // --- Lazy Loading Admin Page Components from Features ---
-const UsersPage = lazy(() => import("../../features/admin/pages/Users"));
-const StudentsPage = lazy(() => import("../../features/admin/pages/Students"));
-const TeachersPage = lazy(() => import("../../features/admin/pages/Teachers"));
-const ParentsPage = lazy(() => import("../../features/admin/pages/Parents"));
-const SessionsPage = lazy(() => import("../../features/admin/pages/Sessions"));
-const AgendaPage = lazy(() => import("../../features/admin/pages/Agenda"));
-const ExamsPage = lazy(() => import("../../features/admin/pages/Exams"));
-const AssignmentsPage = lazy(() => import("../../features/admin/pages/Assignments"));
-const SubscriptionRequestsPage = lazy(
+const UsersPage = lazyWithRetry(() => import("../../features/admin/pages/Users"));
+const ModeratorPage = lazyWithRetry(() => import("../../features/admin/pages/Moderator"));
+const StudentsPage = lazyWithRetry(() => import("../../features/admin/pages/Students"));
+const TeachersPage = lazyWithRetry(() => import("../../features/admin/pages/Teachers"));
+const ParentsPage = lazyWithRetry(() => import("../../features/admin/pages/Parents"));
+const SessionsPage = lazyWithRetry(() => import("../../features/admin/pages/Sessions"));
+const AgendaPage = lazyWithRetry(() => import("../../features/admin/pages/Agenda"));
+const ExamsPage = lazyWithRetry(() => import("../../features/admin/pages/Exams"));
+const DailyQuranPage = lazyWithRetry(() => import("../../features/admin/pages/DailyQuran"));
+const AssignmentsPage = lazyWithRetry(() => import("../../features/admin/pages/Assignments"));
+const SubscriptionRequestsPage = lazyWithRetry(
   () => import("../../features/admin/pages/SubscriptionRequests"),
 );
-const AllSubscriptionsPage = lazy(() => import("../../features/admin/pages/AllSubscriptions"));
-const PlansPage = lazy(() => import("../../features/admin/pages/Plans"));
-const CurrenciesPage = lazy(() => import("../../features/admin/pages/Currencies"));
-const ExpensesPage = lazy(() => import("../../features/admin/pages/Expenses"));
-const TransactionsPage = lazy(() => import("../../features/admin/pages/Transactions"));
-const TeacherRequestsPage = lazy(() => import("../../features/admin/pages/TeacherRequests"));
-const TeacherAvailabilityPage = lazy(
+const AllSubscriptionsPage = lazyWithRetry(() => import("../../features/admin/pages/AllSubscriptions"));
+const PlansPage = lazyWithRetry(() => import("../../features/admin/pages/Plans"));
+const CurrenciesPage = lazyWithRetry(() => import("../../features/admin/pages/Currencies"));
+const ExpensesPage = lazyWithRetry(() => import("../../features/admin/pages/Expenses"));
+const TransactionsPage = lazyWithRetry(() => import("../../features/admin/pages/Transactions"));
+const TeacherRequestsPage = lazyWithRetry(() => import("../../features/admin/pages/TeacherRequests"));
+const TeacherSubscriptionsPage = lazyWithRetry(
+  () => import("../../features/admin/pages/TeacherSubscriptions"),
+);
+const TeacherAvailabilityPage = lazyWithRetry(
   () => import("../../features/admin/pages/TeacherAvailability"),
 );
-const SubjectsPage = lazy(() => import("../../features/admin/pages/Subjects"));
-const LMSCoursesPage = lazy(() => import("../../features/admin/pages/LMSCourses/LMSCourses"));
-const SettingsPage = lazy(() => import("../../features/admin/pages/Settings"));
-const RolesPage = lazy(() => import("../../features/admin/pages/Roles"));
+const FeedbackPage = lazyWithRetry(() => import("../../features/admin/pages/Feedback"));
+
+const SubjectsPage = lazyWithRetry(() => import("../../features/admin/pages/Subjects"));
+const LMSCoursesPage = lazyWithRetry(() => import("../../features/admin/pages/LMSCourses/LMSCourses"));
+const SettingsPage = lazyWithRetry(() => import("../../features/admin/pages/Settings"));
+const RolesPage = lazyWithRetry(() => import("../../features/admin/pages/Roles"));
+const ViolationsPage = lazyWithRetry(() => import("../../features/admin/pages/Violations"));
+const RanksPage = lazyWithRetry(() => import("../../features/admin/pages/Ranks"));
+
+const ModeratorsPage = lazyWithRetry(() => import("../../features/admin/pages/ModeratorsRequests"));
 
 export const adminDashboardRoutes: RouteConfig[] = [
   {
@@ -70,6 +83,7 @@ export const adminDashboardRoutes: RouteConfig[] = [
     icon: Home,
     path: "",
   },
+
   {
     id: "lms",
     label: "sidebar_lms",
@@ -99,11 +113,25 @@ export const adminDashboardRoutes: RouteConfig[] = [
         element: <UsersPage />,
       },
       {
+        id: "moderators",
+        label: "sidebar_moderators",
+        icon: UserCheck,
+        path: "moderators",
+        element: <ModeratorPage />,
+      },
+      {
         id: "students",
         label: "sidebar_students",
         icon: GraduationCap,
         path: "students",
         element: <StudentsPage />,
+      },
+      {
+        id: "ranks",
+        label: "sidebar_ranks",
+        icon: Trophy,
+        path: "ranks",
+        element: <RanksPage />,
       },
       {
         id: "parents",
@@ -114,6 +142,7 @@ export const adminDashboardRoutes: RouteConfig[] = [
       },
     ],
   },
+
   {
     id: "teachers-section",
     label: "sidebar_teachers",
@@ -157,26 +186,32 @@ export const adminDashboardRoutes: RouteConfig[] = [
         element: <SessionsPage />,
       },
       {
-        id: "feedback",
-        label: "sidebar_feedback",
-        icon: MessageSquare,
-        path: "feedback",
-        element: <FeedbackPage/>,
-      },
-      {
         id: "agenda",
         label: "sidebar_agenda",
         icon: Calendar,
         path: "agenda",
         element: <AgendaPage />,
       },
-
+      {
+        id: "feedback",
+        label: "sidebar_feedback",
+        icon: MessageSquare,
+        path: "feedback",
+        element: <FeedbackPage />,
+      },
       {
         id: "exams",
         label: "sidebar_exams",
         icon: FileText,
         path: "exams",
         element: <ExamsPage />,
+      },
+      {
+        id: "daily-quran",
+        label: "sidebar_daily_quran",
+        icon: BookOpen,
+        path: "daily-quran",
+        element: <DailyQuranPage />,
       },
       {
         id: "assignments",
@@ -201,6 +236,20 @@ export const adminDashboardRoutes: RouteConfig[] = [
         element: <SubscriptionRequestsPage />,
       },
       {
+        id: "teacher-subscriptions",
+        label: "sidebar_teacher_subscriptions",
+        icon: UserCheck,
+        path: "teacher-subscriptions",
+        element: <TeacherSubscriptionsPage />,
+      },
+      {
+        id:"moderators-subscriptions",
+        label:"sidebar_moderators_subscriptions",
+        icon:UserCheck,
+        path:"moderators-subscriptions",
+        element:<ModeratorsPage />
+      },
+      {
         id: "all-subscriptions",
         label: "sidebar_all_subscriptions",
         icon: Layers,
@@ -217,14 +266,13 @@ export const adminDashboardRoutes: RouteConfig[] = [
     ],
   },
 
-      {
-        id: 'roles',
-        label: 'sidebar_roles',
-        icon: ShieldCheck,
-        path: 'roles',
-        element: <RolesPage />
-      },
-
+  {
+    id: 'roles',
+    label: 'sidebar_roles',
+    icon: ShieldCheck,
+    path: 'roles',
+    element: <RolesPage />
+  },
 
   {
     id: "finance",
@@ -269,6 +317,13 @@ export const adminDashboardRoutes: RouteConfig[] = [
     icon: FileQuestion,
     path: "requests",
     element: <TeacherRequestsPage />,
+  },
+  {
+    id: "violations",
+    label: "sidebar_violations",
+    icon: AlertCircle,
+    path: "violations",
+    element: <ViolationsPage />,
   },
   {
     id: "settings",

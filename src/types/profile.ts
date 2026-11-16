@@ -71,7 +71,8 @@ export interface TeacherProfileInfo {
   email: string;
   phone: string;
   gender: string;
-  hourPrice: number;
+  hourPrice?: number;
+  hour_price?: number;
   status: string;
   active: boolean;
   user_id?: string;

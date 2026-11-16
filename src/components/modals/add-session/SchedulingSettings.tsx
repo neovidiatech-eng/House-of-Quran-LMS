@@ -129,9 +129,25 @@ export default function SchedulingSettings({
             />
           </div>
 
-          <div className="mb-5">
-            <label className="label">{t('startTime')}</label>
-            <input type="time" {...register('startTime')} className="input" />
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <div>
+              <label className="label">{t('startTime')}</label>
+              <input
+                type="time"
+                {...register('startTime')}
+                className="input"
+              />
+            </div>
+
+            <div>
+              <label className="label">{t('endTime')}</label>
+              <input
+                type="time"
+                {...register('endTime')}
+                readOnly
+                className="input bg-gray-100"
+              />
+            </div>
           </div>
 
           <div>

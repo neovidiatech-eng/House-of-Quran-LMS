@@ -11,13 +11,16 @@ interface ViewPlanModalProps {
     description: string;
     price: number | string;
     currency?: { code: string };
-
     duration: number;
     sessionsCount: number;
     sessionTime: number;
     features: string[];
     bestSeller: boolean;
     active: boolean;
+    planType?: "individual" | "group";
+    maxStudents?: string | number;
+    studentsNum?: string;
+    color?: string;
     createdAt: string;
     updatedAt: string;
   };
@@ -27,6 +30,7 @@ interface ViewPlanModalProps {
 
 export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalProps) {
   const { language } = useLanguage();
+  const modalColor = plan.color || '#369589';
 
   const text = {
     title: { ar: 'تفاصيل الخطة', en: 'Plan Details' },
@@ -47,12 +51,28 @@ export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalPr
     inactive: { ar: 'غير نشط', en: 'Inactive' },
     isPopular: { ar: 'الأكثر شعبية', en: 'Most Popular' },
     sessionTime: { ar: 'مدة الحصة (دقيقة)', en: 'Session Time (Minutes)' },
+    planType: { ar: 'نوع الخطة', en: 'Plan Type' },
+    studentsNum: { ar: 'عدد الطلاب', en: 'Number of Students' },
+    student: { ar: 'طالب', en: 'student' },
+    students: { ar: 'طلاب', en: 'students' },
+    unlimited: { ar: 'غير محدود', en: 'Unlimited' },
+    singlePlan: { ar: 'خطة فردية', en: 'Single Plan' },
+    groupPlan: { ar: 'خطة جماعية', en: 'Group Plan' },
     yes: { ar: 'نعم', en: 'Yes' },
-
     no: { ar: 'لا', en: 'No' },
     close: { ar: 'إغلاق', en: 'Close' },
     planInfo: { ar: 'معلومات الخطة', en: 'Plan Information' },
     pricing: { ar: 'التسعير', en: 'Pricing' }
+  };
+
+  const getGroupPlanText = (rawVal: any) => {
+    const strVal = String(rawVal ?? '').trim().toLowerCase();
+    const isUnlimited = !strVal || strVal === '0' || strVal === 'unlimited';
+    if (isUnlimited) return text.unlimited[language];
+    const count = parseInt(strVal, 10) || 0;
+    if (count <= 0) return text.unlimited[language];
+    const unit = count === 1 ? text.student[language] : text.students[language];
+    return `${count} ${unit}`;
   };
 
   if (!isOpen) return null;
@@ -66,11 +86,14 @@ export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalPr
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh]  overflow-y-auto no-scrollbar" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-        <div className="sticky top-0 bg-primary border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <div
+          className="sticky top-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-50 text-white"
+          style={{ backgroundColor: modalColor }}
+        >
           <h2 className="text-2xl font-bold text-white">{text.title[language]}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
           >
             <X className="w-6 h-6 text-white" />
           </button>
@@ -101,6 +124,12 @@ export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalPr
               <div className="md:col-span-2">
                 <p className="text-sm text-gray-600 mb-1">{text.description[language]}</p>
                 <p className="text-base font-semibold text-gray-900">{plan.description}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">{text.planType[language]}</p>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${plan.planType === 'group' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
+                  {plan.planType === 'group' ? `${text.groupPlan[language]} (${getGroupPlanText(plan.maxStudents ?? plan.studentsNum)})` : text.singlePlan[language]}
+                </span>
               </div>
               <div>
                 <p className="text-sm text-gray-600 mb-1">{text.status[language]}</p>

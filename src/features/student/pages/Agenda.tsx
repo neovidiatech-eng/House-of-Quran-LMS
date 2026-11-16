@@ -207,8 +207,8 @@ export default function Agenda() {
                 <div
                   key={i}
                   className={`aspect-square border p-2 ${isToday(d)
-                      ? "bg-green-50 border-green-300"
-                      : "hover:bg-gray-50"
+                    ? "bg-green-50 border-green-300"
+                    : "hover:bg-gray-50"
                     }`}
                 >
                   <div className="text-sm font-medium">{d.getDate()}</div>
@@ -260,25 +260,68 @@ export default function Agenda() {
               {todaySessions.map((s) => (
                 <div
                   key={s.id}
-                  className="bg-primary-50 border rounded-xl p-4 text-right"
+                  className="bg-white border rounded-xl p-4 text-right shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
                 >
-                  <p className="font-bold">{s.title}</p>
+                  <div
+                    className="absolute top-0 right-0 w-1.5 h-full transition-all group-hover:w-2"
+                    style={{ backgroundColor: s.subject?.color || '#3b82f6' }}
+                  />
+                  <div className="pr-3">
+                    <div className="mb-3 space-y-1">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-sm text-gray-500 font-medium">{t("subject")}:</span>
 
-                  <p className="text-sm text-gray-600">
-                    {new Date(s.start_time).toLocaleTimeString()} -{" "}
-                    {new Date(s.end_time).toLocaleTimeString()}
-                  </p>
+                        <span className="font-bold text-gray-900 text-lg">
+                          {language === 'ar' ? s.subject?.name_ar : s.subject?.name_en}
+                        </span>
+                      </div>
 
-                  <p className="text-xs mt-1">{s.status}</p>
+                      {s.title && (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-sm text-gray-500 font-medium">{t("session")} :</span>
+                          <span className="text-sm text-gray-800 font-medium">{s.title}</span>
+                        </div>
+                      )}
+                    </div>
 
-                  {s.link && (
-                    <button
-                      onClick={() => window.open(s.link, "_blank")}
-                      className="w-full mt-3 bg-green-600 text-white py-2 rounded-lg text-sm"
-                    >
-                      Join Session
-                    </button>
-                  )}
+                    <div className="flex flex-col gap-2 mb-2">
+                      <div className="flex items-center justify-end gap-2 text-sm text-gray-600">
+                        <span dir="ltr">
+                          {new Date(s.start_time).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })} - {" "}
+                          {new Date(s.end_time).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <Clock className="w-4 h-4 text-gray-400" />
+                      </div>
+
+                      {s.teacher?.user?.name && (
+                        <div className="flex items-center justify-end gap-2 text-sm text-gray-600">
+                          <span className="font-medium text-gray-800">{s.teacher.user.name}</span>
+                          <span className="text-sm text-gray-500 font-medium">{t("teacher")}:</span>
+                          <div className="w-5 h-5 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold">
+                            {s.teacher.user.name.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4">
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${s.status === 'completed' ? 'bg-gray-100 text-gray-600' :
+                        s.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                        {s.status}
+                      </span>
+
+                      {s.status !== "completed" && s.link && (
+                        <button
+                          onClick={() => window.open(s.link, "_blank")}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Join Session
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

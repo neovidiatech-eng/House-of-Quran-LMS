@@ -8,15 +8,23 @@ export interface GetStudentsParams {
   search?: string;
   country?: string;
   planId?: string;
+  status?: string;
+  active?: boolean;
+  paid?: string;
 }
 
 export const getStudents = async (params: GetStudentsParams = {}): Promise<StudentsFetchResponse> => {
-  const { page = 1, limit = 7, search, country, planId } = params;
+  const { page, limit, search, country, planId, status, active, paid } = params;
 
-  const queryParams: Record<string, string | number> = { page, limit };
+  const queryParams: Record<string, string | number | boolean> = {};
+  if (page !== undefined) queryParams.page = page;
+  if (limit !== undefined) queryParams.limit = limit;
   if (search) queryParams.search = search;
   if (country && country !== "all") queryParams.country = country;
   if (planId && planId !== "all") queryParams.planId = planId;
+  if (status && status !== "all") queryParams.status = status;
+  if (active !== undefined) queryParams.active = active;
+  if (paid && paid !== "all") queryParams.paid = paid;
 
   const response = await api.get("/students", {
     params: queryParams
@@ -27,28 +35,9 @@ export const getStudents = async (params: GetStudentsParams = {}): Promise<Stude
 export const searchStudent = async (
   search: string,
 ): Promise<StudentsFetchResponse> => {
-  try {
     const response = await api.get(`/students?search=${search}`);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      return {
-        message: "",
-        status: 404,
-        data: {
-          studentsData: [],
-          pagination: {
-            page: 1,
-            limit: 10,
-            totalItems: 0,
-            totalPages: 0,
-            hasNextPage: false,
-          },
-        },
-      };
-    }
-    throw error;
-  }
+
 };
 
 export const getStudentById = async (
@@ -72,5 +61,10 @@ export const createStudent = async (
   data: StudentFormData | Partial<Student>,
 ) => {
   const response = await api.post(`/students/create`, data);
+  return response.data;
+};
+
+export const updateStudentPlan= async (id: string, planId: string) => {
+  const response = await api.patch(`/students/updatePlan/${id}`, { planId });
   return response.data;
 };

@@ -23,42 +23,36 @@ export default function TeacherDashboardHome() {
     );
   }
 
-  if (dashboardError || !dashboardResponse) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-red-500">
-        {isRtl ? 'حدث خطأ أثناء تحميل لوحة التحكم' : 'Error loading dashboard data'}
-      </div>
-    );
-  }
 
-  const dashboardData = dashboardResponse.data;
-  const teacherName = profileResponse?.data?.teacher?.name || '';
+
+  const dashboardData = dashboardResponse?.data || (dashboardResponse as any);
+  const teacherName = profileResponse?.data?.teacher?.name || (profileResponse?.data as any)?.name || (profileResponse?.data as any)?.user?.name || '';
 
   const stats = [
     {
       title: isRtl ? 'الطلاب' : 'Students',
-      value: dashboardData.stats.totalStudents.toString(),
+      value: (dashboardData?.stats?.totalStudents ?? 0).toString(),
       icon: Users,
       color: 'text-blue-500',
       bg: 'bg-primary-50'
     },
     {
       title: isRtl ? 'المواد' : 'Subjects',
-      value: dashboardData.stats.totalSubjects.toString(),
+      value: (dashboardData?.stats?.totalSubjects ?? 0).toString(),
       icon: BookOpen,
       color: 'text-purple-500',
       bg: 'bg-purple-50'
     },
     {
       title: isRtl ? 'إجمالي الحصص' : 'Total Sessions',
-      value: dashboardData.stats.totalSessions.toString(),
+      value: (dashboardData?.stats?.totalSessions ?? 0).toString(),
       icon: Clock,
       color: 'text-orange-500',
       bg: 'bg-orange-50'
     },
     {
       title: isRtl ? 'حصص اليوم' : 'Today Sessions',
-      value: dashboardData.todaySchedules.length.toString(),
+      value: (dashboardData?.todaySchedules?.length ?? 0).toString(),
       icon: Calendar,
       color: 'text-green-500',
       bg: 'bg-green-50'
@@ -109,14 +103,14 @@ export default function TeacherDashboardHome() {
     };
   }
 
-  const normalizedTodaySchedules: NormalizedSchedule[] = (dashboardData.todaySchedules || []).map((todayItem: any) => {
-    const student = (dashboardData.students || []).find(s => s.id === todayItem.studentId);
-    let matchedSubject = (dashboardData.subjects || []).find(sub => 
-      student && (sub.nameEn.toLowerCase() === student.subject?.name?.toLowerCase() || 
+  const normalizedTodaySchedules: NormalizedSchedule[] = (dashboardData?.todaySchedules || []).map((todayItem: any) => {
+    const student = (dashboardData?.students || []).find((s: any) => s.id === todayItem.studentId);
+    let matchedSubject = (dashboardData?.subjects || []).find((sub: any) => 
+      student && (sub.nameEn?.toLowerCase() === student.subject?.name?.toLowerCase() || 
                   sub.nameAr === student.subject?.name)
     );
     
-    if (!matchedSubject && (dashboardData.subjects || []).length > 0) {
+    if (!matchedSubject && (dashboardData?.subjects || []).length > 0) {
       matchedSubject = dashboardData.subjects[0];
     }
     
@@ -141,7 +135,7 @@ export default function TeacherDashboardHome() {
     };
   });
 
-  const normalizedUpcomingSchedules: NormalizedSchedule[] = (dashboardData.schedules || []).map((item: any) => {
+  const normalizedUpcomingSchedules: NormalizedSchedule[] = (dashboardData?.schedules || []).map((item: any) => {
     return {
       title: item.title || '',
       description: item.description || '',
@@ -187,6 +181,22 @@ export default function TeacherDashboardHome() {
         <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-10 -mt-10 opacity-10"></div>
       </div>
 
+      {dashboardError && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 text-amber-900">
+          <div className="p-2.5 bg-amber-100 rounded-xl text-amber-600">
+            <Clock className="w-6 h-6" />
+          </div>
+          <div>
+            <h4 className="font-bold text-sm">
+              {isRtl ? 'حسابك جديد أو قيد الاعتماد من إدارة الأكاديمية' : 'Your account is new or pending admin activation'}
+            </h4>
+            <p className="text-xs text-amber-700 mt-0.5">
+              {isRtl ? 'سيتم ربط المواد والطلاب بحسابك وتفعيل الصلاحيات الكاملة فور تعيينها من المسؤول.' : 'Subjects, schedules and students will appear once assigned by the administrator.'}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => {
@@ -220,7 +230,7 @@ export default function TeacherDashboardHome() {
               }`}
               style={activeTab === 'today' ? { borderColor: settings.primaryColor, color: settings.primaryColor } : {}}
             >
-              {isRtl ? 'جدول اليوم' : "Today's Schedule"} ({dashboardData.todaySchedules.length})
+              {isRtl ? 'جدول اليوم' : "Today's Schedule"} ({dashboardData?.todaySchedules?.length ?? 0})
             </button>
             <button
               onClick={() => setActiveTab('upcoming')}
@@ -231,7 +241,7 @@ export default function TeacherDashboardHome() {
               }`}
               style={activeTab === 'upcoming' ? { borderColor: settings.primaryColor, color: settings.primaryColor } : {}}
             >
-              {isRtl ? 'الجدول القادم' : 'Upcoming Schedule'} ({dashboardData.schedules.length})
+              {isRtl ? 'الجدول القادم' : 'Upcoming Schedule'} ({dashboardData?.schedules?.length ?? 0})
             </button>
           </div>
 
@@ -291,8 +301,8 @@ export default function TeacherDashboardHome() {
             {isRtl ? 'طلابي' : 'My Students'}
           </h2>
           <div className="space-y-4">
-            {dashboardData.students.length > 0 ? (
-              dashboardData.students.map((student) => (
+            {(dashboardData?.students || []).length > 0 ? (
+              dashboardData.students.map((student: any) => (
                 <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-transparent">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-sm" style={{ color: settings.primaryColor }}>
@@ -300,7 +310,7 @@ export default function TeacherDashboardHome() {
                     </div>
                     <div className="text-start">
                       <h4 className="font-bold text-sm text-gray-900">{student.name}</h4>
-                      <p className="text-xs text-gray-500">{student.subject.name}</p>
+                      <p className="text-xs text-gray-500">{student.subject?.name}</p>
                     </div>
                   </div>
                   <div className="text-right">

@@ -118,6 +118,24 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
                 <p className="text-base text-gray-900">{student.country}</p>
               </div>
 
+              {!!student.user?.city && student.user.city.toLowerCase() !== 'unknown' && student.user.city !== '0' && (
+                <div className="text-start">
+                  <label className="text-sm font-medium text-gray-500 block mb-1">
+                    {language === 'ar' ? 'المدينة' : 'City'}
+                  </label>
+                  <p className="text-base text-gray-900">{student.user.city}</p>
+                </div>
+              )}
+
+              {!!student.user?.age && (
+                <div className="text-start">
+                  <label className="text-sm font-medium text-gray-500 block mb-1">
+                    {language === 'ar' ? 'السن' : 'Age'}
+                  </label>
+                  <p className="text-base text-gray-900">{student.user.age}</p>
+                </div>
+              )}
+
               {/* Status */}
               <div className="text-start">
                 <label className="text-sm font-medium text-gray-500 block mb-1">
@@ -139,6 +157,46 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
                 </span>
               </div>
 
+              {/* Payment Status */}
+              <div className="text-start">
+                <label className="text-sm font-medium text-gray-500 block mb-1">
+                  {language === 'ar' ? 'حالة الدفع' : 'Payment Status'}
+                </label>
+                <span
+                  className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${student.paid === 'paid'
+                    ? 'bg-green-100 text-green-700'
+                    : student.paid === 'pending'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-red-100 text-red-700'
+                    }`}
+                >
+                  {student.paid === 'paid'
+                    ? (language === 'ar' ? 'مدفوع' : 'Paid')
+                    : student.paid === 'pending'
+                      ? (language === 'ar' ? 'قيد الانتظار' : 'Pending')
+                      : (language === 'ar' ? 'غير مدفوع' : 'Unpaid')}
+                </span>
+              </div>
+
+              {/* Rank */}
+              <div className="text-start">
+                <label className="text-sm font-medium text-gray-500 block mb-1">
+                  {language === 'ar' ? 'الرتبة' : 'Rank'}
+                </label>
+                {student.rank ? (
+                  <span
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100"
+                    style={student.rank.color ? { backgroundColor: student.rank.color } : undefined}
+                  >
+                    {typeof student.rank.icon === 'function' && student.rank.icon({ className: 'w-4 h-4 mr-2' })}
+                    {language === 'ar' ? student.rank.name_ar : student.rank.name_en}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-sm">{language === 'ar' ? 'لا يوجد' : 'None'}</span>
+                )}
+              </div>
+
+
               {/* Sessions Info */}
               <div className="text-start">
                 <label className="text-sm font-medium text-gray-500 block mb-1">
@@ -151,7 +209,7 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
                   <p className="text-xs text-gray-500">
                     {language === 'ar' ? ' الحصص المتبقية من الخطة :' : 'Remaining Sessions From Plan:'} {student.sessions_remaining || 0}
                   </p>
-                     <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500">
                     {language === 'ar' ? ' الحصص  المتجدولة  :' : 'Scheduled Sessions:'} {scheduledSessions}
                   </p>
 
@@ -159,7 +217,7 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
                 </div>
               </div>
 
-             
+
             </div>
           </div>
         </div>

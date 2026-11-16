@@ -108,6 +108,24 @@ export default function ViewUserModal({ isOpen, onClose, userData }: ViewUserMod
                 <p className="text-gray-900 font-medium text-start">{getRoleLabel(userData.role)}</p>
               </div>
 
+              {userData.age && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <label className="block text-sm font-medium text-gray-500 mb-1 text-start">
+                    {language === 'ar' ? 'السن' : 'Age'}
+                  </label>
+                  <p className="text-gray-900 font-medium text-start">{userData.age}</p>
+                </div>
+              )}
+
+              {userData.city && (
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <label className="block text-sm font-medium text-gray-500 mb-1 text-start">
+                    {language === 'ar' ? 'المدينة' : 'City'}
+                  </label>
+                  <p className="text-gray-900 font-medium text-start">{userData.city}</p>
+                </div>
+              )}
+
               <div className="bg-gray-50 p-4 rounded-xl">
                 <label className="block text-sm font-medium text-gray-500 mb-1 text-start">
                   {language === 'ar' ? 'الحالة' : 'Status'}

@@ -34,8 +34,8 @@ export interface PlatformSettings {
 }
 
 const defaultSettings: PlatformSettings = {
-  name: 'House Of Quran Academy | أكاديمية بيت القران',
-  description: 'House Of Quran Academy | أكاديمية بيت القران - منصة تعليم القرآن الكريم واللغة العربية أونلاين بجلسات مباشرة ومناهج متكاملة.',
+  name: 'House of Quran Academy',
+  description: 'Modern learning management platform for students, teachers, parents, and academy admins.',
   logoUrl: '/logo.jpeg',
   faviconUrl: '/logo.jpeg',
   primaryColor: '#369589',
@@ -43,9 +43,9 @@ const defaultSettings: PlatformSettings = {
   accentColor: '#06b6d4',
   fontFamily: 'Almarai',
   seo: {
-    metaTitle: 'House Of Quran Academy | أكاديمية بيت القران',
-    metaDescription: 'منصة تعليم القرآن الكريم واللغة العربية أونلاين بجلسات مباشرة ومناهج متكاملة.',
-    keywords: 'House Of Quran, أكاديمية بيت القران, Quran Academy, Quran Learning, تعليم القرآن, Arabic Learning, LMS',
+    metaTitle: 'House of Quran Academy | أكاديمية بيت القران | Learning Management System',
+    metaDescription: 'House of Quran Academy - أكاديمية بيت القران is a modern learning management platform for students, teachers, parents, and academy admins.',
+    keywords: 'House of Quran Academy, أكاديمية بيت القران, LMS, learning management system, online education, courses, students, teachers, academy',
     ogImage: '/logo.jpeg',
     robotsIndex: true,
   },
@@ -64,7 +64,7 @@ const defaultSettings: PlatformSettings = {
   phone: '',
   address: '',
   currency: 'SAR',
-  timezone: 'Africa/Cairo',
+  timezone: 'Asia/Riyadh',
 };
 
 interface SettingsContextType {
@@ -78,14 +78,48 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 const STORAGE_KEY = 'platform_settings';
+const LEGACY_NAMES = ['Neovidia', 'Neovidia Academy', 'أكاديمية نيوفيديا'];
+
+const normalizeSettings = (settings: PlatformSettings): PlatformSettings => {
+  const seo = { ...defaultSettings.seo, ...settings.seo };
+  const hasLegacyName = !settings.name || LEGACY_NAMES.includes(settings.name);
+
+  if (!seo.metaTitle || LEGACY_NAMES.some(name => seo.metaTitle.includes(name))) {
+    seo.metaTitle = defaultSettings.seo.metaTitle;
+  }
+
+  if (!seo.metaDescription || seo.metaDescription.includes('Ù')) {
+    seo.metaDescription = defaultSettings.seo.metaDescription;
+  }
+
+  if (!seo.keywords || seo.keywords.includes('Ù') || seo.keywords.includes('Ø')) {
+    seo.keywords = defaultSettings.seo.keywords;
+  }
+
+  if (!seo.ogImage) {
+    seo.ogImage = defaultSettings.seo.ogImage;
+  }
+
+  return {
+    ...settings,
+    name: hasLegacyName ? defaultSettings.name : settings.name,
+    description: !settings.description || settings.description.includes('Ù') ? defaultSettings.description : settings.description,
+    logoUrl: settings.logoUrl || defaultSettings.logoUrl,
+    faviconUrl: settings.faviconUrl || defaultSettings.faviconUrl,
+    seo,
+  };
+};
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<PlatformSettings>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return { ...defaultSettings, ...JSON.parse(saved) };
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return normalizeSettings({ ...defaultSettings, ...parsed, seo: { ...defaultSettings.seo, ...parsed.seo } });
+      }
     } catch { }
-    return defaultSettings;
+    return normalizeSettings(defaultSettings);
   });
 
   useEffect(() => {
@@ -123,37 +157,44 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       document.body.style.fontFamily = `'${s.fontFamily}', sans-serif`;
     }
 
-    if (s.faviconUrl) {
-      let favicon = document.querySelector("link[rel='icon']") as HTMLLinkElement;
-      if (!favicon) {
-        favicon = document.createElement('link');
-        favicon.rel = 'icon';
-        document.head.appendChild(favicon);
-      }
-      favicon.href = s.faviconUrl;
-    }
-
     document.title = s.seo.metaTitle || s.name;
-    setMetaTag('description', s.seo.metaDescription || s.description, 'name');
-    setMetaTag('keywords', s.seo.keywords, 'name');
-    setMetaTag('robots', s.seo.robotsIndex ? 'index, follow' : 'noindex, nofollow', 'name');
-    setMetaTag('og:title', s.seo.metaTitle || s.name, 'property');
-    setMetaTag('og:description', s.seo.metaDescription || s.description, 'property');
-    setMetaTag('og:image', s.seo.ogImage || s.logoUrl || '/logo.jpeg', 'property');
-    setMetaTag('twitter:title', s.seo.metaTitle || s.name, 'name');
-    setMetaTag('twitter:description', s.seo.metaDescription || s.description, 'name');
-    setMetaTag('twitter:image', s.seo.ogImage || s.logoUrl || '/logo.jpeg', 'name');
+    setLinkTag('icon', s.faviconUrl || s.logoUrl);
+    setLinkTag('apple-touch-icon', s.logoUrl);
+    setMetaTag('name', 'description', s.seo.metaDescription || s.description);
+    setMetaTag('name', 'keywords', s.seo.keywords);
+    setMetaTag('name', 'author', s.name);
+    setMetaTag('name', 'robots', s.seo.robotsIndex ? 'index, follow' : 'noindex, nofollow');
+    setMetaTag('property', 'og:type', 'website');
+    setMetaTag('property', 'og:site_name', s.name);
+    setMetaTag('property', 'og:title', s.seo.metaTitle || s.name);
+    setMetaTag('property', 'og:description', s.seo.metaDescription || s.description);
+    setMetaTag('property', 'og:image', s.seo.ogImage || s.logoUrl);
+    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    setMetaTag('name', 'twitter:title', s.seo.metaTitle || s.name);
+    setMetaTag('name', 'twitter:description', s.seo.metaDescription || s.description);
+    setMetaTag('name', 'twitter:image', s.seo.ogImage || s.logoUrl);
   };
 
-  const setMetaTag = (key: string, content: string, attr: 'name' | 'property') => {
+  const setMetaTag = (attr: 'name' | 'property', key: string, content: string) => {
     if (!content) return;
-    let tag = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+    let tag = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
     if (!tag) {
       tag = document.createElement('meta');
       tag.setAttribute(attr, key);
       document.head.appendChild(tag);
     }
-    tag.setAttribute('content', content);
+    tag.content = content;
+  };
+
+  const setLinkTag = (rel: string, href: string) => {
+    if (!href) return;
+    let tag = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
+    if (!tag) {
+      tag = document.createElement('link');
+      tag.rel = rel;
+      document.head.appendChild(tag);
+    }
+    tag.href = href;
   };
 
   const adjustColor = (hex: string, amount: number): string => {

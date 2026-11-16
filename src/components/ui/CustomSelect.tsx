@@ -2,7 +2,6 @@ import React, { forwardRef } from 'react';
 import { Select } from 'antd';
 import type { SelectProps } from 'antd';
 
-// تعريف الـ Props التي سيقبلها المكون
 export interface CustomSelectProps extends SelectProps {
   label?: string;
   error?: string;
@@ -17,10 +16,10 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
   ...props 
 }, ref) => {
   return (
-    <div className="w-full flex flex-col gap-1 text-start">
+    <div className="w-full flex flex-col gap-1">
       {/* Label */}
       {label && (
-        <label className="text-sm font-medium text-gray-700 mb-1">
+        <label className="text-sm font-medium text-gray-700 mb-1 text-start">
           {label}
         </label>
       )}
@@ -39,6 +38,7 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
           <Select.Option 
             key={option.value} 
             value={option.value}
+            disabled={(option as any).disabled}
             searchText={option.searchText || String(option.value)}
             label={option.searchText || option.label}
           >

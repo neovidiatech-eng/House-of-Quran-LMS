@@ -23,7 +23,7 @@ export default function AddExamModal({
   initialData,
 }: AddExamModalProps) {
   const { language, t } = useLanguage();
-  const { data } = useStudents();
+  const { data } = useStudents({ limit: 1000 });
   const { data: subjData } = useSubjects();
 
   const subjects = subjData?.subjects.map((s) => ({
@@ -103,7 +103,7 @@ export default function AddExamModal({
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
-        <div className="sticky top-0 bg-primary border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-primary border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-50">
           <h2 className="text-2xl font-bold text-white">
             {initialData
               ? language === "ar"

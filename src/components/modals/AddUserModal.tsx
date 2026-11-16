@@ -3,17 +3,18 @@ import { X, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
 import { Controller, useForm } from 'react-hook-form';
-import { UserFormData, getUserSchema } from '../../lib/schemas/UserSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { UserFormData, getUserSchema } from '../../lib/schemas/UserSchema';
 import { useRoles } from '../../features/admin/hooks/useRoles';
 import { DEFAULT_COUNTRIES } from '../../consts/countries';
+import { useGetCities } from '../../features/teacher/hooks/useCity';
 // import { CustomCheckbox } from '../ui/CustomCheckbox';
 //import { usePermissions } from '../../hooks/usePermissions';
 
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (userData: UserFormData) => void;
+  onSubmit: (userData: UserFormData) => Promise<void>;
 }
 
 // interface Permission {
@@ -31,7 +32,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
   const [showPassword, setShowPassword] = useState(false);
   const [countryCodes] = useState<Array<{ name: string; phone_code: string; emoji?: string; iso2: string }>>(DEFAULT_COUNTRIES);
   const { data: rolesData } = useRoles();
-  const dynamicRoles = rolesData?.data || [];
+  const dynamicRoles = rolesData?.data?.filter((role) => role.name !== 'student' && role.name !== 'teacher') || [];
+
 
 
   // const { data: permsData } = usePermissions();
@@ -54,7 +56,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
   //   return acc;
   // }, {});
 
-  const { control, handleSubmit, register, reset, formState: { errors } } = useForm<UserFormData>({
+  const { control, handleSubmit, register, reset, watch, formState: { errors } } = useForm<UserFormData>({
     resolver: zodResolver(getUserSchema(t)),
     defaultValues: {
       name: '',
@@ -64,20 +66,23 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
       role: '',
       password: '',
       permissions: [],
+      country: 'Egypt',
+      city: '',
+      age: ''
     } as UserFormData
   });
-  if (!isOpen) return null;
-
-  if (!isOpen) return null;
-
-  const onFormSubmit = (data: UserFormData) => {
-    onSubmit({
+const onFormSubmit = async (data: UserFormData) => {
+  try {
+    await onSubmit({
       ...data,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
+
     reset();
-    onClose();
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const uniqueCountryCodes = Array.from(
     new Map(countryCodes.map((c) => [`+${c.phone_code}`, c])).values()
@@ -95,6 +100,20 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
     ),
   }));
 
+  const selectedCountry = watch("country");
+  const selectedCountryObj = DEFAULT_COUNTRIES.find((c) => c.name === selectedCountry);
+  const iso2 = selectedCountryObj?.iso2?.toLowerCase() || "eg";
+  const { data: citiesData } = useGetCities(iso2);
+  const cityOptions = citiesData ? citiesData.map((city: any) => ({
+    value: city.name,
+    label: city.name
+  })) : [];
+
+  const countries = DEFAULT_COUNTRIES.map((c) => ({
+    value: c.name,
+    label: `${c.emoji} ${displayNames.of(c.iso2) || c.name}`,
+  }));
+
   const roleOptions = dynamicRoles.map((role) => ({
     value: role.id,
     searchText: role.name,
@@ -104,6 +123,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
       </div>
     ),
   }));
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -141,15 +162,48 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-                  {t('email')}
+                  {language === 'ar' ? 'السن' : 'Age'}
                 </label>
                 <input
-                  type="email"
-                  {...register('email')}
+                  type="text"
+                  {...register('age')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
-                  dir="ltr"
                 />
-                {errors.email && <p className="text-red-500 text-xs mt-1 text-start">{errors.email.message}</p>}
+                {errors.age && <p className="text-red-500 text-xs mt-1 text-start">{errors.age.message}</p>}
+              </div>
+            </div>
+
+            {/* Country and City */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Controller
+                  name="country"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      label={language === 'ar' ? 'الدولة' : 'Country'}
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={countries}
+                      className="h-[48px]"
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <Controller
+                  name="city"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      label={language === 'ar' ? 'المدينة' : 'City'}
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={cityOptions}
+                      className="h-[48px]"
+                    />
+                  )}
+                />
               </div>
             </div>
 
@@ -187,10 +241,22 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
               </div>
             </div>
 
-            {/* Role and Password */}
+            {/* Age and Role */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
+                  {t('email')}
+                </label>
+                <input
+                  type="email"
+                  {...register('email')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
+                  dir="ltr"
+                />
+                {errors.email && <p className="text-red-500 text-xs mt-1 text-start">{errors.email.message}</p>}
+              </div>
 
+              <div>
                 <Controller
                   name="role"
                   control={control}
@@ -204,9 +270,12 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
                     />
                   )}
                 />
-
               </div>
-              <div>
+            </div>
+
+            {/* Password */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                   {t('password')}
                 </label>

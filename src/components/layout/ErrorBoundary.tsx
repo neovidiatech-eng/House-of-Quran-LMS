@@ -8,6 +8,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  isChunkError?: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -16,8 +17,13 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true, error };
+    const errorMessage = error?.message || error?.toString() || "";
+    const isChunkError =
+      errorMessage.includes("Failed to fetch dynamically imported module") ||
+      errorMessage.includes("Importing a module script failed") ||
+      errorMessage.includes("Loading chunk");
+
+    return { hasError: true, error, isChunkError };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -25,24 +31,35 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false, error: undefined, isChunkError: false });
     window.location.href = "/";
+  };
+
+  private handleReload = () => {
+    sessionStorage.removeItem("page_refreshed_for_chunk");
+    window.location.reload();
   };
 
   public render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.isChunkError;
+
       return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
           <Result
-            status="error"
-            title="Something went wrong"
-            subTitle="Sorry, an unexpected error occurred. Please try refreshing the page or contact support if the problem persists."
+            status={isChunkError ? "info" : "error"}
+            title={isChunkError ? "New Version Available" : "Something went wrong"}
+            subTitle={
+              isChunkError
+                ? "A new version of the application is available. Please reload the page to load the latest features."
+                : "Sorry, an unexpected error occurred. Please try refreshing the page or contact support if the problem persists."
+            }
             extra={[
-              <Button type="primary" key="home" onClick={this.handleReset}>
-                Back Home
+              <Button type="primary" key="reload" onClick={this.handleReload}>
+                {isChunkError ? "Update & Reload" : "Refresh Page"}
               </Button>,
-              <Button key="refresh" onClick={() => window.location.reload()}>
-                Refresh Page
+              <Button key="home" onClick={this.handleReset}>
+                Back Home
               </Button>,
             ]}
           />

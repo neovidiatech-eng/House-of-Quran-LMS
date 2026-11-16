@@ -80,7 +80,7 @@ export default function ViewExpenseModal({ isOpen, onClose, expense: initialExpe
   return (
     <div className="fixed inset-0  !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh]  overflow-y-auto no-scrollbar" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-        <div className="sticky top-0 bg-gradient-to-r from-red-600 to-pink-700 text-white px-6 py-5 flex items-center justify-between rounded-t-2xl">
+        <div className="sticky top-0 bg-gradient-to-r from-red-600 to-pink-700 text-white px-6 py-5 flex items-center justify-between rounded-t-2xl z-50">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white bg-opacity-20 rounded-lg">
               <DollarSign className="w-6 h-6" />
