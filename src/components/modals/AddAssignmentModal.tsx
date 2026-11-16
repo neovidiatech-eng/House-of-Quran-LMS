@@ -16,7 +16,6 @@ interface AddAssignmentModalProps {
 }
 
 
-//hgrdkhgkurhgli
 export default function AddAssignmentModal({ isOpen, onClose, initialData }: AddAssignmentModalProps) {
   const { language, t } = useLanguage();
 
