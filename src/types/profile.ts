@@ -135,6 +135,7 @@ export interface TeacherProfileSchedule {
 }
 
 export interface TeacherProfileStudent {
+  id:string;
   name: string;
   code: string;
   email: string;

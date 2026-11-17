@@ -9,7 +9,7 @@ import {
   getDailyQuranSchema,
 } from "../../lib/schemas/DailyQuranSchema";
 import { useEffect } from "react";
-import { useStudents } from "../../features/admin/hooks/useStudents";
+import { useMyStudents } from "../../features/teacher/hooks/useMyStudents";
 
 interface AddDailyQuranModalProps {
   isOpen: boolean;
@@ -32,13 +32,13 @@ export default function AddDailyQuranModal({
   initialData,
 }: AddDailyQuranModalProps) {
   const { language, t } = useLanguage();
-  const { data: studentsData } = useStudents({ limit: 1000 });
+  const { data: studentsData } = useMyStudents();
 
   const students =
-    studentsData?.data?.studentsData?.map((s: any) => ({
-      value: s?.id || s?.studentId || s?.user?.id,
-      label: s?.name || s?.user?.name,
-      searchText: s?.name || s?.user?.name || "",
+    studentsData?.data?.map((s) => ({
+      value: s?.id || "",
+      label: s?.name,
+      searchText: s?.name
     })) || [];
 
   const isEdit = !!initialData;

@@ -186,7 +186,7 @@ export default function TeacherProfile() {
           </div>
 
           {/* Meeting Link Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+          {/* <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <Video className="w-5 h-5" style={{ color: settings.primaryColor }} />
@@ -278,7 +278,7 @@ export default function TeacherProfile() {
                 )}
               </div>
             )}
-          </div>
+          </div> */}
         </div>
 
         <div className="lg:col-span-2 space-y-6">

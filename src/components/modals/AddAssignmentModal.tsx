@@ -6,8 +6,9 @@ import DatePickerField from '../ui/DatePickerField';
 import { AssignmentFormData, getAssignmentSchema } from '../../lib/schemas/AssignmentSchema';
 import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useGetStudents, useGetSubjects, useCreateAssignment, useUpdateAssignment } from '../../hooks/useAssignment';
+import { useGetSubjects, useCreateAssignment, useUpdateAssignment } from '../../hooks/useAssignment';
 import { Assignment } from '../../types/assignment';
+import { useTeacherProfile } from '../../features/teacher/hooks/useTeacherProfile';
 
 interface AddAssignmentModalProps {
   isOpen: boolean;
@@ -19,17 +20,18 @@ interface AddAssignmentModalProps {
 export default function AddAssignmentModal({ isOpen, onClose, initialData }: AddAssignmentModalProps) {
   const { language, t } = useLanguage();
 
-  const { data: studentsData, isLoading: isLoadingStudents } = useGetStudents();
-  const { data: subjectsData, isLoading: isLoadingSubjects } = useGetSubjects();
+  // const { data: studentsData, isLoading: isLoadingStudents } = useGetStudents();
+   const { data: subjectsData, isLoading: isLoadingSubjects } = useGetSubjects();
+
+  const {data , isLoading: isLoadingStudents} = useTeacherProfile();
 
   const createMutation = useCreateAssignment();
   const updateMutation = useUpdateAssignment();
 
-  const studentsOptions = (studentsData?.data?.studentsData || []).map(s => ({
-    value: s.id,
-    label: s.user?.name || s.id
-  }));
-
+  const studentsOptions = data?.data.students.map((s) => ({
+    value : s.id || "",
+    label : s.name
+  })) ?? [] ; 
   const subjectsOptions = (subjectsData?.subjects || []).map(s => ({
     value: s.id,
     label: language === 'ar' ? s.name_ar : s.name_en || s.name_ar

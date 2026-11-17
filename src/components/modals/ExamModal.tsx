@@ -6,8 +6,8 @@ import { Resolver, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ExamFormData, getExamSchema } from "../../lib/schemas/ExamSchema";
 import { useEffect } from "react";
-import { useStudents } from "../../features/admin/hooks/useStudents";
 import { useSubjects } from "../../features/admin/hooks/useSubjects";
+import { useMyStudents } from "../../features/teacher/hooks/useMyStudents";
 
 interface AddExamModalProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export default function AddExamModal({
   initialData,
 }: AddExamModalProps) {
   const { language, t } = useLanguage();
-  const { data } = useStudents({ limit: 1000 });
+  const {data} = useMyStudents();
   const { data: subjData } = useSubjects();
 
   const subjects = subjData?.subjects.map((s) => ({
@@ -31,10 +31,10 @@ export default function AddExamModal({
     label: s?.name_ar,
   }));
 
-  const students = data?.data.studentsData?.map((s) => ({
-    value: s?.id,
-    label: s?.user?.name,
-  }));
+  const students = data?.data.map((s) => ({
+    value : s.id ?? "",
+    label : s?.name
+  }))
 
   const text = {
     title: {
