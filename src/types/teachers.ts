@@ -51,6 +51,8 @@ export interface Teacher {
     user_id: string;
     currencyId: string;
     hour_price: number;
+    one_hour_price?: number;
+    group_hour_price?: number;
     gender: 'Male' | 'Female';
     active: boolean;
     nationality?: string;
@@ -111,6 +113,8 @@ export interface CreateTeacherInput {
     gender: 'male' | 'female';
     active: boolean;
     subject_ids: string[];
+    one_hour_price: number;
+    group_hour_price: number;
     meeting_link?: string;
     timezone?: string;
     country?: string;
@@ -129,6 +133,8 @@ export interface UpdateTeacherInput {
     gender: 'male' | 'female';
     active: boolean;
     subject_ids: string[];
+    one_hour_price?: number;
+    group_hour_price?: number;
     timezone?: string;
     meeting_link?: string;
     country?: string;

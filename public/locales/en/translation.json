@@ -671,5 +671,7 @@
   "settings_adding": "Saving...",
   "settings_addRule": "Save Changes ",
   "settings_loadingRules": "Loading attendance rules...",
-  "settings_loadError": "An error occurred while loading data"
+  "settings_loadError": "An error occurred while loading data",
+  "group_hour_price": "Group Hour Price",
+  "one_hour_price" : "One Hour Price"
 }

@@ -169,6 +169,8 @@ export default function Teachers() {
       code_country: formData.phone_code,
       nationality: formData.nationality,
       subject_ids: formData.subjects,
+      one_hour_price: Number(formData.one_hour_price),
+      group_hour_price: Number(formData.group_hour_price),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       meeting_link: formData.meeting_link?.trim() || undefined,
       country: formData.country,

@@ -45,8 +45,7 @@ export default function JitsiMeetingModal({
   const role = (localStorage.getItem('role') || '').toLowerCase();
   const canEndSession = Boolean(
     isTeacher &&
-    role !== 'student' &&
-    role !== 'parent' &&
+    role === 'teacher' &&
     onEndSession
   );
 
@@ -109,7 +108,9 @@ export default function JitsiMeetingModal({
                   {sessionTitle || (isRtl ? 'حصة مباشرة' : 'Live Session')}
                 </h3>
                 <span className="text-xs text-gray-400">
-                  {isTeacher
+                  {role === 'supervisor' || role === 'moderator'
+                    ? isRtl ? 'مشرف (متابع)' : 'Supervisor (Observer)'
+                    : isTeacher
                     ? isRtl ? 'معلم (متحكم بالجلسة)' : 'Teacher (Moderator)'
                     : isRtl ? 'طالب' : 'Student'}
                 </span>

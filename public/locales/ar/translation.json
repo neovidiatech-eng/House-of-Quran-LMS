@@ -671,5 +671,7 @@
   "settings_adding": "جاري الحفظ...",
   "settings_addRule": "حفظ التغييرات",
   "settings_loadingRules": "جاري حفظ التغييرات",
-  "settings_loadError": "حدث خطأ أثناء حفظ التغييرات"
+  "settings_loadError": "حدث خطأ أثناء حفظ التغييرات",
+  "group_hour_price": "سعر الحصة الجماعية",
+  "one_hour_price":"سعر الحصة الفردية"
 }

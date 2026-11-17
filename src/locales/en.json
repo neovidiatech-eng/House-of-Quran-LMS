@@ -1,5 +1,7 @@
 {
   "loginSuccess": "Logged in successfully",
+  "one_hour_price": "One-on-One Session Price",
+  "group_hour_price": "Group Session Price",
   "verifySuccess": "Account verified successfully",
   "codeSentSuccess": "Verification code sent successfully",
   "createNewStudentAccount": "Create New Student Account",

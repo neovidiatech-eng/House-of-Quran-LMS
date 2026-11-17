@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Eye, Trash2, Edit } from "lucide-react";
+import { Search, Plus, Eye, Trash2, Edit, Video } from "lucide-react";
 import Pagination from "../../../components/ui/Pagination";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,6 +10,9 @@ import {
   useDeleteSchedule,
   useDeleteGroupedSchedule,
 } from "../../admin/hooks/useSchedules";
+import { useJoinToSession } from "../../../hooks/useSessions";
+import { leaveSession } from "../../../services/SessionsServices";
+import JitsiMeetingModal, { JitsiRoomData } from "../../../components/modals/JitsiMeetingModal";
 import AddSessionModal from "../../../components/modals/AddSessionModal";
 import ViewSessionModal from "../../../components/modals/ViewSessionModal";
 import EditSessionModal from "../../../components/modals/EditSessionModal";
@@ -37,12 +40,62 @@ export default function Sessions() {
   const [selectedSession, setSelectedSession] = useState<Schedule | null>(null);
   const [groupedSessions, setGroupedSessions] = useState<Schedule[]>([]);
   const [sessionToDelete, setSessionToDelete] = useState<Schedule | null>(null);
+  const [now, setNow] = useState(new Date());
+  const [activeMeeting, setActiveMeeting] = useState<{
+    session: Schedule;
+    roomData: JitsiRoomData;
+  } | null>(null);
+  const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
+
+  // Update current time every 30 seconds to refresh "Join" button state
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const createSchedule = useCreateSchedule();
   const createRecurringSchedule = useCreateRecurringSchedule();
   const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
   // const deleteGroupedSchedule = useDeleteGroupedSchedule();
+  const { mutateAsync: joinToSession } = useJoinToSession();
+
+  const isSessionCompletedOrEnded = (session: Schedule) => {
+    const status = session.status?.toLowerCase();
+    if (status === 'completed' || status === 'cancelled' || status === 'ended') {
+      return true;
+    }
+    if (session.end_time) {
+      const end = new Date(session.end_time);
+      if (!isNaN(end.getTime()) && now > end) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const isJoinable = (startTime: string, endTime?: string) => {
+    if (!startTime) return false;
+    const start = new Date(startTime);
+    const end = endTime ? new Date(endTime) : new Date(start.getTime() + 60 * 60 * 1000);
+    const fiveMinutesBefore = new Date(start.getTime() - 300000);
+    return now >= fiveMinutesBefore && now <= end;
+  };
+
+  const handleJoinSession = async (session: Schedule) => {
+    try {
+      setJoiningSessionId(session.id);
+      const roomData = await joinToSession(session.id);
+      setActiveMeeting({
+        session,
+        roomData,
+      });
+    } catch (error) {
+      console.error("Failed to join session:", error);
+    } finally {
+      setJoiningSessionId(null);
+    }
+  };
 
   const handleUpdateSession = async (
     id: string,
@@ -428,6 +481,9 @@ export default function Sessions() {
                   {t("status")}
                 </th>
                 <th className="px-6 py-4 text-right text-sm font-semibold text-gray-700">
+                  {t("joinSession") || (language === 'ar' ? 'الانضمام للجلسة' : 'Join')}
+                </th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-gray-700">
                   {t("actions")}
                 </th>
               </tr>
@@ -567,6 +623,35 @@ export default function Sessions() {
                       {t(session.status?.toLowerCase() || "")}
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => handleJoinSession(session)}
+                      disabled={
+                        joiningSessionId === session.id ||
+                        isSessionCompletedOrEnded(session) ||
+                        !isJoinable(session.start_time, session.end_time)
+                      }
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all font-medium text-xs sm:text-sm whitespace-nowrap ${
+                        isSessionCompletedOrEnded(session) || !isJoinable(session.start_time, session.end_time)
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                          : 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow-md'
+                      } ${joiningSessionId === session.id ? 'opacity-50 cursor-wait' : ''}`}
+                      title={
+                        isSessionCompletedOrEnded(session)
+                          ? (language === 'ar' ? 'الجلسة منتهية' : 'Session ended')
+                          : !isJoinable(session.start_time, session.end_time)
+                          ? (language === 'ar' ? 'متاح قبل 5 دقائق من موعد الجلسة' : 'Available 5 minutes before session')
+                          : undefined
+                      }
+                    >
+                      <Video className="w-4 h-4 flex-shrink-0" />
+                      <span>
+                        {joiningSessionId === session.id
+                          ? (t('joining...') || (language === 'ar' ? 'جاري الدخول...' : 'Joining...'))
+                          : (t('joinSession') || (language === 'ar' ? 'دخول الحصة' : 'Join Session'))}
+                      </span>
+                    </button>
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 justify-end">
                       <button
@@ -664,6 +749,24 @@ export default function Sessions() {
         isOpen={!!sessionToDelete}
         onClose={() => setSessionToDelete(null)}
         onConfirm={confirmDelete}
+      />
+
+      <JitsiMeetingModal
+        isOpen={Boolean(activeMeeting)}
+        onClose={() => setActiveMeeting(null)}
+        roomData={activeMeeting?.roomData || null}
+        sessionTitle={activeMeeting?.session.title}
+        isTeacher={false}
+        onLeave={async () => {
+          if (!activeMeeting?.session.id) return;
+          try {
+            await leaveSession(activeMeeting.session.id);
+          } catch (error) {
+            console.error('Leave session error:', error);
+          } finally {
+            setActiveMeeting(null);
+          }
+        }}
       />
     </div>
   );

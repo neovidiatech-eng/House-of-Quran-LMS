@@ -42,7 +42,9 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
       meeting_link: '',
       country: 'Egypt',
       city: '',
-      age: ''
+      age: '',
+      one_hour_price:0 ,
+      group_hour_price:0
     }
   });
 
@@ -320,6 +322,39 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
                 )}
               />
             </div>
+            {/* Row 4.8: Prices */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="text-start">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('one_hour_price')} *
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  placeholder="10"
+                  {...register('one_hour_price', { valueAsNumber: true })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
+                  dir="ltr"
+                />
+                {errors.one_hour_price && <p className="text-red-500 text-xs mt-1">{errors.one_hour_price.message}</p>}
+              </div>
+
+              <div className="text-start">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('group_hour_price')} *
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  placeholder="10"
+                  {...register('group_hour_price', { valueAsNumber: true })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
+                  dir="ltr"
+                />
+                {errors.group_hour_price && <p className="text-red-500 text-xs mt-1">{errors.group_hour_price.message}</p>}
+              </div>
+            </div>
+            
 
             {/* Row 5: Zoom Link / Note */}
             <div className="grid grid-cols-1 gap-4">

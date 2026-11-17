@@ -1,5 +1,7 @@
 {
   "loginSuccess": "تم تسجيل الدخول بنجاح",
+  "one_hour_price": "سعر الحصة الفردية",
+  "group_hour_price": "سعر الحصة الجماعية",
   "verifySuccess": "تم التحقق من الحساب بنجاح",
   "codeSentSuccess": "تم إرسال رمز التحقق بنجاح",
   "createNewStudentAccount": "إنشاء حساب طالب جديد",
