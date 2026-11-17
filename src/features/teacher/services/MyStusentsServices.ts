@@ -6,17 +6,16 @@ export interface Subject {
 }
 
 export interface StudentData {
-    studentId?: string; // Made optional just in case
     id?: string;
-    user_id?: string;
-    userId?: string;
-    user?: { id: string };
     name: string;
     code: string;
     email: string;
     phone: string;
-    subject: Subject;
     sessions: string;
+    hour_price: number,
+    session_price: number,
+    plan: string,
+    session_duration_minutes:number
 }
 
 export interface StudentListResponse {

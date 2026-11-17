@@ -67,7 +67,7 @@ export default function TeacherStudents() {
               </div>
               <button
                 onClick={async () => {
-                  const targetStudentId = student.user_id || student.id || student.studentId || student.userId || student.user?.id;
+                  const targetStudentId =  student.id ;
                   
                   if (!targetStudentId) {
                     console.error("Student ID is missing!", student);
@@ -138,7 +138,7 @@ export default function TeacherStudents() {
                   <BookOpen className="w-3 h-3" />
                   <span className="text-xs font-medium">{isRtl ? 'الكورسات' : 'Courses'}</span>
                 </div>
-                <span className="font-bold text-gray-900">{student.subject.name}</span>
+                <span className="font-bold text-gray-900">{student.plan}</span>
               </div>
               <div className="text-center p-2 rounded-lg bg-gray-50">
                 <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
