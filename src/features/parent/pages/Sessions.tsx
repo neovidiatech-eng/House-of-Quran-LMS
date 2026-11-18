@@ -8,7 +8,6 @@ import { useSubjects } from '../../../features/admin/hooks/useSubjects';
 import { Subject } from '../../../types/subject';
 import {  useUserSessions } from '../../../hooks/useSessions';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
-import { useSettings } from '../../../contexts/SettingsContext';
 import CreateRequestModal from '../../../components/modals/CreateRequestModal';
 
 export default function Sessions() {
@@ -44,15 +43,74 @@ export default function Sessions() {
 
   const itemsPerPage = 5;
 
-  const scheduleData = allSchedules?.data || [];
+  const rawData = allSchedules?.data;
+  const scheduleData: Schedule[] = Array.isArray(rawData)
+    ? rawData
+    : Array.isArray((rawData as any)?.schedules)
+    ? (rawData as any).schedules
+    : Array.isArray((rawData as any)?.schedule)
+    ? (rawData as any).schedule
+    : Array.isArray((allSchedules as any)?.schedules)
+    ? (allSchedules as any).schedules
+    : Array.isArray((allSchedules as any)?.schedule)
+    ? (allSchedules as any).schedule
+    : [];
+
+  const isToday = (dateStr: string) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const now = new Date();
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    );
+  };
+
   const displaySchedules: Schedule[] = [];
   const seenParents = new Set<string>();
+
+  const parentGroups = new Map<string, Schedule[]>();
+  scheduleData.forEach((schedule: Schedule) => {
+    if (schedule.parent_recurring_id) {
+      const group = parentGroups.get(schedule.parent_recurring_id) || [];
+      group.push(schedule);
+      parentGroups.set(schedule.parent_recurring_id, group);
+    }
+  });
 
   scheduleData.forEach((schedule: Schedule) => {
     if (schedule.parent_recurring_id) {
       if (!seenParents.has(schedule.parent_recurring_id)) {
         seenParents.add(schedule.parent_recurring_id);
-        displaySchedules.push(schedule);
+        const groupSessions = parentGroups.get(schedule.parent_recurring_id) || [];
+
+        const todaySession = groupSessions.find((s) => isToday(s.start_time));
+        if (todaySession) {
+          displaySchedules.push(todaySession);
+        } else {
+          const now = Date.now();
+          const upcoming = groupSessions.filter(
+            (s) => new Date(s.start_time).getTime() >= now
+          );
+
+          if (upcoming.length > 0) {
+            upcoming.sort(
+              (a, b) =>
+                new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+            );
+            displaySchedules.push(upcoming[0]);
+          } else if (groupSessions.length > 0) {
+            const past = [...groupSessions];
+            past.sort(
+              (a, b) =>
+                new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+            );
+            displaySchedules.push(past[0]);
+          } else {
+            displaySchedules.push(schedule);
+          }
+        }
       }
     } else {
       displaySchedules.push(schedule);
@@ -165,19 +223,18 @@ export default function Sessions() {
 
         <div className="overflow-x-auto">
           {isLoading ? (
-            <TableSkeleton rows={itemsPerPage} columns={7} />
+            <TableSkeleton rows={itemsPerPage} columns={8} />
           ) : (
             <table className="w-full" dir={language === 'ar' ? 'rtl' : 'ltr'}>
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('sessionTitleLabel')}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('studentLabel')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('teacherLabel')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('subjectLabel')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('dateTime')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('duration')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('status')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('joinSession')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('AddRequest')}</th>
                   <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('actions')}</th>
                 </tr>
               </thead>
@@ -186,9 +243,14 @@ export default function Sessions() {
                   currentSessions.map((session) => (
                     <tr key={session.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-start">
-                        <span className="font-medium text-gray-900">{session.title}</span>
+                        <span className="font-medium text-gray-900">{session.title || (language === 'ar' ? 'حصة دراسية' : 'Session')}</span>
                       </td>
-                      <td className="px-6 py-4 text-gray-700 text-start">{session.teacher.user.name}</td>
+                      <td className="px-6 py-4 text-gray-700 text-start font-medium">
+                        {session.student?.user?.name || (session.student as any)?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-gray-700 text-start">
+                        {session.teacher?.user?.name || (session.teacher as any)?.name || '-'}
+                      </td>
                       <td className="px-6 py-4 text-start">
                         <span className="text-primary font-medium">{getSubjectName(session)}</span>
                       </td>
@@ -210,7 +272,7 @@ export default function Sessions() {
                       </td>
                       <td className="px-6 py-4 text-start">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusStyle(session.status)}`}>
-                          {t(session.status?.toLowerCase() || '')}
+                          {t(session.status?.toLowerCase() || '') || session.status}
                         </span>
                       </td>
 
@@ -236,7 +298,7 @@ export default function Sessions() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                       {t('No Sessions')}
                     </td>
                   </tr>
@@ -249,7 +311,7 @@ export default function Sessions() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={scheduleData.length}
+          totalItems={displaySchedules.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
         />

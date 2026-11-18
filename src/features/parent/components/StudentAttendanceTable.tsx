@@ -32,6 +32,46 @@ export default function StudentAttendanceTable({ studentId }: Props) {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentLogs = logs.slice(startIndex, startIndex + itemsPerPage);
 
+  const getAttendanceStatus = (log: AttendanceLog) => {
+    const now = Date.now();
+    const startTime = log.schedule?.start_time ? new Date(log.schedule.start_time).getTime() : null;
+    const endTime = log.schedule?.end_time
+      ? new Date(log.schedule.end_time).getTime()
+      : startTime
+      ? startTime + 30 * 60000
+      : null;
+
+    if (log.isStudentAttended) {
+      return {
+        label: isRtl ? 'حاضر' : 'Attended',
+        style: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        Icon: UserCheck,
+      };
+    }
+
+    if (startTime && startTime > now) {
+      return {
+        label: isRtl ? 'مجدولة' : 'Upcoming',
+        style: 'bg-blue-50 text-blue-700 border-blue-200',
+        Icon: Clock,
+      };
+    }
+
+    if (startTime && endTime && startTime <= now && now <= endTime) {
+      return {
+        label: isRtl ? 'جارية' : 'In Progress',
+        style: 'bg-amber-50 text-amber-700 border-amber-200',
+        Icon: Clock,
+      };
+    }
+
+    return {
+      label: isRtl ? 'غائب' : 'Missed',
+      style: 'bg-rose-50 text-rose-700 border-rose-200',
+      Icon: AlertCircle,
+    };
+  };
+
   return (
     <div className="flex flex-col gap-4 p-6">
       <div className="overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -79,36 +119,57 @@ export default function StudentAttendanceTable({ studentId }: Props) {
                      </div>
                   </td>
                   <td className="px-6 py-4 text-start">
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {log.joinTime_student ? formatDateTime(log.joinTime_student, isRtl).time : isRtl ? 'لم ينضم' : 'No Join Time'}
-                      </span>
-                      <span className="inline-flex items-center w-fit text-[11px] bg-primary-50 text-blue-700 px-2 py-0.5 rounded font-medium">
-                        {log.duration_student ? Math.round(log.duration_student) + ' ' + t('minutes') : '-'}
-                      </span>
-                    </div>
+                    {(() => {
+                      const startTime = log.schedule?.start_time ? new Date(log.schedule.start_time).getTime() : null;
+                      const isUpcoming = startTime ? startTime > Date.now() : false;
+                      return (
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {log.joinTime_student
+                              ? formatDateTime(log.joinTime_student, isRtl).time
+                              : isUpcoming
+                              ? isRtl ? 'لم تبدأ بعد' : 'Not started'
+                              : isRtl ? 'لم ينضم' : 'No Join Time'}
+                          </span>
+                          <span className="inline-flex items-center w-fit text-[11px] bg-primary-50 text-blue-700 px-2 py-0.5 rounded font-medium">
+                            {log.duration_student ? Math.round(log.duration_student) + ' ' + t('minutes') : '-'}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 text-start">
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <UserCheck className="w-3 h-3" />
-                        {log.joinTime_teacher ? formatDateTime(log.joinTime_teacher, isRtl).time : isRtl ? 'لم ينضم' : 'No Join Time'}
-                      </span>
-                      <span className="inline-flex items-center w-fit text-[11px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-medium">
-                        {log.duration_teacher ? Math.round(log.duration_teacher) + ' ' + t('minutes') : '-'}
-                      </span>
-                    </div>
+                    {(() => {
+                      const startTime = log.schedule?.start_time ? new Date(log.schedule.start_time).getTime() : null;
+                      const isUpcoming = startTime ? startTime > Date.now() : false;
+                      return (
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <UserCheck className="w-3 h-3" />
+                            {log.joinTime_teacher
+                              ? formatDateTime(log.joinTime_teacher, isRtl).time
+                              : isUpcoming
+                              ? isRtl ? 'لم تبدأ بعد' : 'Not started'
+                              : isRtl ? 'لم ينضم' : 'No Join Time'}
+                          </span>
+                          <span className="inline-flex items-center w-fit text-[11px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-medium">
+                            {log.duration_teacher ? Math.round(log.duration_teacher) + ' ' + t('minutes') : '-'}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 text-start">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border ${
-                      log.isStudentAttended 
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                        : 'bg-rose-50 text-rose-700 border-rose-200'
-                    }`}>
-                      {log.isStudentAttended ? <UserCheck className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                      {log.isStudentAttended ? (isRtl ? 'حاضر' : 'Attended') : (isRtl ? 'غائب' : 'Missed')}
-                    </span>
+                    {(() => {
+                      const { label, style, Icon } = getAttendanceStatus(log);
+                      return (
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border ${style}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                          {label}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))

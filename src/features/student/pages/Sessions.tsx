@@ -82,20 +82,8 @@ export default function Sessions() {
 
   const itemsPerPage = 5;
 
-  const scheduleData = allSchedules?.data || [];
-  const displaySchedules: Schedule[] = [];
-  const seenParents = new Set<string>();
-
-  scheduleData.forEach((schedule: Schedule) => {
-    if (schedule.parent_recurring_id) {
-      if (!seenParents.has(schedule.parent_recurring_id)) {
-        seenParents.add(schedule.parent_recurring_id);
-        displaySchedules.push(schedule);
-      }
-    } else {
-      displaySchedules.push(schedule);
-    }
-  });
+const scheduleData: Schedule[] = allSchedules?.data || [];
+const displaySchedules = scheduleData;
 
   const totalPages = Math.ceil(displaySchedules.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;

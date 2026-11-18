@@ -33,18 +33,7 @@ export default function StudentSessionsTable({ studentId }: Props) {
 
   const rawSessions: Schedule[] = Array.isArray(data) ? data : data?.data || data?.sessions || [];
   
-  const sessions: Schedule[] = [];
-  const seenParents = new Set<string>();
-  rawSessions.forEach((schedule: Schedule) => {
-    if (schedule.parent_recurring_id) {
-      if (!seenParents.has(schedule.parent_recurring_id)) {
-        seenParents.add(schedule.parent_recurring_id);
-        sessions.push(schedule);
-      }
-    } else {
-      sessions.push(schedule);
-    }
-  });
+  const sessions: Schedule[] = rawSessions;
 
   const totalPages = Math.ceil(sessions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
