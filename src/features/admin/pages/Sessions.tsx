@@ -172,38 +172,55 @@ export default function Sessions() {
     }
   });
 
+  // Helper: check if a date is today
+  const isToday = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    );
+  };
+
   scheduleData.forEach((schedule: Schedule) => {
     if (schedule.parent_recurring_id) {
       if (!seenParents.has(schedule.parent_recurring_id)) {
         seenParents.add(schedule.parent_recurring_id);
 
         const groupSessions = parentGroups.get(schedule.parent_recurring_id) || [];
-        const now = new Date().getTime();
 
-        // Separate upcoming vs past sessions to determine the nearest one
-        const upcoming = groupSessions.filter(
-          (s) => new Date(s.start_time).getTime() >= now
-        );
+        // Check if any session in this group is scheduled for today
+        const todaySession = groupSessions.find((s) => isToday(s.start_time));
 
-        let nearestSession = schedule;
-        if (upcoming.length > 0) {
-          // Sort upcoming ascending (closest future date first)
-          upcoming.sort(
-            (a, b) =>
-              new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+        if (todaySession) {
+          // Show today's session as the representative
+          groupedSchedules.push(todaySession);
+        } else {
+          // No session today — show the nearest upcoming or most recent past
+          const now = new Date().getTime();
+          const upcoming = groupSessions.filter(
+            (s) => new Date(s.start_time).getTime() >= now
           );
-          nearestSession = upcoming[0];
-        } else if (groupSessions.length > 0) {
-          // Sort past descending (closest past date first)
-          const past = [...groupSessions];
-          past.sort(
-            (a, b) =>
-              new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-          );
-          nearestSession = past[0];
+
+          let nearestSession = schedule;
+          if (upcoming.length > 0) {
+            upcoming.sort(
+              (a, b) =>
+                new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+            );
+            nearestSession = upcoming[0];
+          } else if (groupSessions.length > 0) {
+            const past = [...groupSessions];
+            past.sort(
+              (a, b) =>
+                new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+            );
+            nearestSession = past[0];
+          }
+
+          groupedSchedules.push(nearestSession);
         }
-
-        groupedSchedules.push(nearestSession);
       }
     } else {
       groupedSchedules.push(schedule);

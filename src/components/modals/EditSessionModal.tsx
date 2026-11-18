@@ -108,6 +108,10 @@ export default function EditSessionModal({
       notification_Time: data.notification_Time,
     };
 
+    if (data.end_time) {
+      payload.end_time = new Date(data.end_time).toISOString();
+    }
+
     if (data.description?.trim()) payload.description = data.description;
     if (data.notes?.trim()) payload.notes = data.notes;
 
@@ -147,7 +151,51 @@ export default function EditSessionModal({
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      // Auto-recalculate end_time when start_time changes
+      if (field === 'start_time' && value) {
+        const s = currentSession;
+        // Try to get session duration from student's plan sessionTime
+        let durationMinutes = 0;
+
+        // Calculate from existing start/end if available
+        if (s?.start_time && s?.end_time) {
+          const origStart = new Date(s.start_time).getTime();
+          const origEnd = new Date(s.end_time).getTime();
+          if (!isNaN(origStart) && !isNaN(origEnd) && origEnd > origStart) {
+            durationMinutes = Math.round((origEnd - origStart) / 60000);
+          }
+        }
+
+        // Try plan sessionTime as fallback
+        if (!durationMinutes) {
+          const plan = (s as any)?.student?.plan || (s as any)?.plan;
+          if (plan?.sessionTime) {
+            durationMinutes = Number(plan.sessionTime);
+          }
+        }
+
+        // Default to 30 min if still unknown
+        if (!durationMinutes || durationMinutes <= 0) {
+          durationMinutes = 30;
+        }
+
+        const startDate = new Date(value);
+        if (!isNaN(startDate.getTime())) {
+          const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+          const y = endDate.getFullYear();
+          const mo = String(endDate.getMonth() + 1).padStart(2, '0');
+          const d = String(endDate.getDate()).padStart(2, '0');
+          const h = String(endDate.getHours()).padStart(2, '0');
+          const mi = String(endDate.getMinutes()).padStart(2, '0');
+          updated.end_time = `${y}-${mo}-${d}T${h}:${mi}`;
+        }
+      }
+
+      return updated;
+    });
     setCurrentFormIsDirty(true);
   };
 

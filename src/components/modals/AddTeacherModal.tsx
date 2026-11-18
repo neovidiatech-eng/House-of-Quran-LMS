@@ -357,7 +357,8 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
             
 
             {/* Row 5: Zoom Link / Note */}
-            <div className="grid grid-cols-1 gap-4">
+            
+            {/* <div className="grid grid-cols-1 gap-4">
               <div className="text-start">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('zoomLink')}
@@ -370,7 +371,7 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
                 />
                 {errors.meeting_link && <p className="text-red-500 text-xs mt-1">{errors.meeting_link.message}</p>}
               </div>
-            </div>
+            </div> */}
 
             {/* Row 6: Gender & Age */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

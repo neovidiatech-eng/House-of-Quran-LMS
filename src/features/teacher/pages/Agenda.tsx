@@ -107,6 +107,17 @@ export default function Agenda() {
     return <div className="p-10 text-center text-red-500">{error.message}</div>;
   }
 
+  const canJoinSession = (startTime: string) => {
+  const now = new Date();
+  const sessionStart = new Date(startTime);
+
+  const joinAvailableTime = new Date(
+    sessionStart.getTime() - 5 * 60 * 1000
+  );
+
+  return now >= joinAvailableTime;
+};
+
   return (
     <div className="space-y-6">
       {/* HEADER */}
@@ -314,14 +325,14 @@ export default function Agenda() {
                         {s.status}
                       </span>
 
-                      {s.status !== "completed" && s.link && (
-                        <button
-                          onClick={() => window.open(s.link, "_blank")}
-                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          Join Session
-                        </button>
-                      )}
+                    {s.status !== "completed" && s.link && canJoinSession(s.start_time) && (
+  <button
+    onClick={() => window.open(s.link, "_blank")}
+    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+  >
+    Join Session
+  </button>
+)}
                     </div>
                   </div>
                 </div>

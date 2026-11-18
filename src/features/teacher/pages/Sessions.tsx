@@ -37,10 +37,8 @@ export default function Sessions() {
     roomData: JitsiRoomData;
   } | null>(null);
 
-  const { settings } = useSettings();
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [sessionForRequest, setSessionForRequest] = useState<Schedule | null>(null);
-  const isRtl = language === 'ar';
 
   // Update current time every 30 seconds to refresh "Join" button state
   useEffect(() => {
@@ -90,19 +88,27 @@ export default function Sessions() {
   const itemsPerPage = 5;
   const scheduleData = sessionResponse?.data || [];
 
-  const displaySchedules: Schedule[] = [];
-  const seenParents = new Set<string>();
+  // const displaySchedules: Schedule[] = [];
+  // const seenParents = new Set<string>();
 
-  scheduleData.forEach((schedule: Schedule) => {
-    if (schedule.parent_recurring_id) {
-      if (!seenParents.has(schedule.parent_recurring_id)) {
-        seenParents.add(schedule.parent_recurring_id);
-        displaySchedules.push(schedule);
-      }
-    } else {
-      displaySchedules.push(schedule);
-    }
-  });
+  // scheduleData.forEach((schedule: Schedule) => {
+  //   if (schedule.parent_recurring_id) {
+  //     if (!seenParents.has(schedule.parent_recurring_id)) {
+  //       seenParents.add(schedule.parent_recurring_id);
+  //       displaySchedules.push(schedule);
+  //     }
+  //   } else {
+  //     displaySchedules.push(schedule);
+  //   }
+  // });
+
+
+const displaySchedules: Schedule[] = [...scheduleData].sort(
+  (a, b) =>
+    new Date(a.start_time).getTime() -
+    new Date(b.start_time).getTime()
+);
+
 
   const totalPages = Math.ceil(displaySchedules.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;

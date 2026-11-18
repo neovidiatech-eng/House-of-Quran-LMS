@@ -458,6 +458,8 @@
   "earningsFormula_ar": "الأرباح = عدد الساعات × {rate} {currency}/ساعة",
   "earningsFormula_en": "Earnings = Hours × {rate} {currency}/hour",
   "loginSuccess": "Logged in successfully",
+  "invalidCredentials": "Invalid email or password",
+  "loginGeneralError": "An error occurred during login, please try again",
   "verifySuccess": "Account verified successfully",
   "codeSentSuccess": "Verification code sent successfully",
   "totalRoles": "Total Roles",

@@ -86,8 +86,29 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         navigate(getDashboardPathForRole(role));
       }
       connectSocket(token);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      const data = error?.response?.data;
+      const status = error?.response?.status;
+      let errorMsg = "";
+
+      if (data?.error) {
+        errorMsg = data.error;
+      } else if (data?.message) {
+        errorMsg = data.message;
+      } else if (typeof data === "string" && data.length < 200) {
+        errorMsg = data;
+      }
+
+      if (!errorMsg) {
+        if (status === 401 || status === 400) {
+          errorMsg = t("invalidCredentials") || "Invalid email or password";
+        } else {
+          errorMsg = t("loginGeneralError") || "An error occurred during login, please try again";
+        }
+      }
+
+      message.error(errorMsg);
     }
   };
 
