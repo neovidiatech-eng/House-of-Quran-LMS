@@ -72,7 +72,7 @@ export interface TeacherProfileInfo {
   phone: string;
   gender: string;
   hourPrice?: number;
-  hour_price?: number;
+  groupPrice?: number;
   status: string;
   active: boolean;
   user_id?: string;

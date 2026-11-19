@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Calendar, Clock, Book, Eye } from 'lucide-react';
+import { Calendar, Clock, Book, Eye, Star } from 'lucide-react';
 import Pagination from '../../../components/ui/Pagination';
 import ViewSessionModal from '../../../components/modals/ViewSessionModal';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
@@ -49,7 +49,9 @@ export default function StudentSessionsTable({ studentId }: Props) {
               <th className="px-6 py-5 text-start whitespace-nowrap">{t('subjectLabel', 'المادة')}</th>
               <th className="px-6 py-5 text-start whitespace-nowrap">{t('teacherLabel')}</th>
               <th className="px-6 py-5 text-start whitespace-nowrap">{t('dateTime')}</th>
+               
               <th className="px-6 py-5 text-start whitespace-nowrap">{t('status')}</th>
+              <th className="px-6 py-5 text-start whitespace-nowrap">{isRtl ? 'التقييم' : 'Rating'}</th>
               <th className="px-6 py-5 text-start whitespace-nowrap">{t('actions', 'الإجراءات')}</th>
             </tr>
           </thead>
@@ -115,6 +117,31 @@ export default function StudentSessionsTable({ studentId }: Props) {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-start">
+                    {(() => {
+                      const reviews: any[] = session.reviews || [];
+                      if (reviews.length === 0) {
+                        return (
+                          <span className="text-xs text-gray-400 italic">
+                            {isRtl ? 'لا يوجد تقييم بعد' : 'No rating yet'}
+                          </span>
+                        );
+                      }
+                      const avg = reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.length;
+                      const rounded = Math.round(avg);
+                      return (
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${i < rounded ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`}
+                            />
+                          ))}
+                          <span className="text-xs font-bold text-yellow-700 ms-1">{avg.toFixed(1)}</span>
+                        </div>
+                      );
+                    })()}
+                  </td>
+                  <td className="px-6 py-4 text-start">
                     <button
                       onClick={() => {
                         const grouped = session.parent_recurring_id
@@ -134,7 +161,7 @@ export default function StudentSessionsTable({ studentId }: Props) {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-16 text-center">
+                <td colSpan={7} className="px-6 py-16 text-center">
                   <div className="flex flex-col items-center gap-3 text-gray-400">
                     <Calendar className="w-12 h-12 text-gray-200" />
                     <p className="text-lg">{isRtl ? 'لا توجد حصص مسجلة' : 'No sessions found'}</p>

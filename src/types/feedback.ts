@@ -16,7 +16,7 @@ export interface Schedule {
     notes: string | null;
     description: string | null;
     link: string;
-    title: string;
+    title: string; 
     end_time: string;
     start_time: string;
     day_of_week: string | null;
@@ -44,35 +44,37 @@ export interface UserReview {
     provider: string;
     timezone: string;
     country: string | null;
-    nationality: string;
+    nationality: string | null;
     fcmToken: string;
     age: number;
     city: string;
     additionalData: any;
 }
 
-export interface FeedBackItem {
+// A single review inside a session item
+export interface Review {
     id: string;
-    schedule: Schedule;
     reviewer: UserReview;
     reviewee: UserReview;
     rating: number;
     comment: string;
-    role: string;
+    role: 'student' | 'teacher';
     isHidden: boolean;
     createdAt: string;
 }
 
-export interface FeedbackData{
-    items:FeedBackItem[];
-    pagination:Pagination;
+// A session item with its reviews (matches actual API: data.items[])
+export interface FeedBackItem {
+    schedule: Schedule;
+    reviews: Review[];
 }
 
 export interface FeedbackResponse {
-    message: string,
-    status: number,
-    lang: string,
+    message: string;
+    status: number;
+    lang: string;
     data: {
-        feedbacks: FeedbackData
-    }
+        items: FeedBackItem[];
+        pagination: Pagination;
+    };
 }

@@ -5,10 +5,10 @@ import {
   Mail, Phone, MapPin,
   Clock, Wallet, ArrowUpRight,
   BookOpen, Users, FileText,
-  Video, Check, ExternalLink, Edit2, DollarSign
+  Coins
 } from 'lucide-react';
 import { Spin } from 'antd';
-import { useTeacherProfile, useWithdrawals, useWithdrawRequest, useUpdateMeetingLink } from '../hooks/useTeacherProfile';
+import { useTeacherProfile, useWithdrawals, useWithdrawRequest } from '../hooks/useTeacherProfile';
 import WithdrawalModal from '../../../components/modals/WithdrawModal';
 
 // Internal Withdrawal Modal Component
@@ -23,10 +23,10 @@ export default function TeacherProfile() {
   const { data: response, isLoading, error } = useTeacherProfile();
   const { data: withdrawalsResponse, isLoading: isWithdrawalsLoading } = useWithdrawals();
   const { mutateAsync } = useWithdrawRequest();
-  const updateMeetingMutation = useUpdateMeetingLink();
+  // const updateMeetingMutation = useUpdateMeetingLink();
 
-  const [isEditingMeeting, setIsEditingMeeting] = useState(false);
-  const [newMeetingLink, setNewMeetingLink] = useState('');
+  // const [isEditingMeeting, setIsEditingMeeting] = useState(false);
+  // const [newMeetingLink, setNewMeetingLink] = useState('');
   // const [isCopied, setIsCopied] = useState(false);
 
 
@@ -60,6 +60,7 @@ export default function TeacherProfile() {
     phone: teacher?.phone || (teacher as any)?.user?.phone || '',
     title: isRtl ? 'معلم' : 'Teacher',
     hourPrice: teacher?.hourPrice || (teacher as any)?.hour_price || 0,
+    groupPrice: teacher?.groupPrice || (teacher as any)?.group_price || 0 
   };
 
   // Financial Stats
@@ -90,19 +91,19 @@ export default function TeacherProfile() {
     setIsWithdrawModalOpen(false);
   };
 
-  const handleStartEdit = () => {
-    setNewMeetingLink(teacher.meeting_link || '');
-    setIsEditingMeeting(true);
-  };
+  // const handleStartEdit = () => {
+  //   setNewMeetingLink(teacher.meeting_link || '');
+  //   setIsEditingMeeting(true);
+  // };
 
-  const handleSaveMeeting = async () => {
-    try {
-      await updateMeetingMutation.mutateAsync({ meeting_link: newMeetingLink });
-      setIsEditingMeeting(false);
-    } catch (e) {
-      // Handled by hook onError
-    }
-  };
+  // const handleSaveMeeting = async () => {
+  //   try {
+  //     await updateMeetingMutation.mutateAsync({ meeting_link: newMeetingLink });
+  //     setIsEditingMeeting(false);
+  //   } catch (e) {
+  //     // Handled by hook onError
+  //   }
+  // };
 
   // const handleCopyLink = () => {
   //   if (teacher.meeting_link) {
@@ -148,8 +149,12 @@ export default function TeacherProfile() {
 
               <div className="space-y-4 pt-4 border-t border-gray-50">
                 <div className="flex items-center gap-3 text-gray-700">
-                  <DollarSign className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm font-medium">{teacherInfo.hourPrice} {currencySymbol}</span>
+                  <Coins className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium"> {isRtl?"سعر الساعة : " : "Hour Price :"}{teacherInfo.hourPrice} {currencySymbol}</span>
+                </div>
+                 <div className="flex items-center gap-3 text-gray-700">
+                  <Coins className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm font-medium">{isRtl?"سعر المجموعة : " : "Group Price : "} {teacherInfo.groupPrice} {currencySymbol}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <Mail className="w-5 h-5 text-gray-400" />
