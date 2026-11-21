@@ -44,3 +44,8 @@ export const updateSchedule = async (
   const response = await api.patch(`/schedules/${scheduleId}`, scheduleData);
   return response.data;
 };
+
+export const syncStatus  = async () =>{
+  const response = await api.post(`/schedules/sync-statuses`);
+  return response.data;
+}

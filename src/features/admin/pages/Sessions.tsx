@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Eye, Trash2, Edit } from "lucide-react";
+import { Search, Plus, Eye, Trash2, Edit, RefreshCw } from "lucide-react";
 import Pagination from "../../../components/ui/Pagination";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,6 +9,7 @@ import {
   useUpdateSchedule,
   useDeleteSchedule,
   useDeleteGroupedSchedule,
+  useSyncStatus,
 } from "../hooks/useSchedules";
 import AddSessionModal from "../../../components/modals/AddSessionModal";
 import ViewSessionModal from "../../../components/modals/ViewSessionModal";
@@ -42,6 +43,7 @@ export default function Sessions() {
   const createRecurringSchedule = useCreateRecurringSchedule();
   const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
+  const syncStatus = useSyncStatus();
   // const deleteGroupedSchedule = useDeleteGroupedSchedule();
 
   const handleUpdateSession = async (
@@ -364,6 +366,15 @@ export default function Sessions() {
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto">
+              <button
+                onClick={() => syncStatus.mutate()}
+                disabled={syncStatus.isPending}
+                className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-medium whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`w-4 h-4 ${syncStatus.isPending ? 'animate-spin' : ''}`} />
+                {language === 'ar' ? 'مزامنة الحالة' : 'Sync Status'}
+              </button>
+
               <button
                 onClick={() => setShowAddModal(true)}
                 className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-3 btn-primary text-white rounded-xl transition-colors font-medium whitespace-nowrap"

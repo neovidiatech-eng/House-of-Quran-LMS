@@ -5,6 +5,7 @@ import {
   createRecurringSchedule,
   deleteSchedule,
   deleteRecurringScheduale,
+  syncStatus,
 } from "../services/SchedulesServices";
 import {
   UpdateSchedulePayload,
@@ -130,3 +131,14 @@ export const useUpdateSchedule = () => {
   });
 };
 
+
+export const useSyncStatus =() =>{
+  const queryClient = useQueryClient();
+  return useMutation ({
+    mutationFn: syncStatus,
+    onSuccess:(data:any) =>{
+    queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    message.success(data.message)
+    }
+  })
+}
