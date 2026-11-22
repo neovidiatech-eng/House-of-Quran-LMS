@@ -108,10 +108,6 @@ export default function EditSessionModal({
       notification_Time: data.notification_Time,
     };
 
-    if (data.end_time) {
-      payload.end_time = new Date(data.end_time).toISOString();
-    }
-
     if (data.description?.trim()) payload.description = data.description;
     if (data.notes?.trim()) payload.notes = data.notes;
 

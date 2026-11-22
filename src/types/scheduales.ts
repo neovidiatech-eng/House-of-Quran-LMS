@@ -21,7 +21,6 @@ export interface UpdateSchedulePayload {
     notes?: string;
     status: string;
     start_time: string;
-    end_time?: string;
     // type: ScheduleType;
     notification_Time: string;
 }
