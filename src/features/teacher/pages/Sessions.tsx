@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, Eye, Plus, Video } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Eye, Plus, Video, Clock, Calendar, History, ListFilter, Star } from 'lucide-react';
 import Pagination from '../../../components/ui/Pagination';
 import { useTranslation } from 'react-i18next';
 import ViewSessionModal from '../../../components/modals/ViewSessionModal';
@@ -11,7 +11,6 @@ import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
 import CreateRequestModal from '../../../components/modals/CreateRequestModal';
 import FeedbackModal from '../components/FeedbackModal';
 import ViolationGuidelinesModal from '../../../components/modals/ViolationGuidelinesModal';
-import { useSettings } from '../../../contexts/SettingsContext';
 import { leaveSession } from '../../../services/SessionsServices';
 import { Tooltip } from 'antd';
 import JitsiMeetingModal, { JitsiRoomData } from '../../../components/modals/JitsiMeetingModal';
@@ -24,6 +23,7 @@ export default function Sessions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'past' | 'all'>('today');
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Schedule | null>(null);
   const [groupedSessions, setGroupedSessions] = useState<Schedule[]>([]);
@@ -86,29 +86,64 @@ export default function Sessions() {
   }, [searchTerm]);
 
   const itemsPerPage = 5;
-  const scheduleData = sessionResponse?.data || [];
+  const rawList = sessionResponse?.data;
+  const scheduleData: Schedule[] = useMemo(() => {
+    if (Array.isArray(rawList)) return rawList;
+    return (rawList as any)?.schedules || (rawList as any)?.schedule || [];
+  }, [rawList]);
 
-  // const displaySchedules: Schedule[] = [];
-  // const seenParents = new Set<string>();
+  const { todaySessions, upcomingSessions, pastSessions, displaySchedules } = useMemo(() => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
-  // scheduleData.forEach((schedule: Schedule) => {
-  //   if (schedule.parent_recurring_id) {
-  //     if (!seenParents.has(schedule.parent_recurring_id)) {
-  //       seenParents.add(schedule.parent_recurring_id);
-  //       displaySchedules.push(schedule);
-  //     }
-  //   } else {
-  //     displaySchedules.push(schedule);
-  //   }
-  // });
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
 
+    const today: Schedule[] = [];
+    const upcoming: Schedule[] = [];
+    const past: Schedule[] = [];
 
-const displaySchedules: Schedule[] = [...scheduleData].sort(
-  (a, b) =>
-    new Date(a.start_time).getTime() -
-    new Date(b.start_time).getTime()
-);
+    scheduleData.forEach((s) => {
+      const time = new Date(s.start_time).getTime();
+      if (isNaN(time)) return;
 
+      if (time >= startOfToday.getTime() && time <= endOfToday.getTime()) {
+        today.push(s);
+      } else if (time > endOfToday.getTime()) {
+        upcoming.push(s);
+      } else {
+        past.push(s);
+      }
+    });
+
+    today.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    upcoming.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    past.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
+
+    let filtered: Schedule[] = [];
+    switch (activeTab) {
+      case 'today':
+        filtered = today;
+        break;
+      case 'upcoming':
+        filtered = upcoming;
+        break;
+      case 'past':
+        filtered = past;
+        break;
+      case 'all':
+      default:
+        filtered = [...today, ...upcoming, ...past];
+        break;
+    }
+
+    return {
+      todaySessions: today,
+      upcomingSessions: upcoming,
+      pastSessions: past,
+      displaySchedules: filtered,
+    };
+  }, [scheduleData, activeTab]);
 
   const totalPages = Math.ceil(displaySchedules.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -222,9 +257,68 @@ const displaySchedules: Schedule[] = [...scheduleData].sort(
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex flex-col md:flex-row items-center gap-3">
-            <div className="flex-1 w-full relative">
+        <div className="p-6 border-b border-gray-100 space-y-4">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-gray-100/80 rounded-2xl">
+              {[
+                {
+                  key: 'today',
+                  label: language === 'ar' ? 'اليوم' : 'Today',
+                  count: todaySessions.length,
+                  icon: <Clock className="w-4 h-4" />,
+                },
+                {
+                  key: 'upcoming',
+                  label: language === 'ar' ? 'القادمة' : 'Upcoming',
+                  count: upcomingSessions.length,
+                  icon: <Calendar className="w-4 h-4" />,
+                },
+                {
+                  key: 'past',
+                  label: language === 'ar' ? 'السابقة' : 'Past',
+                  count: pastSessions.length,
+                  icon: <History className="w-4 h-4" />,
+                },
+                {
+                  key: 'all',
+                  label: language === 'ar' ? 'الكل' : 'All',
+                  count: scheduleData.length,
+                  icon: <ListFilter className="w-4 h-4" />,
+                },
+              ].map((tab) => {
+                const isActive = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => {
+                      setActiveTab(tab.key as 'today' | 'upcoming' | 'past' | 'all');
+                      setCurrentPage(1);
+                    }}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                      isActive
+                        ? 'bg-white text-primary shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                    }`}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                    <span
+                      className={`px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${
+                        isActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-gray-200/80 text-gray-600'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input */}
+            <div className="w-full lg:w-80 relative">
               <Search
                 className={`absolute ${language === "ar" ? "right-4" : "left-4"} top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5`}
               />
@@ -233,7 +327,7 @@ const displaySchedules: Schedule[] = [...scheduleData].sort(
                 placeholder={t("searchSessionsPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full ${language === "ar" ? "pr-12 text-right" : "pl-12"} py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent`}
+                className={`w-full ${language === "ar" ? "pr-12 text-right" : "pl-12"} py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent`}
               />
             </div>
           </div>
@@ -421,10 +515,11 @@ const displaySchedules: Schedule[] = [...scheduleData].sort(
                             }
                           }}
                           disabled={isSessionCompletedOrEnded(session) || !isEndable(session.start_time)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium text-sm ${isSessionCompletedOrEnded(session) || !isEndable(session.start_time)
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-medium text-sm ${
+                            isSessionCompletedOrEnded(session) || !isEndable(session.start_time)
                               ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
                               : 'bg-red-600 text-white hover:bg-red-700 shadow-sm hover:shadow-md'
-                            }`}
+                          }`}
                         >
                           {t('leaveSession')}
                         </button>
@@ -463,14 +558,55 @@ const displaySchedules: Schedule[] = [...scheduleData].sort(
                           >
                             <Eye className="w-5 h-5" />
                           </button>
+
+                          {isSessionCompletedOrEnded(session) && (
+                            <Tooltip
+                              title={
+                                session.reviews?.some((r: any) => r.role === 'teacher')
+                                  ? (language === 'ar' ? 'تعديل التقييم' : 'Edit Feedback')
+                                  : (language === 'ar' ? 'تقييم الحصة' : 'Rate Session')
+                              }
+                            >
+                              <button
+                                onClick={() => {
+                                  setSessionForFeedback(session);
+                                  setShowFeedbackModal(true);
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  session.reviews?.some((r: any) => r.role === 'teacher')
+                                    ? 'text-emerald-600 hover:bg-emerald-50 bg-emerald-50/50'
+                                    : 'text-amber-500 hover:bg-amber-50 bg-amber-50/50'
+                                }`}
+                              >
+                                <Star
+                                  className={`w-4 h-4 ${
+                                    session.reviews?.some((r: any) => r.role === 'teacher')
+                                      ? 'fill-emerald-500'
+                                      : 'fill-amber-400'
+                                  }`}
+                                />
+                              </button>
+                            </Tooltip>
+                          )}
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={10} className="px-6 py-8 text-center text-gray-500">
-                      {t('No Sessions')}
+                    <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Clock className="w-10 h-10 text-gray-300" />
+                        <p className="font-semibold text-gray-600">
+                          {activeTab === 'today'
+                            ? (language === 'ar' ? 'لا توجد حصص مجدولة لهذا اليوم' : 'No sessions scheduled for today')
+                            : activeTab === 'upcoming'
+                            ? (language === 'ar' ? 'لا توجد حصص قادمة' : 'No upcoming sessions')
+                            : activeTab === 'past'
+                            ? (language === 'ar' ? 'لا توجد حصص سابقة' : 'No past sessions')
+                            : (t('No Sessions') || 'No sessions found')}
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -482,7 +618,7 @@ const displaySchedules: Schedule[] = [...scheduleData].sort(
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={scheduleData.length}
+          totalItems={displaySchedules.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
         />
