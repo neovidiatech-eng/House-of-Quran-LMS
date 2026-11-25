@@ -35,18 +35,36 @@ export default function Exams() {
 
   const { data: apiResponse, isLoading, isError } = useExams();
 
+  const formatExamDate = (dateStr?: string) => {
+    if (!dateStr) return "—";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "—";
+      return d.toISOString().split("T")[0];
+    } catch {
+      return "—";
+    }
+  };
+
   const exams = useMemo(() => {
-    const rawItems = apiResponse?.data?.items ?? [];
+    const rawItems = Array.isArray(apiResponse?.data?.items)
+      ? apiResponse.data.items
+      : Array.isArray(apiResponse?.data)
+      ? apiResponse.data
+      : Array.isArray(apiResponse)
+      ? apiResponse
+      : [];
+
     return rawItems.map((exam: any) => ({
       id: exam.id,
       title: exam.title,
       subject: exam.subject?.name_en || exam.subject?.name_ar || "",
       teacher: exam.teacher?.user?.name || "",
       studentName: exam.student?.user?.name || "",
-      dueDate: exam.dueDate,
-      duration: `${exam.duration} min`,
-      grade: exam.grade ?? 0,
-      status: (exam.status === "pending" ? "upcoming" : "completed") as "upcoming" | "completed",
+      dueDate: exam.startDate || exam.dueDate || "",
+      duration: `${exam.duration || 0} min`,
+      grade: exam.grade ?? exam.passPoints ?? 0,
+      status: (exam.status === "completed" ? "completed" : "upcoming") as "upcoming" | "completed",
     })) as Exam[];
   }, [apiResponse]);
 
@@ -238,7 +256,7 @@ export default function Exams() {
                     {exam.teacher}
                   </td>
                   <td className="px-6 py-4 text-start text-gray-600">
-                    {new Date(exam.dueDate).toISOString().split("T")[0]}
+                    {formatExamDate(exam.dueDate)}
                   </td>
                   <td className="px-6 py-4 text-start text-gray-600">
                     {exam.duration}

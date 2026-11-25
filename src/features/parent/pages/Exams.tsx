@@ -61,20 +61,40 @@ export default function Exams() {
 
   //   return matchesSearch && matchesStatus && matchesSubject && matchesTeacher;
   // });
-  const exams: Exam[] =
-    data?.data?.map((exam: any) => ({
+  const rawList = Array.isArray(data?.data)
+    ? data.data
+    : Array.isArray((data?.data as any)?.items)
+    ? (data?.data as any).items
+    : Array.isArray(data)
+    ? data
+    : [];
+
+  const exams: Exam[] = rawList.map((exam: any) => {
+    let formattedDate = "";
+    const dateSource = exam.startDate || exam.dueDate;
+    if (dateSource) {
+      try {
+        const d = new Date(dateSource);
+        if (!isNaN(d.getTime())) {
+          formattedDate = d.toISOString().split("T")[0];
+        }
+      } catch {
+        formattedDate = "";
+      }
+    }
+
+    return {
       id: exam.id,
       title: exam.title,
       subject: exam.subject?.name_en || exam.subject?.name_ar || "",
       teacher: exam.teacher?.user?.name || "",
       studentName: exam.student?.user?.name || "",
-      dueDate: exam.dueDate
-        ? new Date(exam.dueDate).toISOString().split("T")[0]
-        : "",
-      duration: `${exam.duration} دقيقة`,
-      grade: exam.grade,
-      status: exam.status === "pending" ? "upcoming" : "completed",
-    })) || [];
+      dueDate: formattedDate,
+      duration: `${exam.duration || 0} دقيقة`,
+      grade: exam.grade ?? exam.passPoints ?? 0,
+      status: exam.status === "completed" ? "completed" : "upcoming",
+    };
+  });
   const filteredExams = exams.filter((exam) => {
     const matchesSearch =
       exam.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
