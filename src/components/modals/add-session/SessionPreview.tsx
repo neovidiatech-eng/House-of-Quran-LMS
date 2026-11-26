@@ -28,6 +28,7 @@ interface SessionPreviewProps {
   onResetSessions?: () => void;
   hasCustomizations?: boolean;
   apiConflicts?: {date: string, conflict: string}[];
+  durationMinutes?: number;
 }
 
 const calcEndTime = (startTimeStr: string, durationMinutes: number = 60): string => {
@@ -75,6 +76,7 @@ export default function SessionPreview({
   onResetSessions,
   hasCustomizations = false,
   apiConflicts = [],
+  durationMinutes = 60,
 }: SessionPreviewProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
@@ -86,7 +88,7 @@ export default function SessionPreview({
 
   const startEditing = (session: PreviewSessionItem) => {
     const startTimeToUse = session.time || watchStartTime || '14:00';
-    const endTimeToUse = session.endTime || watchEndTime || calcEndTime(startTimeToUse, 60);
+    const endTimeToUse = session.endTime || watchEndTime || calcEndTime(startTimeToUse, durationMinutes);
 
     setEditingId(session.id);
     setEditDate(session.date);
@@ -96,7 +98,7 @@ export default function SessionPreview({
 
   const handleStartTimeChange = (newStartTime: string) => {
     setEditTime(newStartTime);
-    setEditEndTime(calcEndTime(newStartTime, 60));
+    setEditEndTime(calcEndTime(newStartTime, durationMinutes));
   };
 
   const cancelEditing = () => {

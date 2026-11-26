@@ -12,6 +12,7 @@ interface SchedulingSettingsProps {
   DAYS: DayOfWeek[];
   control: Control<any>;
   errors?: any;
+  durationMinutes?: number;
 }
 
 export default function SchedulingSettings({
@@ -23,6 +24,7 @@ export default function SchedulingSettings({
   DAYS,
   control,
   errors = {},
+  durationMinutes,
 }: SchedulingSettingsProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
@@ -105,7 +107,14 @@ export default function SchedulingSettings({
               </div>
 
               <div>
-                <label className="label">{t('endTime')}</label>
+                <label className="label flex items-center justify-between">
+                  <span>{t('endTime')}</span>
+                  {durationMinutes ? (
+                    <span className="text-[11px] font-normal text-indigo-600">
+                      ({durationMinutes} {language === 'ar' ? 'دقيقة' : 'min'})
+                    </span>
+                  ) : null}
+                </label>
                 <input
                   type="time"
                   {...register('endTime')}
@@ -178,7 +187,14 @@ export default function SchedulingSettings({
             </div>
 
             <div>
-              <label className="label">{t('endTime')}</label>
+              <label className="label flex items-center justify-between">
+                <span>{t('endTime')}</span>
+                {durationMinutes ? (
+                  <span className="text-[11px] font-normal text-indigo-600">
+                    ({durationMinutes} {language === 'ar' ? 'دقيقة' : 'min'})
+                  </span>
+                ) : null}
+              </label>
               <input
                 type="time"
                 {...register('endTime')}

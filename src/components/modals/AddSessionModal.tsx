@@ -152,33 +152,87 @@ export default function AddSessionModal({
   const watchEndTime = watch('endTime');
   const watchTeacher = watch('teacher');
 
-
   const watchSelectedDays =
     (watch('selectedDays') as DayOfWeek[]) || [];
 
-  useEffect(() => {
-    if (!watchStartTime || !watchType) return;
+  const selectedStudentData = useMemo(() => {
+    const list = studentsList;
+    if (!watchStudent || !list) return null;
+    const firstId = Array.isArray(watchStudent) ? watchStudent[0] : watchStudent;
+    return list.find((s: Student) => String(s.id) === String(firstId)) || null;
+  }, [watchStudent, studentsList]);
 
-    const durationMinutes = watchType === 'full' ? 60 : 30;
+  // Extract student plan session duration (in minutes) from plan.sessionTime or plan.duration
+  const studentPlanDuration = useMemo(() => {
+    const student = selectedStudentData;
+    if (!student) return null;
+
+    const plan = (student.plan || (student as any).subscription?.plan) as any;
+    if (!plan) return null;
+
+    // 1. Check sessionTime (standard in bayt LMS for session duration in minutes: e.g. 30, 45, 60)
+    const sessionTime = Number(plan.sessionTime ?? plan.session_time ?? plan.sessionDuration);
+    if (!isNaN(sessionTime) && sessionTime > 0) {
+      return sessionTime;
+    }
+
+    // 2. Check duration if stored in minutes (e.g. 15, 30, 45, 60, 90, 120)
+    const duration = Number(plan.duration);
+    if (!isNaN(duration) && duration >= 15) {
+      return duration;
+    }
+
+    // 3. Fallback: Parse from plan name if mentioned (e.g., "30 دقيقة", "نصف ساعة", "ساعة", "60 min")
+    const nameStr = `${plan.name_ar || ''} ${plan.name_en || ''}`.toLowerCase();
+    if (nameStr.includes('30') || nameStr.includes('نصف ساعة') || nameStr.includes('half')) {
+      return 30;
+    }
+    if (nameStr.includes('45')) {
+      return 45;
+    }
+    if (nameStr.includes('60') || nameStr.includes('ساعة') || nameStr.includes('hour') || nameStr.includes('full')) {
+      return 60;
+    }
+
+    return null;
+  }, [selectedStudentData]);
+
+  // Calculate duration in minutes: from student plan duration if available, else from watchType or default 60
+  const effectiveDurationMinutes = useMemo(() => {
+    if (studentPlanDuration && studentPlanDuration > 0) {
+      return studentPlanDuration;
+    }
+    return watchType === 'half' ? 30 : 60;
+  }, [studentPlanDuration, watchType]);
+
+  useEffect(() => {
+    if (!watchStartTime) return;
+
+    const durationMinutes = effectiveDurationMinutes;
 
     setValue('duration', String(durationMinutes));
+
+    if (durationMinutes <= 30) {
+      setValue('type', 'half');
+    } else {
+      setValue('type', 'full');
+    }
 
     const [hours, minutes] = watchStartTime
       .split(':')
       .map(Number);
 
+    if (isNaN(hours) || isNaN(minutes)) return;
+
     const date = new Date();
-
     date.setHours(hours, minutes, 0, 0);
-
     date.setMinutes(date.getMinutes() + durationMinutes);
 
     const endHours = String(date.getHours()).padStart(2, '0');
-
     const endMinutes = String(date.getMinutes()).padStart(2, '0');
 
     setValue('endTime', `${endHours}:${endMinutes}`);
-  }, [watchStartTime, watchType, setValue]);
+  }, [watchStartTime, effectiveDurationMinutes, setValue]);
 
   const isGroupPlanStudent = (student?: Student | null) =>
     Boolean(
@@ -187,13 +241,6 @@ export default function AddSessionModal({
         student.plan.name_ar?.includes('جماعية') ||
         student.plan.name_en?.toLowerCase().includes('group'))
     );
-
-  const selectedStudentData = useMemo(() => {
-    const list = studentsList;
-    if (!watchStudent || !list) return null;
-    const firstId = Array.isArray(watchStudent) ? watchStudent[0] : watchStudent;
-    return list.find((s: Student) => String(s.id) === String(firstId)) || null;
-  }, [watchStudent, studentsList]);
 
   const isGroupPlan = isGroupPlanStudent(selectedStudentData);
 
@@ -283,13 +330,14 @@ export default function AddSessionModal({
 
     return {
       planName: (language === 'ar' ? selectedStudentData.plan?.name_ar : selectedStudentData.plan?.name_en) || null,
+      sessionDuration: studentPlanDuration,
       totalSessions: selectedStudentData.sessions || 0,
       sessionsAttended:
         selectedStudentData.sessions_attended || 0,
       sessionsRemaining:
         selectedStudentData.sessions_remaining || 0,
     };
-  }, [selectedStudentData]);
+  }, [selectedStudentData, language, studentPlanDuration]);
 
   const [customSessionMap, setCustomSessionMap] = useState<Record<string, { date?: string; time?: string; endTime?: string; deleted?: boolean }>>({});
 
@@ -829,6 +877,7 @@ export default function AddSessionModal({
               DAYS={DAYS}
               control={control}
               errors={errors}
+              durationMinutes={effectiveDurationMinutes}
             />
 
             {/* Meeting Link & Notification */}
@@ -952,6 +1001,7 @@ export default function AddSessionModal({
             onResetSessions={handleResetSessions}
             hasCustomizations={hasCustomizations}
             apiConflicts={apiConflicts}
+            durationMinutes={effectiveDurationMinutes}
           />
         </form>
 

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 interface StudentPlanCardProps {
   studentPlanInfo: {
     planName: string | null;
+    sessionDuration?: number | null;
     totalSessions: number;
     sessionsAttended: number;
     sessionsRemaining: number;
@@ -13,7 +14,8 @@ interface StudentPlanCardProps {
 export default function StudentPlanCard({
   studentPlanInfo,
 }: StudentPlanCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language.split('-')[0];
 
   if (!studentPlanInfo) return null;
 
@@ -26,13 +28,24 @@ export default function StudentPlanCard({
         </h3>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div>
           <p className="text-xs text-gray-500 mb-1">{t('packageName')}</p>
           <p className="font-bold text-sm">
             {studentPlanInfo.planName || t('noPlan')}
           </p>
         </div>
+
+        {studentPlanInfo.sessionDuration ? (
+          <div>
+            <p className="text-xs text-gray-500 mb-1">
+              {language === 'ar' ? 'مدة الحصة' : 'Session Duration'}
+            </p>
+            <p className="font-bold text-sm text-indigo-600">
+              {studentPlanInfo.sessionDuration} {language === 'ar' ? 'دقيقة' : 'min'}
+            </p>
+          </div>
+        ) : null}
 
         <div>
           <p className="text-xs text-gray-500 mb-1">{t('sessionsRemaining')}</p>
